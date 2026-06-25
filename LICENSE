@@ -1,0 +1,130 @@
+ZiftLab Pro License v1.0
+Copyright (c) 2026 ZiftLab. All rights reserved.
+
+---
+
+1. DEFINITIONS
+
+"Software" refers to the ZiftLab platform, including all source code, design, systems, AI tools, and related documentation.
+
+"User" refers to any individual or entity using the Software.
+
+"ZiftLab" refers to the owner and creator of the Software.
+
+---
+
+2. LICENSE GRANT
+
+ZiftLab grants you a limited, non-exclusive, non-transferable, revocable license to:
+
+- Use the Software for personal or internal business purposes
+- Modify the Software for internal use
+- Integrate parts of the Software into your own projects (non-competing)
+
+---
+
+3. COMMERCIAL USE
+
+Commercial use is permitted ONLY under the following conditions:
+
+- The Software is not resold, sublicensed, or redistributed as a standalone product
+- The Software is not used to create a competing platform, SaaS, or service
+- The Software is not used to replicate ZiftLab’s core business model
+
+Any commercial use beyond these conditions requires explicit written permission from ZiftLab.
+
+---
+
+4. RESTRICTIONS
+
+You may NOT:
+
+- Use the Software to build or offer a competing SaaS, platform, or marketplace
+- Resell, sublicense, or distribute the Software as a product or service
+- Copy or replicate the architecture, systems, or business model of ZiftLab
+- Reverse engineer proprietary components intended to be protected
+- Remove or alter any copyright or license notices
+
+---
+
+5. INTELLECTUAL PROPERTY
+
+All rights, title, and interest in and to the Software remain exclusively with ZiftLab.
+
+This includes:
+
+- Source code
+- Design systems
+- AI tools and logic
+- Platform architecture
+- Branding, name, and identity
+
+This license does NOT grant rights to use ZiftLab trademarks, branding, or identity.
+
+---
+
+6. SAAS AND PLATFORM RESTRICTIONS
+
+You are explicitly prohibited from:
+
+- Offering the Software as a hosted service
+- Deploying it as a multi-tenant platform
+- Providing access to third parties as a productized system
+
+Unless you obtain a commercial or enterprise license.
+
+---
+
+7. ATTRIBUTION
+
+You must retain this license in all copies or substantial portions of the Software.
+
+---
+
+8. DATA AND AI USAGE
+
+ZiftLab may include AI-powered features.
+
+You agree not to:
+
+- Extract, replicate, or train competing AI systems using ZiftLab outputs
+- Use the platform to build competing AI-based tools
+
+---
+
+9. DISCLAIMER OF WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+AND NON-INFRINGEMENT.
+
+---
+
+10. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL ZIFTLAB BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM THE USE OF
+THE SOFTWARE.
+
+---
+
+11. TERMINATION
+
+This license is automatically terminated if you violate any of its terms.
+
+Upon termination, you must cease all use of the Software.
+
+---
+
+12. GOVERNING LAW
+
+This License shall be governed by and interpreted in accordance with the laws
+of the jurisdiction in which ZiftLab operates.
+
+---
+
+13. CONTACT
+
+For commercial licensing, partnerships, or enterprise access:
+
+hello@ziftlab.com
