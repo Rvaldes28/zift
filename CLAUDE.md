@@ -19,7 +19,7 @@ All commands run from the repo root:
 
 There is no test suite yet (testing is FASE 15).
 
-Local services (Homebrew, not Docker): PostgreSQL 16 must be running (`brew services start postgresql@16`, DB `ziftlab_dev`) for the cms to boot; MinIO starts with `./infra/scripts/start-minio.sh` and the media bucket is created (idempotent) with `./infra/scripts/create-minio-bucket.sh` (needs `mc`: `brew install minio-mc`). Ports: cms `3000`, web `4321`, Postgres `5432`, MinIO `9000`/console `9001`.
+Local services (Homebrew, not Docker): PostgreSQL 16 must be running (`brew services start postgresql@16`, DB `ziftlab_dev`) for the cms to boot; MinIO runs as a user LaunchAgent (`com.ziftlab.minio`, installed idempotently with `./infra/scripts/install-minio-autostart.sh` — autostarts at login, self-restarts; log at `~/Library/Logs/ziftlab-minio.log`); `./infra/scripts/start-minio.sh` runs it in the foreground ad-hoc instead. The media bucket is created (idempotent) with `./infra/scripts/create-minio-bucket.sh` (needs `mc`: `brew install minio-mc`). Ports: cms `3000`, web `4321`, Postgres `5432`, MinIO `9000`/console `9001`.
 
 ## Architecture
 
