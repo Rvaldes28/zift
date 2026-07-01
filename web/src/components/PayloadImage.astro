@@ -1,0 +1,37 @@
+---
+/**
+ * Imagen servida desde Payload/MinIO. Renderiza width/height reales del
+ * upload (evita CLS) y no pinta nada si la relación viene vacía o sin poblar.
+ */
+import { getMediaUrl, resolveMedia, type MediaRef } from '@/lib/media'
+
+interface Props {
+  media: MediaRef
+  /** Para imágenes above-the-fold (hero): eager + fetchpriority high */
+  priority?: boolean
+  /** Atributo sizes para responsive, ej. "(min-width: 768px) 50vw, 100vw" */
+  sizes?: string
+  class?: string
+}
+
+const { media, priority = false, sizes, class: className } = Astro.props
+
+const doc = resolveMedia(media)
+const src = getMediaUrl(media)
+---
+
+{
+  doc && src && (
+    <img
+      src={src}
+      alt={doc.alt}
+      width={doc.width ?? undefined}
+      height={doc.height ?? undefined}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+      fetchpriority={priority ? 'high' : undefined}
+      sizes={sizes}
+      class={className}
+    />
+  )
+}

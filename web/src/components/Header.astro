@@ -1,0 +1,156 @@
+---
+/**
+ * Header del sitio con datos del global `header` de Payload (logo, navegación
+ * y CTA). El menú móvil se abre con un script mínimo sin framework.
+ */
+import type { Header as HeaderGlobal } from '@cms/types'
+
+import PayloadImage from '@/components/PayloadImage.astro'
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import { resolveMedia } from '@/lib/media'
+
+interface Props {
+  header: HeaderGlobal
+  siteName: string
+}
+
+const { header, siteName } = Astro.props
+
+const navItems = header.navItems ?? []
+const logo = resolveMedia(header.logo)
+// El CTA es opcional en el CMS: solo se pinta si label y href están completos
+const cta =
+  header.cta?.label && header.cta?.href
+    ? { label: header.cta.label, href: header.cta.href, newTab: header.cta.newTab ?? false }
+    : null
+
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/'
+const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === currentPath
+---
+
+<header class="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur">
+  <Container>
+    <div class="flex h-16 items-center justify-between gap-6">
+      <a href="/" class="font-display text-xl" aria-label={`${siteName} — inicio`}>
+        {
+          logo ? (
+            <PayloadImage media={logo} priority class="h-8 w-auto" />
+          ) : (
+            <>
+              {siteName}
+              <span class="ml-1 inline-block size-2 bg-zift" aria-hidden="true" />
+            </>
+          )
+        }
+      </a>
+
+      {
+        navItems.length > 0 && (
+          <nav class="hidden md:block" aria-label="Principal">
+            <ul class="flex items-center gap-7">
+              {navItems.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    target={item.newTab ? '_blank' : undefined}
+                    rel={item.newTab ? 'noopener noreferrer' : undefined}
+                    aria-current={isCurrent(item.href) ? 'page' : undefined}
+                    class:list={[
+                      'text-sm font-medium transition-colors hover:text-ink',
+                      isCurrent(item.href) ? 'text-ink' : 'text-muted',
+                    ]}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+
+      <div class="flex items-center gap-3">
+        {
+          /* En móvil el CTA vive dentro del panel del menú */
+          cta && (
+            <div class="hidden sm:block">
+              <Button href={cta.href} size="sm" newTab={cta.newTab}>
+                {cta.label}
+              </Button>
+            </div>
+          )
+        }
+        <button
+          type="button"
+          class="inline-flex size-10 items-center justify-center rounded-md border border-line text-ink md:hidden"
+          aria-expanded="false"
+          aria-controls="nav-movil"
+          data-nav-toggle
+        >
+          <span class="sr-only">Abrir menú</span>
+          <svg
+            class="size-5"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M3 5.5h14M3 10h14M3 14.5h14"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </Container>
+
+  <nav
+    id="nav-movil"
+    class="hidden border-t border-line bg-paper md:hidden"
+    aria-label="Principal"
+    data-nav-panel
+  >
+    <Container class="py-4">
+      <ul class="flex flex-col">
+        {
+          navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                target={item.newTab ? '_blank' : undefined}
+                rel={item.newTab ? 'noopener noreferrer' : undefined}
+                aria-current={isCurrent(item.href) ? 'page' : undefined}
+                class:list={[
+                  'block py-2.5 font-medium transition-colors hover:text-ink',
+                  isCurrent(item.href) ? 'text-ink' : 'text-muted',
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+        {
+          cta && (
+            <li class="pt-3">
+              <Button href={cta.href} newTab={cta.newTab} class="w-full">
+                {cta.label}
+              </Button>
+            </li>
+          )
+        }
+      </ul>
+    </Container>
+  </nav>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]')
+  const panel = document.querySelector<HTMLElement>('[data-nav-panel]')
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = panel?.classList.toggle('hidden') === false
+    toggle.setAttribute('aria-expanded', String(isOpen))
+  })
+</script>

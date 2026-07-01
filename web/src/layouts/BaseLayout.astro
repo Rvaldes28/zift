@@ -1,0 +1,68 @@
+---
+/**
+ * Layout principal: <head> con SEO, header y footer con datos reales de
+ * Payload. Los globals se piden en paralelo y quedan memoizados durante
+ * el build (getCachedGlobal).
+ */
+import '@/styles/global.css'
+
+import Footer from '@/components/Footer.astro'
+import Header from '@/components/Header.astro'
+import SEO from '@/components/SEO.astro'
+import { getMediaUrl } from '@/lib/media'
+import { getCachedGlobal } from '@/lib/payload'
+
+interface Props {
+  /** Título de la página; se compone como "Título | SiteName". Si falta, se usa el SEO por defecto del CMS. */
+  title?: string
+  description?: string
+  /** URL absoluta de la imagen OG; default: ogImage de Ajustes del sitio */
+  ogImage?: string | null
+  noindex?: boolean
+}
+
+const { title, description, ogImage, noindex = false } = Astro.props
+
+const [settings, header, footer] = await Promise.all([
+  getCachedGlobal('site-settings'),
+  getCachedGlobal('header'),
+  getCachedGlobal('footer'),
+])
+
+const siteName = settings.siteName
+const defaultTitle =
+  settings.defaultSeo?.title ?? (settings.tagline ? `${siteName} — ${settings.tagline}` : siteName)
+
+const seoTitle = title ? `${title} | ${siteName}` : defaultTitle
+const seoDescription = description ?? settings.defaultSeo?.description ?? undefined
+const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <SEO
+      title={seoTitle}
+      description={seoDescription}
+      image={seoImage}
+      siteName={siteName}
+      noindex={noindex}
+    />
+  </head>
+  <body class="flex min-h-screen flex-col">
+    <a
+      href="#contenido"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:rounded-md focus:bg-zift focus:px-4 focus:py-2 focus:text-white"
+    >
+      Saltar al contenido
+    </a>
+    <Header header={header} siteName={siteName} />
+    <main id="contenido" class="flex-1">
+      <slot />
+    </main>
+    <Footer footer={footer} settings={settings} />
+  </body>
+</html>

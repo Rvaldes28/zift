@@ -1,11 +1,12 @@
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
+import { seedGlobals } from './globals'
 import { lexicalParagraphs } from './lexical'
 import { services } from './services'
 
-// Siembra idempotente de los 14 servicios mínimos (docs/FASES.MD §8 FASE 2).
-// Correr con: pnpm seed (desde /cms). Requiere PostgreSQL corriendo.
+// Siembra idempotente: 14 servicios mínimos (FASE 2) + globals del
+// frontend (FASE 3). Correr con: pnpm seed (desde /cms). Requiere PostgreSQL.
 const seed = async (): Promise<void> => {
   const payload = await getPayload({ config })
 
@@ -44,6 +45,8 @@ const seed = async (): Promise<void> => {
   }
 
   payload.logger.info(`Seed de servicios: ${created} creados, ${skipped} ya existían`)
+
+  await seedGlobals(payload)
 }
 
 // Top-level await: `payload run` solo espera la evaluación del módulo,

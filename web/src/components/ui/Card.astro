@@ -1,0 +1,32 @@
+---
+/**
+ * Panel con borde hairline. Con href se vuelve card clicable completa
+ * (usa .group para reaccionar en hover desde el contenido del slot).
+ */
+interface Props {
+  href?: string
+  padding?: 'none' | 'default'
+  class?: string
+}
+
+const { href, padding = 'default', class: className } = Astro.props
+
+const classes = [
+  'block rounded-xl border border-line bg-white',
+  padding === 'default' && 'p-6 md:p-8',
+  href && 'group transition-colors hover:border-zift',
+  className,
+]
+---
+
+{
+  href ? (
+    <a {href} class:list={classes}>
+      <slot />
+    </a>
+  ) : (
+    <div class:list={classes}>
+      <slot />
+    </div>
+  )
+}

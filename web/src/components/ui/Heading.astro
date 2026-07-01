@@ -1,0 +1,29 @@
+---
+/**
+ * Titulares en la voz display de ZiftLab (Archivo expandida 125%).
+ * `as` define la semántica y `size` el tamaño visual, por separado.
+ */
+interface Props {
+  as?: 'h1' | 'h2' | 'h3' | 'h4'
+  size?: 'display' | 'xl' | 'lg' | 'md' | 'sm'
+  class?: string
+}
+
+// Anotado con Props: con tag dinámico el chequeo de Astro no lo infiere solo
+const { as: Tag = 'h2', size = 'lg', class: className }: Props = Astro.props
+
+const sizes = {
+  display: 'text-4xl sm:text-5xl lg:text-6xl',
+  xl: 'text-3xl sm:text-4xl lg:text-5xl',
+  lg: 'text-2xl sm:text-3xl',
+  md: 'text-xl sm:text-2xl',
+  sm: 'text-lg',
+}
+
+// Calculado aquí: dentro del atributo de un tag dinámico TS pierde el tipado
+const classes = ['font-display text-balance', sizes[size], className]
+---
+
+<Tag class:list={classes}>
+  <slot />
+</Tag>

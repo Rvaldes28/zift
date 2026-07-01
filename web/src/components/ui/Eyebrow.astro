@@ -1,0 +1,26 @@
+---
+/**
+ * Etiqueta de sección — la firma del sistema ZiftLab: mono en versalitas
+ * con marcador cuadrado ultramar, como rótulo de especimen de laboratorio.
+ */
+interface Props {
+  as?: 'p' | 'span' | 'h3'
+  /** dark = para usar sobre fondos ink */
+  tone?: 'light' | 'dark'
+  class?: string
+}
+
+// Anotado con Props: con tag dinámico el chequeo de Astro no lo infiere solo
+const { as: Tag = 'p', tone = 'light', class: className }: Props = Astro.props
+---
+
+<Tag
+  class:list={[
+    'flex items-center gap-2.5 font-mono text-xs tracking-[0.18em] uppercase',
+    tone === 'dark' ? 'text-ink-muted' : 'text-muted',
+    className,
+  ]}
+>
+  <span class="size-2 shrink-0 bg-zift" aria-hidden="true"></span>
+  <slot />
+</Tag>

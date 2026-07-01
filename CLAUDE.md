@@ -4,11 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 2 (content modeling) complete** — next up is FASE 3 (Astro frontend base). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`).
+ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 3 (Astro frontend base) complete** — next up is FASE 4 (core commercial pages). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`). The Payload CMS must be running for `pnpm dev:web` / `pnpm build:web` to render real data (the web fetches at build/request time).
 
 ## Commands
 
 All commands run from the repo root:
+
+- `make install` — full machine setup (Homebrew, formulas, `.env`s, DB, MinIO LaunchAgent + bucket, `pnpm install`, seed); idempotent
+- `make start` / `make stop` / `make status` — bring the whole stack up (PostgreSQL, MinIO, cms `:3000`, web `:4321`; dev-server logs in `~/Library/Logs/ziftlab-*.log`, PIDs in `/tmp/ziftlab-*.pid`), tear it all down, or check it
 
 - `pnpm dev:cms` — Payload CMS dev server → http://localhost:3000/admin
 - `pnpm dev:web` — Astro dev server → http://localhost:4321
@@ -26,10 +29,14 @@ Local services (Homebrew, not Docker): PostgreSQL 16 must be running (`brew serv
 pnpm-workspaces monorepo:
 
 - `cms/` — Payload CMS v3 on Next.js 16 (Turbopack), Postgres via `@payloadcms/db-postgres`. Admin + content API only — it must never render the public site. Config lives in `cms/src/payload.config.ts`; collections in `cms/src/collections/`, globals in `cms/src/globals/`, access helpers in `cms/src/access/`, reusable field factories (slug, link/CTA, social links) in `cms/src/fields/`, seed in `cms/src/seed/`. Content collections with an editorial flow (services, projects, posts, home-page global) use `versions.drafts` + the `publishedOnly` read helper; SEO `meta` fields come from `@payloadcms/plugin-seo`. Env vars (in `cms/.env`, never committed): `DATABASE_URL`, `PAYLOAD_SECRET` — note the template uses `DATABASE_URL`, not `DATABASE_URI` as written in docs/FASES.MD §11. `payload run` scripts (e.g. the seed) only read `cms/.env`, not the repo root.
-- `web/` — Astro 5 + Tailwind CSS 4 (via `@tailwindcss/vite` plugin in `astro.config.mjs`; global CSS is `web/src/styles/global.css` with `@import 'tailwindcss'`). Renders the public site; will consume the Payload REST API starting FASE 3.
+- `web/` — Astro 5 + Tailwind CSS 4 (via `@tailwindcss/vite` plugin in `astro.config.mjs`; global CSS is `web/src/styles/global.css` with `@import 'tailwindcss'`). Renders the public site consuming the Payload REST API: client in `web/src/lib/payload.ts` (typed via the `@cms/types` tsconfig alias → `cms/src/payload-types.ts`, type-only so it vanishes at build), media helpers in `web/src/lib/media.ts`, layout in `web/src/layouts/BaseLayout.astro`, UI kit in `web/src/components/ui/`. Design tokens live in `global.css` under `@theme` — the default Tailwind palette is disabled (`--color-*: initial`); use only ZiftLab tokens (paper/surface/line/muted/ink/zift…), display headlines via the `font-display` utility (Archivo Variable expanded 125%), mono labels via IBM Plex Mono.
 - `infra/` — local scripts and backups. `docs/` — spec and roadmap.
 
-## Monorepo gotchas (learned during FASE 0)
+## Monorepo gotchas (learned during FASE 0/3)
+
+- `vite` must stay a direct devDependency of `web/` pinned to Astro's major (`^6`): `astro.config.mjs` imports `loadEnv` from it and pnpm's strict `node_modules` won't resolve it transitively; letting it float to vite 7+ breaks `astro check` with duplicate plugin types.
+- Astro components that render a dynamic tag (`const { as: Tag } = Astro.props`) need the destructure annotated `: Props` — without it `astro check` leaves `Astro.props` as `any` (astro-language-tools quirk). Don't switch to `Astro.props as Props`: that breaks the component's external prop typing instead.
+- Tailwind display utilities from a component's base classes (e.g. Button's `inline-flex`) can override a `hidden` passed via `class` — wrap in a `<div class="hidden sm:block">` instead of fighting stylesheet order.
 
 - `cms/next.config.ts` sets `turbopack.root` to the **repo root** (`path.resolve(dirname, '..')`), not the app dir — pnpm symlinks resolve into the root `node_modules/.pnpm`, and Turbopack refuses files outside its root. Don't revert this to the Payload template default.
 - `eslint-config-next` 16 is flat-config native: `cms/eslint.config.mjs` imports `eslint-config-next/core-web-vitals` and `/typescript` directly. Do not reintroduce the `FlatCompat`/`@eslint/eslintrc` pattern from the Payload template.

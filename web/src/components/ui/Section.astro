@@ -1,0 +1,23 @@
+---
+/**
+ * Bloque vertical de página con ritmo consistente.
+ * tone controla el fondo: paper (base), surface (alterno), ink (oscuro).
+ */
+interface Props {
+  tone?: 'paper' | 'surface' | 'ink'
+  id?: string
+  class?: string
+}
+
+const { tone = 'paper', id, class: className } = Astro.props
+
+const tones = {
+  paper: 'bg-paper',
+  surface: 'border-y border-line bg-surface',
+  ink: 'bg-ink text-white',
+}
+---
+
+<section {id} class:list={['py-16 md:py-24', tones[tone], className]}>
+  <slot />
+</section>

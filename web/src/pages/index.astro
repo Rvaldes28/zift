@@ -1,26 +1,73 @@
 ---
-import '../styles/global.css'
+/**
+ * Portada FASE 3: demuestra la conexión Astro ⇄ Payload y el sistema de
+ * diseño base. La Home comercial completa llega en FASE 4.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import Button from '@/components/ui/Button.astro'
+import Card from '@/components/ui/Card.astro'
+import Container from '@/components/ui/Container.astro'
+import Eyebrow from '@/components/ui/Eyebrow.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import { getCachedGlobal, getCollection } from '@/lib/payload'
+
+const settings = await getCachedGlobal('site-settings')
+const services = await getCollection('services', { sort: 'order', limit: 14 })
+
+const heroDescription =
+  settings.defaultSeo?.description ??
+  'Sitios web, sistemas digitales, automatizaciones y soluciones con IA para empresas que quieren escalar.'
 ---
 
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <title>ZiftLab</title>
-    <meta name="description" content="ZiftLab — agencia digital. Sitio en construcción." />
-  </head>
-  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
-    <main
-      class="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-4 px-6 text-center"
-    >
-      <p class="text-sm tracking-widest text-slate-400 uppercase">Fase 0 — Setup local</p>
-      <h1 class="text-5xl font-bold">ZiftLab</h1>
-      <p class="text-lg text-slate-300">
-        Entorno local funcionando: Astro + Tailwind CSS. El contenido llegará desde Payload CMS en
-        las siguientes fases.
-      </p>
-    </main>
-  </body>
-</html>
+<BaseLayout>
+  <Section class="md:py-32">
+    <Container>
+      <div class="max-w-3xl">
+        <Eyebrow>Agencia digital · {settings.tagline ?? settings.siteName}</Eyebrow>
+        <Heading as="h1" size="display" class="mt-6">
+          Tecnología moderna para empresas que quieren vender más
+        </Heading>
+        <Text size="lead" muted class="mt-6 max-w-2xl">
+          {heroDescription}
+        </Text>
+        <div class="mt-10 flex flex-wrap gap-4">
+          <Button href="#servicios" size="lg">Ver servicios</Button>
+          {
+            settings.contactEmail && (
+              <Button href={`mailto:${settings.contactEmail}`} variant="secondary" size="lg">
+                Escríbenos
+              </Button>
+            )
+          }
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="surface" id="servicios">
+    <Container>
+      <div class="max-w-2xl">
+        <Eyebrow>Servicios · {services.totalDocs} publicados en Payload</Eyebrow>
+        <Heading as="h2" size="xl" class="mt-6">Lo que construimos</Heading>
+      </div>
+      <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+        {
+          services.docs.map((service) => (
+            <li>
+              <Card class="h-full">
+                <Heading as="h3" size="sm">
+                  {service.title}
+                </Heading>
+                <Text size="sm" muted class="mt-3">
+                  {service.excerpt}
+                </Text>
+              </Card>
+            </li>
+          ))
+        }
+      </ul>
+    </Container>
+  </Section>
+</BaseLayout>

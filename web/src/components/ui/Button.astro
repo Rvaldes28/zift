@@ -1,0 +1,60 @@
+---
+/**
+ * Botón del sistema. Renderiza <a> si recibe href, <button> si no.
+ * primary = acción principal (ultramar), secondary = alternativa sobre fondos
+ * claros, ghost = terciaria de bajo peso.
+ */
+interface Props {
+  href?: string
+  variant?: 'primary' | 'secondary' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  newTab?: boolean
+  type?: 'button' | 'submit'
+  class?: string
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  newTab = false,
+  type = 'button',
+  class: className,
+} = Astro.props
+
+const variants = {
+  primary: 'bg-zift text-white hover:bg-zift-deep',
+  secondary: 'border border-line bg-white text-ink hover:border-ink',
+  ghost: 'text-zift hover:bg-zift-tint',
+}
+
+const sizes = {
+  sm: 'h-9 px-4 text-sm',
+  md: 'h-11 px-6 text-sm',
+  lg: 'h-12 px-8 text-base',
+}
+
+const classes = [
+  'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors',
+  variants[variant],
+  sizes[size],
+  className,
+]
+---
+
+{
+  href ? (
+    <a
+      {href}
+      class:list={classes}
+      target={newTab ? '_blank' : undefined}
+      rel={newTab ? 'noopener noreferrer' : undefined}
+    >
+      <slot />
+    </a>
+  ) : (
+    <button {type} class:list={classes}>
+      <slot />
+    </button>
+  )
+}

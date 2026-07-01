@@ -1,1 +1,71 @@
+/* Fuentes autoalojadas (Fontsource) — Archivo Variable con eje de ancho
+   (62%–125%) para la voz display expandida, y IBM Plex Mono para etiquetas. */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
 @import 'tailwindcss';
+
+@theme {
+  /* Se elimina la paleta por defecto de Tailwind: todo color del sitio
+     debe salir de estos tokens (sistema de diseño ZiftLab, FASE 3). */
+  --color-*: initial;
+
+  /* Neutros fríos — papel de laboratorio y tinta */
+  --color-white: #ffffff;
+  --color-paper: #fcfcfd; /* fondo base */
+  --color-surface: #f3f4f7; /* paneles y cards */
+  --color-line: #e3e5eb; /* bordes hairline */
+  --color-muted: #596070; /* texto secundario */
+  --color-ink: #14161c; /* texto principal y secciones oscuras */
+  --color-ink-2: #1e212b; /* superficie elevada sobre ink */
+  --color-ink-line: #2e3240; /* bordes sobre ink */
+  --color-ink-muted: #9aa1b2; /* texto secundario sobre ink */
+
+  /* Firma cromática — ultramar Zift */
+  --color-zift: #4633ff; /* acciones, links, marcadores */
+  --color-zift-deep: #3524e0; /* hover/active */
+  --color-zift-tint: #edebff; /* fondos suaves, chips */
+  --color-zift-glow: #9d93ff; /* acento sobre fondos ink */
+
+  /* Estados (formularios en fases posteriores) */
+  --color-ok: #0f7b4d;
+  --color-danger: #c2273a;
+
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+}
+
+/* Voz display: Archivo expandida, peso alto, tracking cerrado.
+   Es la tipografía de señalética de los titulares ZiftLab. */
+@utility font-display {
+  font-family: var(--font-sans);
+  font-stretch: 125%;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+@layer base {
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+  }
+
+  ::selection {
+    @apply bg-zift text-white;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-zift;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

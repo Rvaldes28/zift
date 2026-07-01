@@ -1,0 +1,137 @@
+---
+/**
+ * Footer del sitio: columnas de links del global `footer` de Payload,
+ * más contacto y redes de Ajustes del sitio. Fondo ink, la sección oscura
+ * que ancla la página.
+ */
+import type { Footer as FooterGlobal, SiteSetting } from '@cms/types'
+
+import Container from '@/components/ui/Container.astro'
+import Eyebrow from '@/components/ui/Eyebrow.astro'
+
+interface Props {
+  footer: FooterGlobal
+  settings: SiteSetting
+}
+
+const { footer, settings } = Astro.props
+
+const columns = footer.columns ?? []
+const socials = settings.socialLinks ?? []
+const bottomText =
+  footer.bottomText ??
+  `© ${new Date().getFullYear()} ${settings.siteName}. Todos los derechos reservados.`
+
+const socialNames: Record<string, string> = {
+  linkedin: 'LinkedIn',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  x: 'X',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  github: 'GitHub',
+  other: 'Web',
+}
+
+const linkClass = 'text-sm text-ink-muted transition-colors hover:text-white'
+---
+
+<footer class="bg-ink text-white">
+  <Container class="py-14 md:py-20">
+    <div class="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
+      <div class="max-w-sm">
+        <p class="font-display text-2xl">
+          {settings.siteName}<span class="ml-1 inline-block size-2 bg-zift-glow" aria-hidden="true"
+          ></span>
+        </p>
+        {settings.tagline && <p class="mt-2 text-ink-muted">{settings.tagline}</p>}
+        <ul class="mt-5 space-y-1.5 font-mono text-sm">
+          {
+            settings.contactEmail && (
+              <li>
+                <a href={`mailto:${settings.contactEmail}`} class={linkClass}>
+                  {settings.contactEmail}
+                </a>
+              </li>
+            )
+          }
+          {
+            settings.phone && (
+              <li>
+                <a href={`tel:${settings.phone.replace(/[^\d+]/g, '')}`} class={linkClass}>
+                  {settings.phone}
+                </a>
+              </li>
+            )
+          }
+          {
+            settings.whatsapp && (
+              <li>
+                <a
+                  href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class={linkClass}
+                >
+                  WhatsApp ↗
+                </a>
+              </li>
+            )
+          }
+        </ul>
+      </div>
+
+      {
+        columns.length > 0 && (
+          <div class="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3">
+            {columns.map((column) => (
+              <div>
+                <Eyebrow as="h3" tone="dark" class="mb-4">
+                  {column.title}
+                </Eyebrow>
+                <ul class="space-y-2.5">
+                  {(column.links ?? []).map((link) => (
+                    <li>
+                      <a
+                        href={link.href}
+                        target={link.newTab ? '_blank' : undefined}
+                        rel={link.newTab ? 'noopener noreferrer' : undefined}
+                        class={linkClass}
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <div
+      class="mt-14 flex flex-col gap-4 border-t border-ink-line pt-6 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p class="text-sm text-ink-muted">{bottomText}</p>
+      {
+        socials.length > 0 && (
+          <ul class="flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs tracking-wider uppercase">
+            {socials.map((social) => (
+              <li>
+                <a
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-ink-muted transition-colors hover:text-white"
+                >
+                  {socialNames[social.platform] ?? social.platform} ↗
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </Container>
+</footer>

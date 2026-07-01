@@ -1,0 +1,25 @@
+---
+/** Cuerpo de texto del sistema. lead = entradilla, base = párrafo, sm = notas. */
+interface Props {
+  as?: 'p' | 'span' | 'div'
+  size?: 'lead' | 'base' | 'sm'
+  muted?: boolean
+  class?: string
+}
+
+// Anotado con Props: con tag dinámico el chequeo de Astro no lo infiere solo
+const { as: Tag = 'p', size = 'base', muted = false, class: className }: Props = Astro.props
+
+const sizes = {
+  lead: 'text-lg leading-relaxed md:text-xl',
+  base: 'text-base leading-relaxed',
+  sm: 'text-sm leading-normal',
+}
+
+// Calculado aquí: dentro del atributo de un tag dinámico TS pierde el tipado
+const classes = [sizes[size], muted && 'text-muted', className]
+---
+
+<Tag class:list={classes}>
+  <slot />
+</Tag>
