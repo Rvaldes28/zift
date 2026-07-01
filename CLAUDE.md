@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 0 (local setup) complete** — next up is FASE 1 (Payload CMS core: S3/MinIO media storage, roles, CORS).
+ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 1 (Payload CMS core) complete** — next up is FASE 2 (content modeling). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`).
 
 ## Commands
 
@@ -19,7 +19,7 @@ All commands run from the repo root:
 
 There is no test suite yet (testing is FASE 15).
 
-Local services (Homebrew, not Docker): PostgreSQL 16 must be running (`brew services start postgresql@16`, DB `ziftlab_dev`) for the cms to boot; MinIO starts with `./infra/scripts/start-minio.sh` (not needed until FASE 1). Ports: cms `3000`, web `4321`, Postgres `5432`, MinIO `9000`/console `9001`.
+Local services (Homebrew, not Docker): PostgreSQL 16 must be running (`brew services start postgresql@16`, DB `ziftlab_dev`) for the cms to boot; MinIO starts with `./infra/scripts/start-minio.sh` and the media bucket is created (idempotent) with `./infra/scripts/create-minio-bucket.sh` (needs `mc`: `brew install minio-mc`). Ports: cms `3000`, web `4321`, Postgres `5432`, MinIO `9000`/console `9001`.
 
 ## Architecture
 
