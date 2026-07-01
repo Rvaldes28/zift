@@ -1,0 +1,18 @@
+# dependencias y builds
+node_modules/
+.next/
+dist/
+.astro/
+coverage/
+pnpm-lock.yaml
+
+# generados por Payload / Next
+cms/src/app/(payload)/admin/importMap.js
+cms/src/payload-types.ts
+next-env.d.ts
+
+# documentación fuente (no reformatear)
+docs/
+
+# datos locales
+infra/backups/

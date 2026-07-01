@@ -1,0 +1,25 @@
+{
+  "name": "ziftlab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sitio oficial de ZiftLab — monorepo con Payload CMS (cms/) y Astro (web/)",
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev:cms": "pnpm --filter cms dev",
+    "dev:web": "pnpm --filter web dev",
+    "build": "pnpm -r build",
+    "build:cms": "pnpm --filter cms build",
+    "build:web": "pnpm --filter web build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "prettier-plugin-astro": "^0.14.1"
+  }
+}
