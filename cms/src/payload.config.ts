@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
@@ -8,6 +9,20 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Services } from './collections/Services'
+import { Projects } from './collections/Projects'
+import { Posts } from './collections/Posts'
+import { Categories } from './collections/Categories'
+import { Clients } from './collections/Clients'
+import { Testimonials } from './collections/Testimonials'
+import { TeamMembers } from './collections/TeamMembers'
+import { FAQs } from './collections/FAQs'
+import { Leads } from './collections/Leads'
+import { Redirects } from './collections/Redirects'
+import { SiteSettings } from './globals/SiteSettings'
+import { Header } from './globals/Header'
+import { Footer } from './globals/Footer'
+import { HomePage } from './globals/HomePage'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -21,7 +36,21 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [
+    Users,
+    Media,
+    Services,
+    Projects,
+    Posts,
+    Categories,
+    Clients,
+    Testimonials,
+    TeamMembers,
+    FAQs,
+    Leads,
+    Redirects,
+  ],
+  globals: [SiteSettings, Header, Footer, HomePage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -49,6 +78,13 @@ export default buildConfig({
         // MinIO requiere path-style (http://host:9000/bucket/key)
         forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
       },
+    }),
+    seoPlugin({
+      collections: ['services', 'projects', 'posts'],
+      globals: ['home-page'],
+      uploadsCollection: 'media',
+      generateTitle: ({ doc }) => (doc?.title ? `${doc.title} | ZiftLab` : 'ZiftLab'),
+      generateDescription: ({ doc }) => doc?.excerpt ?? '',
     }),
   ],
 })

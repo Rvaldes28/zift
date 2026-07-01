@@ -20,9 +20,13 @@ S3), helpers de acceso en `cms/src/access/` (`anyone`, `authenticated`, `isAdmin
 ### 1. SEO — plugin oficial `@payloadcms/plugin-seo@3.85.2`
 
 - Misma versión exacta que el resto de paquetes Payload (convención del repo).
-- `seoPlugin({ collections: ['services','projects','posts'], globals: ['home-page'], uploadsCollection: 'media', tabbedUI: true, generateTitle, generateDescription })`
+- `seoPlugin({ collections: ['services','projects','posts'], globals: ['home-page'], uploadsCollection: 'media', generateTitle, generateDescription })`
   — añade el grupo `meta` (title/description/image) con preview de Google y botones de
   autogeneración. `generateTitle` produce `"<título> | ZiftLab"`.
+- Sin `tabbedUI`: al activarlo el plugin mueve **todos** los campos base a una pestaña
+  "Content", lo que entierra los campos de sidebar (slug, order, status) dentro del tab
+  y rompe esa UX. Con el default, el grupo `meta` se añade al final y el sidebar queda
+  intacto.
 - Descartado: grupo SEO artesanal (peor UX de admin, reinventa un plugin oficial).
 - `SiteSettings` lleva un grupo `defaultSeo` manual (title/description/ogImage) como
   fallback global — el plugin no aplica ahí porque no es contenido por-documento.
