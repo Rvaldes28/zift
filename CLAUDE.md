@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 1 (Payload CMS core) complete** — next up is FASE 2 (content modeling). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`).
+ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 2 (content modeling) complete** — next up is FASE 3 (Astro frontend base). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`).
 
 ## Commands
 
@@ -15,7 +15,7 @@ All commands run from the repo root:
 - `pnpm lint` / `pnpm typecheck` / `pnpm format:check` — quality gate; all three must pass before a phase is considered done, plus `pnpm build` where applicable
 - `pnpm format` — apply Prettier
 - `pnpm build` — production build of both apps (`build:cms` / `build:web` for one)
-- cms-only (run inside `cms/`): `pnpm generate:types`, `pnpm generate:importmap`, `pnpm payload` (Payload CLI)
+- cms-only (run inside `cms/`): `pnpm generate:types`, `pnpm generate:importmap`, `pnpm payload` (Payload CLI), `pnpm seed` (idempotent — creates the 14 minimum services; needs PostgreSQL and `cms/.env`)
 
 There is no test suite yet (testing is FASE 15).
 
@@ -25,7 +25,7 @@ Local services (Homebrew, not Docker): PostgreSQL 16 must be running (`brew serv
 
 pnpm-workspaces monorepo:
 
-- `cms/` — Payload CMS v3 on Next.js 16 (Turbopack), Postgres via `@payloadcms/db-postgres`. Admin + content API only — it must never render the public site. Config lives in `cms/src/payload.config.ts`; collections in `cms/src/collections/`. Env vars (in `cms/.env`, never committed): `DATABASE_URL`, `PAYLOAD_SECRET` — note the template uses `DATABASE_URL`, not `DATABASE_URI` as written in docs/FASES.MD §11.
+- `cms/` — Payload CMS v3 on Next.js 16 (Turbopack), Postgres via `@payloadcms/db-postgres`. Admin + content API only — it must never render the public site. Config lives in `cms/src/payload.config.ts`; collections in `cms/src/collections/`, globals in `cms/src/globals/`, access helpers in `cms/src/access/`, reusable field factories (slug, link/CTA, social links) in `cms/src/fields/`, seed in `cms/src/seed/`. Content collections with an editorial flow (services, projects, posts, home-page global) use `versions.drafts` + the `publishedOnly` read helper; SEO `meta` fields come from `@payloadcms/plugin-seo`. Env vars (in `cms/.env`, never committed): `DATABASE_URL`, `PAYLOAD_SECRET` — note the template uses `DATABASE_URL`, not `DATABASE_URI` as written in docs/FASES.MD §11. `payload run` scripts (e.g. the seed) only read `cms/.env`, not the repo root.
 - `web/` — Astro 5 + Tailwind CSS 4 (via `@tailwindcss/vite` plugin in `astro.config.mjs`; global CSS is `web/src/styles/global.css` with `@import 'tailwindcss'`). Renders the public site; will consume the Payload REST API starting FASE 3.
 - `infra/` — local scripts and backups. `docs/` — spec and roadmap.
 

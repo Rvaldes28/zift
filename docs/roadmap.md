@@ -8,7 +8,7 @@ Este archivo solo registra el estado de avance.
 | ------- | ----------------------------- | ------------- |
 | FASE 0  | Setup local macOS + Homebrew  | ✅ Completada |
 | FASE 1  | Payload CMS Core              | ✅ Completada |
-| FASE 2  | Modelado de contenido         | Pendiente     |
+| FASE 2  | Modelado de contenido         | ✅ Completada |
 | FASE 3  | Astro Frontend Base           | Pendiente     |
 | FASE 4  | Páginas comerciales core      | Pendiente     |
 | FASE 5  | Portafolio y casos de éxito   | Pendiente     |
