@@ -18,3 +18,5 @@ minimumReleaseAgeExclude:
   - '@payloadcms/translations@3.85.2'
   - '@payloadcms/ui@3.85.2'
   - payload@3.85.2
+  - '@payloadcms/plugin-cloud-storage@3.85.2'
+  - '@payloadcms/storage-s3@3.85.2'
