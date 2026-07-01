@@ -1,0 +1,10 @@
+{
+  // Etiquetas para el panel Ports de VS Code (autodetecta los procesos de make start)
+  "remote.portsAttributes": {
+    "3000": { "label": "Payload CMS (admin/API)", "onAutoForward": "silent" },
+    "4321": { "label": "Astro (web)", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "ignore" },
+    "9000": { "label": "MinIO S3", "onAutoForward": "silent" },
+    "9001": { "label": "MinIO consola", "onAutoForward": "silent" }
+  }
+}
