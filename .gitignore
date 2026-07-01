@@ -1,0 +1,35 @@
+# dependencias
+node_modules/
+
+# builds
+.next/
+dist/
+.astro/
+build/
+out/
+
+# variables de entorno (solo se versiona .env.example)
+.env
+.env.*
+!.env.example
+
+# logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# sistema operativo
+.DS_Store
+
+# misc
+coverage/
+.vercel/
+.turbo/
+
+# datos locales de MinIO si se apunta dentro del repo
+minio-data/
+
+# backups locales
+infra/backups/*
+!infra/backups/.gitkeep
