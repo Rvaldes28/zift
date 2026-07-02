@@ -15,13 +15,15 @@ import { getCachedGlobal } from '@/lib/payload'
 interface Props {
   /** Título de la página; se compone como "Título | SiteName". Si falta, se usa el SEO por defecto del CMS. */
   title?: string
+  /** Título ya compuesto (p. ej. meta.title del plugin SEO) — se usa tal cual, sin añadir "| SiteName" */
+  absoluteTitle?: string
   description?: string
   /** URL absoluta de la imagen OG; default: ogImage de Ajustes del sitio */
   ogImage?: string | null
   noindex?: boolean
 }
 
-const { title, description, ogImage, noindex = false } = Astro.props
+const { title, absoluteTitle, description, ogImage, noindex = false } = Astro.props
 
 const [settings, header, footer] = await Promise.all([
   getCachedGlobal('site-settings'),
@@ -33,7 +35,7 @@ const siteName = settings.siteName
 const defaultTitle =
   settings.defaultSeo?.title ?? (settings.tagline ? `${siteName} — ${settings.tagline}` : siteName)
 
-const seoTitle = title ? `${title} | ${siteName}` : defaultTitle
+const seoTitle = absoluteTitle ?? (title ? `${title} | ${siteName}` : defaultTitle)
 const seoDescription = description ?? settings.defaultSeo?.description ?? undefined
 const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
 ---

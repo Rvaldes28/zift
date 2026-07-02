@@ -45,6 +45,46 @@
   letter-spacing: -0.02em;
 }
 
+/* Retícula de papel milimétrico para el mundo tinta (hero y CTA del home) */
+@utility lab-grid {
+  background-image:
+    linear-gradient(to right, var(--color-ink-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-ink-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(120% 90% at 18% 0%, black 35%, transparent 78%);
+}
+
+/* Prosa del rich text de Payload (componente RichText.astro) */
+@layer components {
+  .rich-text {
+    @apply text-base leading-relaxed;
+  }
+  .rich-text > * + * {
+    margin-top: calc(var(--spacing) * 5);
+  }
+  .rich-text h2 {
+    @apply font-display mt-12 text-2xl sm:text-3xl;
+  }
+  .rich-text h3 {
+    @apply font-display mt-10 text-xl sm:text-2xl;
+  }
+  .rich-text ul {
+    @apply list-disc pl-6;
+  }
+  .rich-text ol {
+    @apply list-decimal pl-6;
+  }
+  .rich-text li + li {
+    margin-top: calc(var(--spacing) * 2);
+  }
+  .rich-text a {
+    @apply text-zift underline underline-offset-4 hover:text-zift-deep;
+  }
+  .rich-text strong {
+    @apply font-semibold;
+  }
+}
+
 @layer base {
   body {
     @apply bg-paper font-sans text-ink antialiased;

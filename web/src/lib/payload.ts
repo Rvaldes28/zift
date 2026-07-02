@@ -158,3 +158,11 @@ export function getCachedGlobal<TSlug extends GlobalSlug>(
   }
   return cached as Promise<Config['globals'][TSlug]>
 }
+
+/**
+ * Relaciones hasMany con depth ≥ 1 llegan como (id | doc)[] — devuelve solo
+ * los docs poblados, en el orden guardado en el CMS.
+ */
+export function resolveDocs<T extends object>(rel: (number | T)[] | null | undefined): T[] {
+  return (rel ?? []).filter((item): item is T => typeof item === 'object' && item !== null)
+}

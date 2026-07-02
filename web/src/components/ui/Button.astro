@@ -6,7 +6,7 @@
  */
 interface Props {
   href?: string
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'inverse'
   size?: 'sm' | 'md' | 'lg'
   newTab?: boolean
   type?: 'button' | 'submit'
@@ -26,6 +26,8 @@ const variants = {
   primary: 'bg-zift text-white hover:bg-zift-deep',
   secondary: 'border border-line bg-white text-ink hover:border-ink',
   ghost: 'text-zift hover:bg-zift-tint',
+  // Para fondos ink (hero/CTA oscuros)
+  inverse: 'border border-ink-line text-white hover:border-zift-glow hover:text-zift-glow',
 }
 
 const sizes = {

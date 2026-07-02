@@ -1,0 +1,22 @@
+---
+/**
+ * Rich text de Payload (Lexical) → HTML en build con el conversor oficial.
+ * No llega JS al cliente: la conversión ocurre al generar la página.
+ */
+import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
+import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
+
+interface Props {
+  /** Campo richText de Payload (puede venir null si el doc no lo tiene) */
+  content: unknown
+  class?: string
+}
+
+const { content, class: className } = Astro.props
+
+const html = content
+  ? convertLexicalToHTML({ data: content as SerializedEditorState, disableContainer: true })
+  : ''
+---
+
+{html && <div class:list={['rich-text', className]} set:html={html} />}
