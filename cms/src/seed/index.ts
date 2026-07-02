@@ -4,6 +4,7 @@ import config from '../payload.config'
 import { seedCompany } from './company'
 import { seedGlobals } from './globals'
 import { lexicalParagraphs } from './lexical'
+import { seedProjects } from './projects'
 import { services } from './services'
 
 // Siembra idempotente: 14 servicios mínimos (FASE 2) + globals del
@@ -48,6 +49,7 @@ const seed = async (): Promise<void> => {
   payload.logger.info(`Seed de servicios: ${created} creados, ${skipped} ya existían`)
 
   await seedCompany(payload)
+  await seedProjects(payload)
 
   await seedGlobals(payload)
 }
