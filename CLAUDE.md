@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 3 (Astro frontend base) complete** — next up is FASE 4 (core commercial pages). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`). The Payload CMS must be running for `pnpm dev:web` / `pnpm build:web` to render real data (the web fetches at build/request time).
+ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 4 (core commercial pages) complete** — next up is FASE 5 (portfolio and case studies). MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`). The Payload CMS must be running for `pnpm dev:web` / `pnpm build:web` to render real data (the web fetches at build/request time).
 
 ## Commands
 
