@@ -1,0 +1,44 @@
+---
+/** Sección CTA final sobre tinta. No renderiza nada sin título. */
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+
+interface Props {
+  title?: string | null
+  text?: string | null
+  cta?: { label?: string | null; href?: string | null; newTab?: boolean | null } | null
+  class?: string
+}
+
+const { title, text, cta, class: className } = Astro.props
+
+const button = cta?.label && cta?.href ? cta : null
+---
+
+{
+  title && (
+    <Section tone="ink" class:list={['relative overflow-hidden', className]}>
+      <div class="lab-grid absolute inset-0" aria-hidden="true" />
+      <Container class="relative text-center">
+        <Heading as="h2" size="xl" class="mx-auto max-w-3xl">
+          {title}
+        </Heading>
+        {text && (
+          <Text size="lead" class="mx-auto mt-6 max-w-2xl text-ink-muted">
+            {text}
+          </Text>
+        )}
+        {button && (
+          <div class="mt-10">
+            <Button href={button.href!} newTab={button.newTab ?? false} size="lg">
+              {button.label}
+            </Button>
+          </div>
+        )}
+      </Container>
+    </Section>
+  )
+}

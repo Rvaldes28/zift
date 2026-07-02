@@ -1,0 +1,45 @@
+---
+/** Cabecera de sección: eyebrow mono + titular display + entradilla. */
+import Eyebrow from '@/components/ui/Eyebrow.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Text from '@/components/ui/Text.astro'
+
+interface Props {
+  eyebrow?: string | null
+  title?: string | null
+  text?: string | null
+  /** dark = sobre fondos ink */
+  tone?: 'light' | 'dark'
+  as?: 'h1' | 'h2'
+  size?: 'display' | 'xl' | 'lg'
+  class?: string
+}
+
+const {
+  eyebrow,
+  title,
+  text,
+  tone = 'light',
+  as = 'h2',
+  size = 'xl',
+  class: className,
+}: Props = Astro.props
+---
+
+{
+  (eyebrow || title || text) && (
+    <div class:list={['max-w-2xl', className]}>
+      {eyebrow && <Eyebrow tone={tone}>{eyebrow}</Eyebrow>}
+      {title && (
+        <Heading as={as} size={size} class="mt-6">
+          {title}
+        </Heading>
+      )}
+      {text && (
+        <Text size="lead" class:list={['mt-6', tone === 'dark' ? 'text-ink-muted' : 'text-muted']}>
+          {text}
+        </Text>
+      )}
+    </div>
+  )
+}

@@ -1,0 +1,35 @@
+---
+/**
+ * Pasos de proceso numerados en mono — la numeración encodea el orden real
+ * de trabajo (única sección numerada del sistema, spec FASE 4 §4).
+ */
+interface Props {
+  steps: { title: string; text?: string | null }[]
+  /** ink = sobre Section tone="ink" (home); paper = sobre fondos claros */
+  tone?: 'paper' | 'ink'
+  class?: string
+}
+
+const { steps, tone = 'paper', class: className }: Props = Astro.props
+
+const border = tone === 'ink' ? 'border-ink-line' : 'border-line'
+const number = tone === 'ink' ? 'text-zift-glow' : 'text-zift'
+const title = tone === 'ink' ? 'text-white' : 'text-ink'
+const text = tone === 'ink' ? 'text-ink-muted' : 'text-muted'
+---
+
+{
+  steps.length > 0 && (
+    <ol class:list={['grid gap-8 sm:grid-cols-2 lg:grid-cols-4', className]} role="list">
+      {steps.map((step, index) => (
+        <li class:list={['border-t pt-5', border]}>
+          <span class:list={['font-mono text-xs tracking-[0.18em]', number]}>
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <h3 class:list={['font-display mt-3 text-lg', title]}>{step.title}</h3>
+          {step.text && <p class:list={['mt-2 text-sm leading-relaxed', text]}>{step.text}</p>}
+        </li>
+      ))}
+    </ol>
+  )
+}
