@@ -23,6 +23,8 @@ import { SiteSettings } from './globals/SiteSettings'
 import { Header } from './globals/Header'
 import { Footer } from './globals/Footer'
 import { HomePage } from './globals/HomePage'
+import { AboutPage } from './globals/AboutPage'
+import { ContactPage } from './globals/ContactPage'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -50,7 +52,7 @@ export default buildConfig({
     Leads,
     Redirects,
   ],
-  globals: [SiteSettings, Header, Footer, HomePage],
+  globals: [SiteSettings, Header, Footer, HomePage, AboutPage, ContactPage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
