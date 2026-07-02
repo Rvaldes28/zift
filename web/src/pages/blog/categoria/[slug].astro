@@ -1,0 +1,77 @@
+---
+/**
+ * Categoría del blog (FASE 6): página real por categoría (rastreable por
+ * Google, a diferencia del filtro JS del portafolio). Muestra todos los
+ * posts de la categoría; se paginará cuando el volumen lo pida.
+ */
+import CTASection from '@/components/sections/CTASection.astro'
+import CategoryChips from '@/components/sections/CategoryChips.astro'
+import PostGrid from '@/components/sections/PostGrid.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Container from '@/components/ui/Container.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCollection } from '@/lib/payload'
+import type { Category } from '@cms/types'
+
+export async function getStaticPaths() {
+  const categories = await getCollection('categories', { sort: 'createdAt', limit: 100 })
+  return categories.docs
+    .filter((category): category is Category & { slug: string } => Boolean(category.slug))
+    .map((category) => ({
+      params: { slug: category.slug },
+      props: { category, categories: categories.docs as Category[] },
+    }))
+}
+
+const { category, categories } = Astro.props
+
+const posts = await getCollection('posts', {
+  sort: '-publishedAt',
+  limit: 100,
+  where: { categories: { contains: category.id } },
+})
+---
+
+<BaseLayout
+  title={`${category.title} — Blog`}
+  description={category.description ??
+    `Artículos de ${category.title} en el blog de ZiftLab: guías prácticas escritas desde proyectos reales.`}
+>
+  <Section class="md:pb-16">
+    <Container>
+      <SectionIntro
+        eyebrow={`Blog · ${category.title} · ${posts.totalDocs} ${posts.totalDocs === 1 ? 'artículo' : 'artículos'}`}
+        title={category.title}
+        text={category.description}
+        as="h1"
+        size="display"
+      />
+    </Container>
+  </Section>
+
+  <Section tone="surface">
+    <Container>
+      <CategoryChips {categories} activeSlug={category.slug ?? undefined} class="mb-10" />
+      {
+        posts.docs.length > 0 ? (
+          <PostGrid posts={posts.docs} />
+        ) : (
+          <Text muted>
+            Aún no hay artículos en esta categoría.
+            <a href="/blog" class="text-zift underline underline-offset-4">
+              Ver todos los artículos
+            </a>
+          </Text>
+        )
+      }
+    </Container>
+  </Section>
+
+  <CTASection
+    title="¿Prefieres que lo hagamos por ti?"
+    text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos con tu proyecto y qué resultados puedes esperar."
+    cta={{ label: 'Agenda una asesoría', href: '/contacto' }}
+  />
+</BaseLayout>

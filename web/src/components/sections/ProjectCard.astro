@@ -1,7 +1,7 @@
 ---
 /**
- * Caso destacado. Sin link: la página de detalle de portafolio llega en
- * FASE 5 — entonces esta card recibirá href.
+ * Card de caso de éxito. Enlaza a su detalle de portafolio (FASE 5) y
+ * muestra el primer resultado medible como sello mono ultramar.
  */
 import PayloadImage from '@/components/PayloadImage.astro'
 import Card from '@/components/ui/Card.astro'
@@ -19,9 +19,11 @@ const { project, class: className } = Astro.props
 
 const client = typeof project.client === 'object' ? project.client : null
 const cover = resolveMedia(project.coverImage)
+const keyResult = project.results?.[0] ?? null
+const href = project.slug ? `/portafolio/${project.slug}` : undefined
 ---
 
-<Card padding="none" class:list={['flex h-full flex-col overflow-hidden', className]}>
+<Card {href} padding="none" class:list={['flex h-full flex-col overflow-hidden', className]}>
   {
     cover && (
       <PayloadImage
@@ -37,11 +39,23 @@ const cover = resolveMedia(project.coverImage)
         <p class="font-mono text-xs tracking-[0.18em] text-muted uppercase">{client.name}</p>
       )
     }
-    <Heading as="h3" size="sm" class="mt-3">
+    <Heading
+      as="h3"
+      size="sm"
+      class:list={['mt-3', href && 'transition-colors group-hover:text-zift']}
+    >
       {project.title}
     </Heading>
-    <Text size="sm" muted class="mt-3">
+    <Text size="sm" muted class:list={['mt-3', keyResult && 'pb-6']}>
       {project.excerpt}
     </Text>
+    {
+      keyResult && (
+        <p class="mt-auto border-t border-line pt-4 font-mono text-sm text-zift">
+          <span class="font-medium">{keyResult.value}</span>
+          <span class="text-muted"> · {keyResult.label}</span>
+        </p>
+      )
+    }
   </div>
 </Card>

@@ -1,44 +1,105 @@
 ---
 /**
- * Formulario de lead FASE 4: validación HTML5 + fetch a /api/leads
- * (create: anyone + CORS, FASE 1). El hardening (Zod, honeypot, rate
- * limiting, emails) llega en FASE 7 sobre este mismo markup.
+ * Formulario de lead (FASE 7): validación con Zod en cliente (espejo del
+ * servidor), honeypot, errores por campo accesibles y envío al endpoint
+ * endurecido POST /api/leads/submit (Zod + rate limit + emails en el CMS).
+ * El presupuesto se elige con chips mono — la firma del sistema ZiftLab.
  */
 import Button from '@/components/ui/Button.astro'
+import { BUDGET_OPTIONS, type LeadFormType } from '@/lib/leads'
 import { PAYLOAD_URL } from '@/lib/payload'
 import type { Service } from '@cms/types'
 
 interface Props {
   services: Service[]
+  formType?: LeadFormType
+  /** Valor de `source` que se guarda con el lead (default: formulario-<tipo>) */
+  source?: string
+  /** Chips de presupuesto estimado (default: solo en cotización) */
+  showBudget?: boolean
+  /** Mensaje obligatorio (default: solo en cotización) */
+  requireMessage?: boolean
+  submitLabel?: string
 }
 
-const { services } = Astro.props
+const {
+  services,
+  formType = 'contacto',
+  source = `formulario-${formType}`,
+  showBudget = formType === 'cotizacion',
+  requireMessage = formType === 'cotizacion',
+  submitLabel = {
+    contacto: 'Enviar mensaje',
+    asesoria: 'Pedir asesoría gratuita',
+    cotizacion: 'Pedir cotización',
+  }[formType],
+} = Astro.props
 
 const inputClasses =
-  'h-11 rounded-md border border-line bg-white px-4 text-base font-normal transition-colors placeholder:text-muted/60 focus:border-zift focus:outline-none'
+  'h-11 rounded-md border border-line bg-white px-4 text-base font-normal transition-colors placeholder:text-muted/60 focus:border-zift focus:outline-none aria-[invalid=true]:border-danger'
+
+const chipClasses =
+  'group/chip flex cursor-pointer items-center gap-2.5 rounded-md border border-line bg-white px-3.5 py-2.5 font-mono text-xs tracking-[0.08em] uppercase transition-colors hover:border-ink has-[:checked]:border-zift has-[:checked]:bg-zift-tint has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-zift'
+
+/** id único por instancia para enlazar errores vía aria-describedby */
+const uid = `lead-${formType}`
+const errorId = (field: string) => `${uid}-error-${field}`
 ---
 
-<form id="lead-form" data-api={`${PAYLOAD_URL}/api/leads`} class="grid gap-5">
+<form
+  data-lead-form
+  data-api={`${PAYLOAD_URL}/api/leads/submit`}
+  data-form-type={formType}
+  data-source={source}
+  data-require-message={requireMessage ? 'true' : undefined}
+  data-require-budget={showBudget ? 'true' : undefined}
+  class="grid gap-5"
+  novalidate
+>
   <div class="grid gap-5 sm:grid-cols-2">
     <label class="grid gap-2 text-sm font-medium">
       Nombre
       <input name="name" required autocomplete="name" class={inputClasses} />
+      <p id={errorId('name')} data-error-for="name" class="text-sm font-normal text-danger" hidden>
+      </p>
     </label>
     <label class="grid gap-2 text-sm font-medium">
       Email
       <input name="email" type="email" required autocomplete="email" class={inputClasses} />
+      <p
+        id={errorId('email')}
+        data-error-for="email"
+        class="text-sm font-normal text-danger"
+        hidden
+      >
+      </p>
     </label>
     <label class="grid gap-2 text-sm font-medium">
-      Teléfono / WhatsApp <span class="font-normal text-muted">(opcional)</span>
+      <span>Teléfono / WhatsApp <span class="font-normal text-muted">(opcional)</span></span>
       <input name="phone" type="tel" autocomplete="tel" class={inputClasses} />
+      <p
+        id={errorId('phone')}
+        data-error-for="phone"
+        class="text-sm font-normal text-danger"
+        hidden
+      >
+      </p>
     </label>
     <label class="grid gap-2 text-sm font-medium">
-      Empresa <span class="font-normal text-muted">(opcional)</span>
+      <span>Empresa <span class="font-normal text-muted">(opcional)</span></span>
       <input name="company" autocomplete="organization" class={inputClasses} />
+      <p
+        id={errorId('company')}
+        data-error-for="company"
+        class="text-sm font-normal text-danger"
+        hidden
+      >
+      </p>
     </label>
   </div>
+
   <label class="grid gap-2 text-sm font-medium">
-    Servicio de interés <span class="font-normal text-muted">(opcional)</span>
+    <span>Servicio de interés <span class="font-normal text-muted">(opcional)</span></span>
     <select name="service" class={inputClasses}>
       <option value="">Aún no lo sé</option>
       {
@@ -50,60 +111,181 @@ const inputClasses =
       }
     </select>
   </label>
+
+  {
+    showBudget && (
+      <fieldset class="grid gap-3">
+        <legend class="text-sm font-medium">
+          Presupuesto estimado <span class="font-normal text-muted">(USD)</span>
+        </legend>
+        <div class="mt-2 flex flex-wrap gap-2">
+          {BUDGET_OPTIONS.map((option) => (
+            <label class={chipClasses}>
+              <input type="radio" name="budget" value={option.value} class="sr-only" />
+              <span
+                class="size-2 shrink-0 border border-line bg-white transition-colors group-has-[:checked]/chip:border-zift group-has-[:checked]/chip:bg-zift"
+                aria-hidden="true"
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+        <p
+          id={errorId('budget')}
+          data-error-for="budget"
+          class="text-sm font-normal text-danger"
+          hidden
+        />
+      </fieldset>
+    )
+  }
+
   <label class="grid gap-2 text-sm font-medium">
-    Cuéntanos tu proyecto <span class="font-normal text-muted">(opcional)</span>
+    <span>
+      Cuéntanos tu proyecto {
+        !requireMessage && <span class="font-normal text-muted">(opcional)</span>
+      }
+    </span>
     <textarea
       name="message"
       rows="5"
-      class="rounded-md border border-line bg-white px-4 py-3 text-base font-normal transition-colors placeholder:text-muted/60 focus:border-zift focus:outline-none"
+      class="rounded-md border border-line bg-white px-4 py-3 text-base font-normal transition-colors placeholder:text-muted/60 focus:border-zift focus:outline-none aria-[invalid=true]:border-danger"
       placeholder="Qué necesitas, plazos, contexto…"></textarea>
+    <p
+      id={errorId('message')}
+      data-error-for="message"
+      class="text-sm font-normal text-danger"
+      hidden
+    >
+    </p>
   </label>
+
+  {/* Honeypot: invisible para personas; los bots lo rellenan y se descartan */}
+  <div class="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+    <label>
+      No llenes este campo
+      <input type="text" name="website" tabindex="-1" autocomplete="off" />
+    </label>
+  </div>
+
   <div class="flex flex-wrap items-center gap-4">
-    <Button type="submit" size="lg">Enviar mensaje</Button>
-    <p id="lead-form-status" class="text-sm text-muted" role="status" aria-live="polite"></p>
+    <Button type="submit" size="lg">{submitLabel}</Button>
+    <p data-form-status class="text-sm text-muted" role="status" aria-live="polite"></p>
   </div>
 </form>
 
 <script>
-  const form = document.getElementById('lead-form') as HTMLFormElement
-  const status = document.getElementById('lead-form-status') as HTMLParagraphElement
-  const submit = form.querySelector('button[type="submit"]') as HTMLButtonElement
+  import { track } from '@/lib/analytics'
+  import { validateLead, type LeadFieldErrors, type LeadFormValues } from '@/lib/leads'
 
-  // Preselección del servicio vía ?servicio=<slug> (CTA del detalle de servicio)
-  const slug = new URLSearchParams(window.location.search).get('servicio')
-  if (slug) {
-    const option = form.querySelector<HTMLOptionElement>(`option[data-slug="${CSS.escape(slug)}"]`)
-    if (option) option.selected = true
-  }
+  document.querySelectorAll<HTMLFormElement>('form[data-lead-form]').forEach((form) => {
+    const statusEl = form.querySelector<HTMLElement>('[data-form-status]')!
+    const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
+    const submitLabel = submitBtn.textContent
+    const formType = form.dataset.formType ?? 'contacto'
 
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault()
-    const data = new FormData(form)
-    const service = data.get('service')
-
-    submit.disabled = true
-    status.textContent = 'Enviando…'
-
-    try {
-      const response = await fetch(form.dataset.api!, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.get('name'),
-          email: data.get('email'),
-          phone: data.get('phone') || undefined,
-          company: data.get('company') || undefined,
-          service: service ? Number(service) : undefined,
-          message: data.get('message') || undefined,
-          source: 'formulario-contacto',
-        }),
-      })
-      if (!response.ok) throw new Error(`Payload respondió ${response.status}`)
-      window.location.assign('/gracias')
-    } catch {
-      submit.disabled = false
-      status.textContent =
-        'No se pudo enviar el mensaje. Inténtalo de nuevo o escríbenos por email.'
+    // Preselección del servicio vía ?servicio=<slug> (CTA del detalle de servicio)
+    const slug = new URLSearchParams(window.location.search).get('servicio')
+    if (slug) {
+      const option = form.querySelector<HTMLOptionElement>(
+        `option[data-slug="${CSS.escape(slug)}"]`,
+      )
+      if (option) option.selected = true
     }
+
+    const fieldInput = (field: string) =>
+      form.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+        `input[name="${field}"], textarea[name="${field}"]`,
+      )
+
+    const setFieldError = (field: string, message: string | undefined) => {
+      const errorEl = form.querySelector<HTMLElement>(`[data-error-for="${field}"]`)
+      if (!errorEl) return
+      errorEl.textContent = message ?? ''
+      errorEl.hidden = !message
+      const input = fieldInput(field)
+      if (input) {
+        input.setAttribute('aria-invalid', message ? 'true' : 'false')
+        if (message) input.setAttribute('aria-describedby', errorEl.id)
+        else input.removeAttribute('aria-describedby')
+      }
+    }
+
+    const paintErrors = (errors: LeadFieldErrors) => {
+      const fields = ['name', 'email', 'phone', 'company', 'budget', 'message'] as const
+      fields.forEach((field) => setFieldError(field, errors[field]))
+      const first = fields.find((field) => errors[field])
+      if (first)
+        (fieldInput(first) ?? form.querySelector<HTMLElement>(`[name="${first}"]`))?.focus()
+    }
+
+    // Al corregir un campo, su error desaparece
+    form.addEventListener('input', (event) => {
+      const name = (event.target as HTMLInputElement).name
+      if (name && name !== 'website') setFieldError(name, undefined)
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      const data = new FormData(form)
+      const values: LeadFormValues = {
+        name: String(data.get('name') ?? ''),
+        email: String(data.get('email') ?? ''),
+        phone: String(data.get('phone') ?? ''),
+        company: String(data.get('company') ?? ''),
+        service: String(data.get('service') ?? ''),
+        budget: String(data.get('budget') ?? ''),
+        message: String(data.get('message') ?? ''),
+      }
+
+      const errors = validateLead(values, {
+        requireMessage: form.dataset.requireMessage === 'true',
+        requireBudget: form.dataset.requireBudget === 'true',
+      })
+      if (Object.keys(errors).length > 0) {
+        paintErrors(errors)
+        statusEl.textContent = 'Revisa los campos marcados.'
+        return
+      }
+
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Enviando…'
+      statusEl.textContent = ''
+
+      try {
+        const response = await fetch(form.dataset.api!, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            formType,
+            name: values.name,
+            email: values.email,
+            phone: values.phone || undefined,
+            company: values.company || undefined,
+            service: values.service ? Number(values.service) : undefined,
+            budget: values.budget || undefined,
+            message: values.message || undefined,
+            source: form.dataset.source,
+            website: String(data.get('website') ?? '') || undefined,
+          }),
+        })
+
+        if (response.status === 429) {
+          const body = (await response.json().catch(() => null)) as { message?: string } | null
+          throw new Error(body?.message ?? 'Demasiados envíos seguidos. Espera unos minutos.')
+        }
+        if (!response.ok) throw new Error('No se pudo enviar tu solicitud. Inténtalo de nuevo.')
+
+        track('generate_lead', { form_type: formType })
+        window.location.assign(`/gracias?de=${formType}`)
+      } catch (error) {
+        submitBtn.disabled = false
+        submitBtn.textContent = submitLabel
+        statusEl.textContent =
+          error instanceof Error && error.message
+            ? error.message
+            : 'No se pudo enviar tu solicitud. Inténtalo de nuevo o escríbenos por email.'
+      }
+    })
   })
 </script>

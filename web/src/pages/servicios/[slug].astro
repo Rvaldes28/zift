@@ -39,7 +39,8 @@ const features = service.features ?? []
 const steps = service.process ?? []
 const relatedProjects = resolveDocs<Project>(service.relatedProjects)
 const faqs = resolveDocs<Faq>(service.faqs)
-const contactHref = `/contacto?servicio=${service.slug}`
+// FASE 7: la cotización preselecciona el servicio; la asesoría es la vía suave
+const quoteHref = `/cotizacion?servicio=${service.slug}`
 ---
 
 <BaseLayout
@@ -59,7 +60,8 @@ const contactHref = `/contacto?servicio=${service.slug}`
         {service.excerpt}
       </Text>
       <div class="mt-10 flex flex-wrap gap-4">
-        <Button href={contactHref} size="lg">Agenda una asesoría</Button>
+        <Button href={quoteHref} size="lg">Pedir cotización</Button>
+        <Button href="/asesoria" variant="secondary" size="lg">Agenda una asesoría</Button>
       </div>
       <PayloadImage
         media={service.image}
@@ -154,6 +156,6 @@ const contactHref = `/contacto?servicio=${service.slug}`
   <CTASection
     title="¿Hablamos de tu proyecto?"
     text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos y cuánto costaría, sin compromiso."
-    cta={{ label: 'Agenda una asesoría', href: contactHref }}
+    cta={{ label: 'Agenda una asesoría', href: '/asesoria' }}
   />
 </BaseLayout>

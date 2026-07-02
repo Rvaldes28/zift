@@ -292,9 +292,42 @@ export interface Project {
   excerpt: string;
   client?: (number | null) | Client;
   /**
+   * Sector del cliente, ej. "Retail" o "Servicios legales"
+   */
+  industry?: string | null;
+  /**
    * Servicios aplicados en este proyecto
    */
   services?: (number | Service)[] | null;
+  /**
+   * Situación del cliente antes del proyecto (2–4 frases)
+   */
+  problem?: string | null;
+  /**
+   * Qué se construyó y por qué (2–4 frases)
+   */
+  solution?: string | null;
+  /**
+   * Tecnologías usadas, ej. "Astro", "Payload CMS", "PostgreSQL"
+   */
+  stack?: string[] | null;
+  /**
+   * Métricas del caso; la primera se muestra en las tarjetas
+   */
+  results?:
+    | {
+        /**
+         * Cifra corta, ej. "+42%" o "3×"
+         */
+        value: string;
+        /**
+         * Qué mide, ej. "ventas online"
+         */
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  testimonial?: (number | null) | Testimonial;
   coverImage: number | Media;
   gallery?:
     | {
@@ -352,6 +385,30 @@ export interface Client {
    * URL pública del cliente (opcional)
    */
   website?: string | null;
+  /**
+   * Orden en listados (menor = primero)
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  quote: string;
+  authorName: string;
+  /**
+   * Cargo y empresa, ej. "CEO, Acme"
+   */
+  authorRole?: string | null;
+  /**
+   * Cliente relacionado (opcional)
+   */
+  client?: (number | null) | Client;
+  avatar?: (number | null) | Media;
   /**
    * Orden en listados (menor = primero)
    */
@@ -478,30 +535,6 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "testimonials".
- */
-export interface Testimonial {
-  id: number;
-  quote: string;
-  authorName: string;
-  /**
-   * Cargo y empresa, ej. "CEO, Acme"
-   */
-  authorRole?: string | null;
-  /**
-   * Cliente relacionado (opcional)
-   */
-  client?: (number | null) | Client;
-  avatar?: (number | null) | Media;
-  /**
-   * Orden en listados (menor = primero)
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "leads".
  */
 export interface Lead {
@@ -514,7 +547,15 @@ export interface Lead {
    * Servicio por el que pregunta
    */
   service?: (number | null) | Service;
+  /**
+   * Presupuesto estimado en USD
+   */
+  budget?: ('lt-1500' | '1500-5000' | '5000-15000' | 'gt-15000' | 'unknown') | null;
   message?: string | null;
+  /**
+   * Formulario desde el que llegó el lead
+   */
+  formType: 'contacto' | 'asesoria' | 'cotizacion';
   /**
    * Página o campaña de origen, ej. "/servicios/seo" o "google-ads"
    */
@@ -757,7 +798,19 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   excerpt?: T;
   client?: T;
+  industry?: T;
   services?: T;
+  problem?: T;
+  solution?: T;
+  stack?: T;
+  results?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  testimonial?: T;
   coverImage?: T;
   gallery?:
     | T
@@ -881,7 +934,9 @@ export interface LeadsSelect<T extends boolean = true> {
   phone?: T;
   company?: T;
   service?: T;
+  budget?: T;
   message?: T;
+  formType?: T;
   source?: T;
   status?: T;
   notes?: T;
@@ -957,6 +1012,10 @@ export interface SiteSetting {
    */
   whatsapp?: string | null;
   address?: string | null;
+  /**
+   * URL del evento de Calendly para la asesoría gratuita, ej. https://calendly.com/ziftlab/asesoria — vacío: /asesoria muestra solo el formulario
+   */
+  calendlyUrl?: string | null;
   socialLinks?:
     | {
         platform: 'linkedin' | 'instagram' | 'facebook' | 'x' | 'tiktok' | 'youtube' | 'github' | 'other';
@@ -1254,6 +1313,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   phone?: T;
   whatsapp?: T;
   address?: T;
+  calendlyUrl?: T;
   socialLinks?:
     | T
     | {

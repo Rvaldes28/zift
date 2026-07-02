@@ -1,0 +1,51 @@
+---
+/**
+ * Botón flotante de WhatsApp (FASE 7). Píldora ink del sistema ZiftLab con
+ * punto verde de estado — no el círculo verde genérico. En hover/focus se
+ * despliega la etiqueta mono; el clic emite el evento de conversión
+ * whatsapp_click (dataLayer, lo consume GA4 en FASE 12).
+ */
+interface Props {
+  /** Número en formato internacional, ej. +5075512345678 */
+  phone: string
+  message?: string
+}
+
+const { phone, message = 'Hola, quiero información sobre sus servicios.' } = Astro.props
+
+const href = `https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(message)}`
+---
+
+<a
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  data-whatsapp-fab
+  aria-label="Escríbenos por WhatsApp (se abre en otra pestaña)"
+  class="group fixed right-5 bottom-5 z-40 flex h-13 items-center rounded-full bg-ink px-3.5 text-white shadow-lg transition-colors hover:bg-ink-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zift print:hidden"
+>
+  <span class="relative shrink-0">
+    <svg viewBox="0 0 24 24" fill="currentColor" class="size-6" aria-hidden="true">
+      <path
+        d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 1.8a8.2 8.2 0 1 1-4.2 15.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 0 1 12 3.8Zm-3 4.1c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.5 1 2.6c.1.2 1.8 2.8 4.3 3.8 2.1.9 2.6.7 3 .7.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.4-.3-1.6-.8c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.4-2.9c-.1-.3 0-.4.1-.5l.5-.6c.1-.2.1-.3.2-.5v-.4L10 8.3c-.2-.4-.4-.4-.6-.4H9Z"
+      ></path>
+    </svg>
+    {/* Punto de estado — verde de marca WhatsApp, único color fuera de tokens */}
+    <span
+      class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-ink bg-[#25d366] transition-colors group-hover:border-ink-2"
+      aria-hidden="true"></span>
+  </span>
+  <span
+    class="max-w-0 overflow-hidden font-mono text-xs tracking-[0.14em] whitespace-nowrap uppercase transition-[max-width,margin-left] duration-300 group-hover:ml-2.5 group-hover:max-w-32 group-focus-visible:ml-2.5 group-focus-visible:max-w-32"
+  >
+    WhatsApp
+  </span>
+</a>
+
+<script>
+  import { track } from '@/lib/analytics'
+
+  document
+    .querySelector('[data-whatsapp-fab]')
+    ?.addEventListener('click', () => track('whatsapp_click'))
+</script>

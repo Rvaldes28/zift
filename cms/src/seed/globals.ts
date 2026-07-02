@@ -25,28 +25,34 @@ export const seedGlobals = async (payload: Payload): Promise<void> => {
   }
 
   const header = await payload.findGlobal({ slug: 'header' })
-  // Escribe si está vacío o si conserva el nav de FASE 3 (enlazaba fases futuras)
-  const headerStale = header.navItems?.some((item) => item.href === '/portafolio') ?? false
+  // Escribe si está vacío, si aún no enlaza el blog (FASE 6) o si el CTA
+  // sigue apuntando al default de FASE 4 (la asesoría vive en /asesoria)
+  const headerStale =
+    !header.navItems?.some((item) => item.href === '/blog') || header.cta?.href === '/contacto'
   if (!header.navItems?.length || headerStale) {
     await payload.updateGlobal({
       slug: 'header',
       data: {
         navItems: [
           { label: 'Servicios', href: '/servicios' },
+          { label: 'Portafolio', href: '/portafolio' },
+          { label: 'Blog', href: '/blog' },
           { label: 'Quiénes somos', href: '/quienes-somos' },
           { label: 'Contacto', href: '/contacto' },
         ],
-        cta: { label: 'Agenda una asesoría', href: '/contacto' },
+        cta: { label: 'Agenda una asesoría', href: '/asesoria' },
       },
     })
     payload.logger.info('Seed: global header poblado')
   }
 
   const footer = await payload.findGlobal({ slug: 'footer' })
+  const footerLinks = footer.columns?.flatMap((column) => column.links ?? []) ?? []
+  // Escribe si está vacío o si falta alguna sección ya construida
   const footerStale =
-    footer.columns?.some((column) =>
-      column.links?.some((link) => link.href === '/portafolio' || link.href === '/blog'),
-    ) ?? false
+    !footerLinks.some((link) => link.href === '/blog') ||
+    !footerLinks.some((link) => link.href === '/portafolio') ||
+    !footerLinks.some((link) => link.href === '/cotizacion')
   if (!footer.columns?.length || footerStale) {
     await payload.updateGlobal({
       slug: 'footer',
@@ -63,12 +69,18 @@ export const seedGlobals = async (payload: Payload): Promise<void> => {
           },
           {
             title: 'Empresa',
-            links: [{ label: 'Quiénes somos', href: '/quienes-somos' }],
+            links: [
+              { label: 'Portafolio', href: '/portafolio' },
+              { label: 'Blog', href: '/blog' },
+              { label: 'Quiénes somos', href: '/quienes-somos' },
+            ],
           },
           {
             title: 'Contacto',
             links: [
-              { label: 'Agenda una asesoría', href: '/contacto' },
+              { label: 'Agenda una asesoría', href: '/asesoria' },
+              { label: 'Pide una cotización', href: '/cotizacion' },
+              { label: 'Escríbenos', href: '/contacto' },
               { label: 'hola@ziftlab.com', href: 'mailto:hola@ziftlab.com' },
             ],
           },
@@ -111,7 +123,7 @@ export const seedGlobals = async (payload: Payload): Promise<void> => {
           title: 'Tecnología moderna para empresas que quieren vender más',
           subtitle:
             'Sitios web, sistemas digitales, automatizaciones y soluciones con IA que trabajan juntos para hacer crecer tu negocio.',
-          primaryCta: { label: 'Agenda una asesoría', href: '/contacto' },
+          primaryCta: { label: 'Agenda una asesoría', href: '/asesoria' },
           secondaryCta: { label: 'Ver servicios', href: '/servicios' },
         },
         valueProposition: {
@@ -203,7 +215,7 @@ export const seedGlobals = async (payload: Payload): Promise<void> => {
         ctaSection: {
           title: '¿Listo para vender más con tecnología?',
           text: 'Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos y cuánto costaría, sin compromiso.',
-          cta: { label: 'Agenda una asesoría', href: '/contacto' },
+          cta: { label: 'Agenda una asesoría', href: '/asesoria' },
         },
         _status: 'published',
       },
@@ -241,7 +253,7 @@ export const seedGlobals = async (payload: Payload): Promise<void> => {
         ctaSection: {
           title: '¿Quieres trabajar con nosotros?',
           text: 'Cuéntanos tu proyecto y te respondemos en menos de 24 horas.',
-          cta: { label: 'Agenda una asesoría', href: '/contacto' },
+          cta: { label: 'Agenda una asesoría', href: '/asesoria' },
         },
         _status: 'published',
       },

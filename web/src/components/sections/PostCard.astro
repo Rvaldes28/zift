@@ -1,0 +1,64 @@
+---
+/**
+ * Card de artículo del blog (FASE 6). Cierra con la línea de registro
+ * mono — fecha · minutos de lectura — la firma editorial del blog.
+ */
+import PayloadImage from '@/components/PayloadImage.astro'
+import Card from '@/components/ui/Card.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Text from '@/components/ui/Text.astro'
+import { formatDateShort, postCategories, readingTimeMinutes } from '@/lib/blog'
+import { resolveMedia } from '@/lib/media'
+import type { Post } from '@cms/types'
+
+interface Props {
+  post: Post
+  class?: string
+}
+
+const { post, class: className } = Astro.props
+
+const cover = resolveMedia(post.coverImage)
+const category = postCategories(post)[0] ?? null
+const minutes = readingTimeMinutes(post.content)
+const href = post.slug ? `/blog/${post.slug}` : undefined
+---
+
+<Card {href} padding="none" class:list={['flex h-full flex-col overflow-hidden', className]}>
+  {
+    cover && (
+      <PayloadImage
+        media={cover}
+        class="aspect-[3/2] w-full border-b border-line object-cover"
+        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+      />
+    )
+  }
+  <div class="flex flex-1 flex-col p-6 md:p-8">
+    {
+      category && (
+        <p class="font-mono text-xs tracking-[0.18em] text-muted uppercase">{category.title}</p>
+      )
+    }
+    <Heading
+      as="h3"
+      size="sm"
+      class:list={['mt-3', href && 'transition-colors group-hover:text-zift']}
+    >
+      {post.title}
+    </Heading>
+    <Text size="sm" muted class="mt-3 pb-6">
+      {post.excerpt}
+    </Text>
+    <p
+      class="mt-auto border-t border-line pt-4 font-mono text-xs tracking-[0.14em] text-muted uppercase"
+    >
+      {
+        post.publishedAt && (
+          <time datetime={post.publishedAt}>{formatDateShort(post.publishedAt)}</time>
+        )
+      }
+      {post.publishedAt && ' · '}{minutes} min
+    </p>
+  </div>
+</Card>

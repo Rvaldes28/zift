@@ -31,7 +31,7 @@ const whatsappHref = settings.whatsapp
             size="display"
           />
           <div class="mt-12">
-            <LeadForm services={services.docs} />
+            <LeadForm formType="contacto" services={services.docs} />
           </div>
         </div>
 
@@ -86,6 +86,17 @@ const whatsappHref = settings.whatsapp
               )
             }
           </dl>
+          {/* Rutas directas de conversión (FASE 7) */}
+          <div class="mt-8 space-y-2 border-t border-line pt-6 text-sm">
+            <p>
+              ¿Buscas precio?
+              <a href="/cotizacion" class="text-zift hover:underline">Pide una cotización</a>
+            </p>
+            <p>
+              ¿Prefieres hablar?
+              <a href="/asesoria" class="text-zift hover:underline">Agenda una asesoría gratuita</a>
+            </p>
+          </div>
         </aside>
       </div>
     </Container>

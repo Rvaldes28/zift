@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -54,6 +55,15 @@ export default buildConfig({
   ],
   globals: [SiteSettings, Header, Footer, HomePage, AboutPage, ContactPage],
   editor: lexicalEditor(),
+  // Sin RESEND_API_KEY (dev local) Payload usa su adaptador de consola:
+  // los emails del flujo de leads se imprimen en el log en vez de enviarse
+  email: process.env.RESEND_API_KEY
+    ? resendAdapter({
+        apiKey: process.env.RESEND_API_KEY,
+        defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
+        defaultFromName: process.env.EMAIL_FROM_NAME || 'ZiftLab',
+      })
+    : undefined,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

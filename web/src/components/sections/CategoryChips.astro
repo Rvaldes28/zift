@@ -1,0 +1,44 @@
+---
+/**
+ * Navegación por categorías del blog: chips-enlace (páginas reales,
+ * rastreables por Google — a diferencia del filtro JS del portafolio).
+ */
+import type { Category } from '@cms/types'
+
+interface Props {
+  categories: Category[]
+  /** Slug de la categoría activa; undefined = "Todos" (listado general) */
+  activeSlug?: string
+  class?: string
+}
+
+const { categories, activeSlug, class: className } = Astro.props
+
+const chipClasses = (active: boolean) => [
+  'inline-flex h-9 items-center rounded-md border px-4 font-mono text-xs tracking-[0.14em] uppercase transition-colors',
+  active
+    ? 'border-ink bg-ink text-white'
+    : 'border-line bg-white text-muted hover:border-ink hover:text-ink',
+]
+---
+
+<nav class:list={['flex flex-wrap gap-2', className]} aria-label="Categorías del blog">
+  <a
+    href="/blog"
+    class:list={chipClasses(!activeSlug)}
+    aria-current={!activeSlug ? 'page' : undefined}
+  >
+    Todos
+  </a>
+  {
+    categories.map((category) => (
+      <a
+        href={`/blog/categoria/${category.slug}`}
+        class:list={chipClasses(category.slug === activeSlug)}
+        aria-current={category.slug === activeSlug ? 'page' : undefined}
+      >
+        {category.title}
+      </a>
+    ))
+  }
+</nav>

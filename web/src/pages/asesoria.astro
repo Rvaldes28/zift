@@ -1,0 +1,133 @@
+---
+/**
+ * Asesoría gratuita (FASE 7): agenda directa con Calendly si hay URL en
+ * Ajustes del sitio; el formulario queda como vía alternativa. El evento
+ * calendly.event_scheduled se emite como conversión (asesoria_agendada).
+ */
+import LeadForm from '@/components/sections/LeadForm.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCachedGlobal, getCollection } from '@/lib/payload'
+
+const [settings, services] = await Promise.all([
+  getCachedGlobal('site-settings'),
+  getCollection('services', { sort: 'order', limit: 100 }),
+])
+
+// URL del embed con la marca ZiftLab; si la URL del CMS no es válida, se
+// descarta y la página funciona solo con formulario (Regla 7: nada roto)
+let calendlyUrl: string | null = null
+if (settings.calendlyUrl) {
+  try {
+    const url = new URL(settings.calendlyUrl)
+    url.searchParams.set('hide_gdpr_banner', '1')
+    url.searchParams.set('primary_color', '4633ff')
+    calendlyUrl = url.toString()
+  } catch {
+    calendlyUrl = null
+  }
+}
+
+const takeaways = [
+  'Diagnóstico honesto de tu situación digital',
+  'Qué haríamos nosotros, en qué orden y por qué',
+  'Rango de inversión estimado para tu caso',
+  'Próximos pasos accionables — con o sin nosotros',
+]
+---
+
+<BaseLayout
+  title="Asesoría gratuita"
+  description="Agenda 30 minutos con ZiftLab: te decimos qué haríamos con tu negocio, en qué orden y cuánto costaría. Sin costo y sin compromiso."
+>
+  <Section>
+    <Container>
+      <div class="grid gap-14 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
+        <div>
+          <SectionIntro
+            eyebrow="Asesoría gratuita"
+            title="30 minutos que ordenan tu proyecto"
+            text="Nos cuentas tu negocio y te decimos qué haríamos, en qué orden y cuánto costaría. Sin costo, sin compromiso y sin jerga técnica."
+            as="h1"
+            size="display"
+          />
+          <ul class="mt-10 space-y-4">
+            {
+              takeaways.map((item) => (
+                <li class="flex items-start gap-3 text-sm leading-relaxed">
+                  <span class="mt-1.5 size-2 shrink-0 bg-zift" aria-hidden="true" />
+                  {item}
+                </li>
+              ))
+            }
+          </ul>
+          <p class="mt-10 font-mono text-xs tracking-[0.18em] text-muted uppercase">
+            30 min · videollamada · sin costo
+          </p>
+        </div>
+
+        {
+          calendlyUrl ? (
+            <div class="overflow-hidden rounded-xl border border-line bg-white">
+              <div
+                class="calendly-inline-widget"
+                data-url={calendlyUrl}
+                style="min-width:320px;height:680px"
+              />
+              <script src="https://assets.calendly.com/assets/external/widget.js" is:inline async />
+            </div>
+          ) : (
+            <div class="h-fit rounded-xl border border-line bg-surface p-6 md:p-8">
+              <Heading as="h2" size="md">
+                Pide tu asesoría
+              </Heading>
+              <Text size="sm" muted class="mt-2">
+                Te escribimos en menos de 24 horas hábiles para agendar.
+              </Text>
+              <div class="mt-8">
+                <LeadForm formType="asesoria" services={services.docs} />
+              </div>
+            </div>
+          )
+        }
+      </div>
+    </Container>
+  </Section>
+
+  {
+    calendlyUrl && (
+      <Section tone="surface">
+        <Container size="narrow">
+          <Heading as="h2" size="lg">
+            ¿Prefieres que te escribamos nosotros?
+          </Heading>
+          <Text muted class="mt-4">
+            Déjanos tus datos y te contactamos en menos de 24 horas hábiles para coordinar la
+            asesoría.
+          </Text>
+          <div class="mt-10">
+            <LeadForm formType="asesoria" services={services.docs} />
+          </div>
+        </Container>
+      </Section>
+    )
+  }
+</BaseLayout>
+
+<script>
+  import { track } from '@/lib/analytics'
+
+  // Conversión de reserva: Calendly notifica por postMessage desde el iframe
+  window.addEventListener('message', (event) => {
+    if (
+      event.origin === 'https://calendly.com' &&
+      (event.data as { event?: string } | null)?.event === 'calendly.event_scheduled'
+    ) {
+      track('asesoria_agendada')
+    }
+  })
+</script>

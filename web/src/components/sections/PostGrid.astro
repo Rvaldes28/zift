@@ -1,0 +1,22 @@
+---
+/** Grid de artículos del blog — compartido por listado, paginación y categorías. */
+import PostCard from '@/components/sections/PostCard.astro'
+import type { Post } from '@cms/types'
+
+interface Props {
+  posts: Post[]
+  class?: string
+}
+
+const { posts, class: className } = Astro.props
+---
+
+<ul class:list={['grid gap-5 sm:grid-cols-2 lg:grid-cols-3', className]} role="list">
+  {
+    posts.map((post) => (
+      <li>
+        <PostCard {post} class="h-full" />
+      </li>
+    ))
+  }
+</ul>

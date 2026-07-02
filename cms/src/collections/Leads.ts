@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyone, authenticated, isAdmin } from '../access'
+import { authenticated, isAdmin } from '../access'
+import { BUDGET_LABELS, FORM_TYPE_LABELS } from '../leads/schema'
+import { leadSubmitEndpoint } from '../leads/submit'
 
 export const Leads: CollectionConfig = {
   slug: 'leads',
@@ -10,18 +12,19 @@ export const Leads: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'email', 'service', 'status', 'createdAt'],
+    defaultColumns: ['name', 'email', 'formType', 'service', 'status', 'createdAt'],
     group: 'CRM',
   },
   defaultSort: '-createdAt',
   access: {
-    // El formulario público de la web postea sin auth (FASE 7);
-    // leer y gestionar leads requiere login, borrarlos solo admin
-    create: anyone,
+    // El público entra por POST /api/leads/submit (Zod + honeypot + rate
+    // limit, FASE 7); crear directo por la REST API requiere login.
+    create: authenticated,
     read: authenticated,
     update: authenticated,
     delete: isAdmin,
   },
+  endpoints: [leadSubmitEndpoint],
   fields: [
     {
       name: 'name',
@@ -51,8 +54,27 @@ export const Leads: CollectionConfig = {
       },
     },
     {
+      name: 'budget',
+      type: 'select',
+      options: Object.entries(BUDGET_LABELS).map(([value, label]) => ({ label, value })),
+      admin: {
+        description: 'Presupuesto estimado en USD',
+      },
+    },
+    {
       name: 'message',
       type: 'textarea',
+    },
+    {
+      name: 'formType',
+      type: 'select',
+      required: true,
+      defaultValue: 'contacto',
+      options: Object.entries(FORM_TYPE_LABELS).map(([value, label]) => ({ label, value })),
+      admin: {
+        position: 'sidebar',
+        description: 'Formulario desde el que llegó el lead',
+      },
     },
     {
       name: 'source',

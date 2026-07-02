@@ -1,0 +1,54 @@
+---
+/**
+ * Paginación del blog: anterior/siguiente con indicador mono de página.
+ * Los enlaces son estáticos (SEO): /blog, /blog/pagina/2, /blog/pagina/3…
+ */
+import { blogPageHref } from '@/lib/blog'
+
+interface Props {
+  currentPage: number
+  totalPages: number
+  class?: string
+}
+
+const { currentPage, totalPages, class: className } = Astro.props
+
+const prevHref = currentPage > 1 ? blogPageHref(currentPage - 1) : null
+const nextHref = currentPage < totalPages ? blogPageHref(currentPage + 1) : null
+
+const linkClasses =
+  'inline-flex h-10 items-center gap-2 rounded-md border border-line bg-white px-4 font-mono text-xs tracking-[0.14em] uppercase text-ink transition-colors hover:border-zift hover:text-zift'
+const disabledClasses =
+  'inline-flex h-10 items-center gap-2 rounded-md border border-line bg-surface px-4 font-mono text-xs tracking-[0.14em] uppercase text-muted/60'
+---
+
+{
+  totalPages > 1 && (
+    <nav
+      class:list={['flex items-center justify-between gap-4 border-t border-line pt-8', className]}
+      aria-label="Paginación del blog"
+    >
+      {prevHref ? (
+        <a href={prevHref} rel="prev" class={linkClasses}>
+          <span aria-hidden="true">←</span> Más recientes
+        </a>
+      ) : (
+        <span class={disabledClasses} aria-hidden="true">
+          <span>←</span> Más recientes
+        </span>
+      )}
+      <p class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+        Página {currentPage} de {totalPages}
+      </p>
+      {nextHref ? (
+        <a href={nextHref} rel="next" class={linkClasses}>
+          Anteriores <span aria-hidden="true">→</span>
+        </a>
+      ) : (
+        <span class={disabledClasses} aria-hidden="true">
+          Anteriores <span>→</span>
+        </span>
+      )}
+    </nav>
+  )
+}

@@ -1,0 +1,68 @@
+---
+/**
+ * Cotización (FASE 7): el brief comercial. Formulario con presupuesto en
+ * chips y mensaje obligatorio; el aside fija el compromiso de respuesta.
+ * Acepta ?servicio=<slug> para preseleccionar (CTA del detalle de servicio).
+ */
+import LeadForm from '@/components/sections/LeadForm.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Container from '@/components/ui/Container.astro'
+import Section from '@/components/ui/Section.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCollection } from '@/lib/payload'
+
+const services = await getCollection('services', { sort: 'order', limit: 100 })
+
+const deliverables = [
+  { term: 'Alcance', detail: 'Qué incluye la propuesta, por fases y sin letra pequeña' },
+  { term: 'Plazo', detail: 'Fechas realistas con entregas visibles cada semana' },
+  { term: 'Precio cerrado', detail: 'Un número final — no una tarifa por horas' },
+  { term: 'Respuesta', detail: 'En un máximo de 48 horas hábiles' },
+]
+---
+
+<BaseLayout
+  title="Pide una cotización"
+  description="Cuéntanos tu proyecto y recibe una propuesta con alcance, plazo y precio cerrado en un máximo de 48 horas hábiles."
+>
+  <Section>
+    <Container>
+      <div class="grid gap-14 lg:grid-cols-[2fr_1fr] lg:gap-20">
+        <div>
+          <SectionIntro
+            eyebrow="Cotización"
+            title="Cuéntanos tu proyecto y ponle número"
+            text="Mientras más contexto nos des, más precisa la propuesta. La recibes con alcance, plazo y precio cerrado en un máximo de 48 horas hábiles."
+            as="h1"
+            size="display"
+          />
+          <div class="mt-12">
+            <LeadForm formType="cotizacion" services={services.docs} />
+          </div>
+        </div>
+
+        <aside class="h-fit rounded-xl border border-line bg-surface p-6 md:p-8">
+          <h2 class="font-mono text-xs tracking-[0.18em] text-muted uppercase">Qué recibirás</h2>
+          <dl class="mt-6 space-y-5">
+            {
+              deliverables.map((item) => (
+                <div class="flex items-start gap-3">
+                  <span class="mt-1.5 size-2 shrink-0 bg-zift" aria-hidden="true" />
+                  <div>
+                    <dt class="text-sm font-medium">{item.term}</dt>
+                    <dd class="mt-0.5 text-sm text-muted">{item.detail}</dd>
+                  </div>
+                </div>
+              ))
+            }
+          </dl>
+          <p class="mt-8 border-t border-line pt-6 text-sm text-muted">
+            ¿Prefieres hablar primero?
+            <a href="/asesoria" class="text-zift hover:underline">Agenda una asesoría gratuita</a>
+            de 30 minutos.
+          </p>
+        </aside>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

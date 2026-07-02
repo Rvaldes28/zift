@@ -1,0 +1,289 @@
+---
+/**
+ * Detalle de caso de éxito (FASE 5). El caso se lee como expediente de
+ * laboratorio: ficha técnica fija (cliente, industria, servicios, stack,
+ * entrega, sitio) junto a la narrativa problema → solución, resultados
+ * medibles en numerales display, galería, testimonio y CTA final.
+ */
+import PayloadImage from '@/components/PayloadImage.astro'
+import CTASection from '@/components/sections/CTASection.astro'
+import RichText from '@/components/sections/RichText.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Container from '@/components/ui/Container.astro'
+import Eyebrow from '@/components/ui/Eyebrow.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getMediaUrl } from '@/lib/media'
+import { getCollection, resolveDocs } from '@/lib/payload'
+import type { Project, Service } from '@cms/types'
+
+export async function getStaticPaths() {
+  // depth 2: resuelve cliente, servicios, galería y el avatar del testimonio
+  const projects = await getCollection('projects', { sort: '-completedAt', limit: 100, depth: 2 })
+  return projects.docs
+    .filter((project): project is Project & { slug: string } => Boolean(project.slug))
+    .map((project) => ({ params: { slug: project.slug }, props: { project } }))
+}
+
+// El tipo de props lo infiere Astro desde getStaticPaths
+const { project } = Astro.props
+
+const client = typeof project.client === 'object' ? project.client : null
+const services = resolveDocs<Service>(project.services)
+const testimonial = typeof project.testimonial === 'object' ? project.testimonial : null
+const gallery = project.gallery ?? []
+const results = project.results ?? []
+const stack = project.stack ?? []
+
+// "septiembre de 2025" → "Septiembre de 2025"
+const deliveredAt = project.completedAt
+  ? new Intl.DateTimeFormat('es', { month: 'long', year: 'numeric' })
+      .format(new Date(project.completedAt))
+      .replace(/^./, (letter) => letter.toUpperCase())
+  : null
+
+// hostname para la etiqueta del enlace; null si la URL guardada no es válida
+const externalHost = (() => {
+  try {
+    return project.externalUrl ? new URL(project.externalUrl).hostname : null
+  } catch {
+    return null
+  }
+})()
+const hasSheet = Boolean(client || project.industry || services.length || stack.length)
+---
+
+<BaseLayout
+  absoluteTitle={project.meta?.title ?? undefined}
+  title={project.meta?.title ? undefined : project.title}
+  description={project.meta?.description ?? project.excerpt}
+  ogImage={getMediaUrl(project.meta?.image) ?? getMediaUrl(project.coverImage)}
+>
+  {/* Cabecera del expediente */}
+  <Section class="md:pb-16">
+    <Container>
+      <Eyebrow>{client ? `Portafolio · ${client.name}` : 'Portafolio'}</Eyebrow>
+      <Heading as="h1" size="display" class="mt-6 max-w-4xl">
+        {project.title}
+      </Heading>
+      <Text size="lead" muted class="mt-6 max-w-2xl">
+        {project.excerpt}
+      </Text>
+      <PayloadImage
+        media={project.coverImage}
+        priority
+        class="mt-14 w-full rounded-xl border border-line object-cover"
+        sizes="(min-width: 1152px) 1152px, 100vw"
+      />
+    </Container>
+  </Section>
+
+  {/* Narrativa + ficha técnica */}
+  <Section tone="surface">
+    <Container>
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
+        <div class="min-w-0 space-y-14">
+          {
+            project.problem && (
+              <div>
+                <Eyebrow as="h2">Problema</Eyebrow>
+                <Text size="lead" class="mt-6">
+                  {project.problem}
+                </Text>
+              </div>
+            )
+          }
+          {
+            project.solution && (
+              <div>
+                <Eyebrow as="h2">Solución</Eyebrow>
+                <Text size="lead" class="mt-6">
+                  {project.solution}
+                </Text>
+              </div>
+            )
+          }
+          {
+            project.content && (
+              <div>
+                <Eyebrow as="h2">Cómo se trabajó</Eyebrow>
+                <RichText content={project.content} class="mt-6" />
+              </div>
+            )
+          }
+        </div>
+
+        {
+          hasSheet && (
+            <aside class="lg:sticky lg:top-24 lg:self-start">
+              <div class="rounded-xl border border-line bg-white p-6 md:p-8">
+                <Eyebrow as="h2">Ficha técnica</Eyebrow>
+                <dl class="mt-6">
+                  {client && (
+                    <div class="border-t border-line py-4">
+                      <dt class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                        Cliente
+                      </dt>
+                      <dd class="mt-1.5 text-sm font-medium">{client.name}</dd>
+                    </div>
+                  )}
+                  {project.industry && (
+                    <div class="border-t border-line py-4">
+                      <dt class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                        Industria
+                      </dt>
+                      <dd class="mt-1.5 text-sm font-medium">{project.industry}</dd>
+                    </div>
+                  )}
+                  {services.length > 0 && (
+                    <div class="border-t border-line py-4">
+                      <dt class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                        Servicios
+                      </dt>
+                      <dd class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                        {services.map((service) => (
+                          <a
+                            href={`/servicios/${service.slug}`}
+                            class="text-sm font-medium text-zift underline-offset-4 hover:underline"
+                          >
+                            {service.title}
+                          </a>
+                        ))}
+                      </dd>
+                    </div>
+                  )}
+                  {stack.length > 0 && (
+                    <div class="border-t border-line py-4">
+                      <dt class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                        Stack
+                      </dt>
+                      <dd class="mt-2 flex flex-wrap gap-1.5">
+                        {stack.map((item) => (
+                          <span class="rounded-md border border-line bg-surface px-2 py-1 font-mono text-xs">
+                            {item}
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
+                  )}
+                  {deliveredAt && (
+                    <div class="border-t border-line py-4">
+                      <dt class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                        Entrega
+                      </dt>
+                      <dd class="mt-1.5 text-sm font-medium">{deliveredAt}</dd>
+                    </div>
+                  )}
+                  {project.externalUrl && externalHost && (
+                    <div class="border-t border-line py-4 pb-0">
+                      <dt class="font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                        Sitio
+                      </dt>
+                      <dd class="mt-1.5">
+                        <a
+                          href={project.externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-sm font-medium text-zift underline-offset-4 hover:underline"
+                        >
+                          {externalHost} ↗
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            </aside>
+          )
+        }
+      </div>
+    </Container>
+  </Section>
+
+  {/* Resultados medibles */}
+  {
+    results.length > 0 && (
+      <Section>
+        <Container>
+          <SectionIntro eyebrow="Resultados" title="Lo que cambió" />
+          <dl class="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            {results.map((result) => (
+              <div class="flex flex-col border-t border-ink pt-5">
+                <dt class="order-2 mt-3 font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                  {result.label}
+                </dt>
+                <dd class="font-display order-1 text-4xl tracking-tight text-zift sm:text-5xl">
+                  {result.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Galería */}
+  {
+    gallery.length > 0 && (
+      <Section tone="surface">
+        <Container>
+          <SectionIntro eyebrow="Galería" title="El proyecto en pantalla" />
+          <ul class="mt-12 grid gap-5 sm:grid-cols-2" role="list">
+            {gallery.map((item) => (
+              <li>
+                <PayloadImage
+                  media={item.image}
+                  class="w-full rounded-xl border border-line object-cover"
+                  sizes="(min-width: 640px) 50vw, 100vw"
+                />
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Testimonio relacionado */}
+  {
+    testimonial && (
+      <Section>
+        <Container size="narrow">
+          <span class="font-display block text-5xl leading-none text-zift" aria-hidden="true">
+            “
+          </span>
+          <blockquote class="mt-4">
+            <Text size="lead" class="max-w-2xl">
+              {testimonial.quote}
+            </Text>
+          </blockquote>
+          <footer class="mt-8 flex items-center gap-4 border-t border-line pt-6">
+            <PayloadImage
+              media={testimonial.avatar}
+              class="size-12 rounded-full object-cover"
+              sizes="48px"
+            />
+            <div>
+              <p class="font-medium">{testimonial.authorName}</p>
+              {testimonial.authorRole && (
+                <p class="mt-0.5 font-mono text-xs tracking-wide text-muted">
+                  {testimonial.authorRole}
+                </p>
+              )}
+            </div>
+          </footer>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* CTA final */}
+  <CTASection
+    title="¿Quieres resultados como estos?"
+    text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos con tu proyecto y qué resultados puedes esperar."
+    cta={{ label: 'Agenda una asesoría', href: '/contacto' }}
+  />
+</BaseLayout>

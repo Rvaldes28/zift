@@ -45,6 +45,14 @@ export const Projects: CollectionConfig = {
       relationTo: 'clients',
     },
     {
+      name: 'industry',
+      label: 'Industria',
+      type: 'text',
+      admin: {
+        description: 'Sector del cliente, ej. "Retail" o "Servicios legales"',
+      },
+    },
+    {
       name: 'services',
       type: 'relationship',
       relationTo: 'services',
@@ -52,6 +60,63 @@ export const Projects: CollectionConfig = {
       admin: {
         description: 'Servicios aplicados en este proyecto',
       },
+    },
+    {
+      name: 'problem',
+      label: 'Problema',
+      type: 'textarea',
+      admin: {
+        description: 'Situación del cliente antes del proyecto (2–4 frases)',
+      },
+    },
+    {
+      name: 'solution',
+      label: 'Solución',
+      type: 'textarea',
+      admin: {
+        description: 'Qué se construyó y por qué (2–4 frases)',
+      },
+    },
+    {
+      name: 'stack',
+      label: 'Stack',
+      type: 'text',
+      hasMany: true,
+      admin: {
+        description: 'Tecnologías usadas, ej. "Astro", "Payload CMS", "PostgreSQL"',
+      },
+    },
+    {
+      name: 'results',
+      label: 'Resultados medibles',
+      type: 'array',
+      admin: {
+        description: 'Métricas del caso; la primera se muestra en las tarjetas',
+      },
+      fields: [
+        {
+          name: 'value',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Cifra corta, ej. "+42%" o "3×"',
+          },
+        },
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Qué mide, ej. "ventas online"',
+          },
+        },
+      ],
+    },
+    {
+      name: 'testimonial',
+      label: 'Testimonio relacionado',
+      type: 'relationship',
+      relationTo: 'testimonials',
     },
     {
       name: 'coverImage',

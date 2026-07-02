@@ -1,0 +1,72 @@
+---
+/**
+ * Blog (FASE 6), páginas 2+: /blog/pagina/2, /blog/pagina/3…
+ * La página 1 es /blog (blog/index.astro); aquí solo el grid paginado.
+ */
+import CTASection from '@/components/sections/CTASection.astro'
+import CategoryChips from '@/components/sections/CategoryChips.astro'
+import PostGrid from '@/components/sections/PostGrid.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Container from '@/components/ui/Container.astro'
+import Pagination from '@/components/ui/Pagination.astro'
+import Section from '@/components/ui/Section.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { POSTS_PER_PAGE } from '@/lib/blog'
+import { getCollection } from '@/lib/payload'
+import type { Category, Post } from '@cms/types'
+
+export async function getStaticPaths() {
+  const [posts, categories] = await Promise.all([
+    getCollection('posts', { sort: '-publishedAt', limit: 200 }),
+    getCollection('categories', { sort: 'createdAt', limit: 100 }),
+  ])
+  const totalPages = Math.ceil(posts.totalDocs / POSTS_PER_PAGE)
+
+  // Solo páginas 2..N — la 1 es /blog
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) => {
+    const page = index + 2
+    return {
+      params: { page: String(page) },
+      props: {
+        posts: posts.docs.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE) as Post[],
+        categories: categories.docs as Category[],
+        page,
+        totalPages,
+        totalDocs: posts.totalDocs,
+      },
+    }
+  })
+}
+
+const { posts, categories, page, totalPages, totalDocs } = Astro.props
+---
+
+<BaseLayout
+  title={`Blog — página ${page}`}
+  description="Guías prácticas sobre desarrollo web, marketing digital, SEO, e-commerce, automatización e IA — escritas desde proyectos reales, sin humo."
+>
+  <Section class="md:pb-16">
+    <Container>
+      <SectionIntro
+        eyebrow={`Blog · página ${page} de ${totalPages} · ${totalDocs} artículos`}
+        title="Ideas que convierten"
+        as="h1"
+        size="display"
+      />
+    </Container>
+  </Section>
+
+  <Section tone="surface">
+    <Container>
+      <CategoryChips {categories} class="mb-10" />
+      <PostGrid {posts} />
+      <Pagination currentPage={page} {totalPages} class="mt-12" />
+    </Container>
+  </Section>
+
+  <CTASection
+    title="¿Prefieres que lo hagamos por ti?"
+    text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos con tu proyecto y qué resultados puedes esperar."
+    cta={{ label: 'Agenda una asesoría', href: '/contacto' }}
+  />
+</BaseLayout>

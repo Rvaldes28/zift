@@ -46,6 +46,14 @@ export const SiteSettings: GlobalConfig = {
       name: 'address',
       type: 'text',
     },
+    {
+      name: 'calendlyUrl',
+      type: 'text',
+      admin: {
+        description:
+          'URL del evento de Calendly para la asesoría gratuita, ej. https://calendly.com/ziftlab/asesoria — vacío: /asesoria muestra solo el formulario',
+      },
+    },
     socialLinksField(),
     {
       // Fallback de SEO para páginas sin meta propia

@@ -9,6 +9,7 @@ import '@/styles/global.css'
 import Footer from '@/components/Footer.astro'
 import Header from '@/components/Header.astro'
 import SEO from '@/components/SEO.astro'
+import WhatsAppButton from '@/components/WhatsAppButton.astro'
 import { getMediaUrl } from '@/lib/media'
 import { getCachedGlobal } from '@/lib/payload'
 
@@ -21,9 +22,11 @@ interface Props {
   /** URL absoluta de la imagen OG; default: ogImage de Ajustes del sitio */
   ogImage?: string | null
   noindex?: boolean
+  /** Posts del blog: og:type article con sus fechas de publicación/edición */
+  article?: { publishedTime?: string; modifiedTime?: string }
 }
 
-const { title, absoluteTitle, description, ogImage, noindex = false } = Astro.props
+const { title, absoluteTitle, description, ogImage, noindex = false, article } = Astro.props
 
 const [settings, header, footer] = await Promise.all([
   getCachedGlobal('site-settings'),
@@ -52,7 +55,19 @@ const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
       image={seoImage}
       siteName={siteName}
       noindex={noindex}
+      type={article ? 'article' : 'website'}
+      publishedTime={article?.publishedTime}
+      modifiedTime={article?.modifiedTime}
     />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`Blog de ${siteName}`}
+      href="/rss.xml"
+    />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {/* JSON-LD y metas específicas de cada página (p. ej. Schema Article) */}
+    <slot name="head" />
   </head>
   <body class="flex min-h-screen flex-col">
     <a
@@ -66,5 +81,6 @@ const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
       <slot />
     </main>
     <Footer footer={footer} settings={settings} />
+    {settings.whatsapp && <WhatsAppButton phone={settings.whatsapp} />}
   </body>
 </html>

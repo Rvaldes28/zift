@@ -1,0 +1,112 @@
+---
+/**
+ * Blog (FASE 6), página 1: el artículo más reciente como entrada destacada,
+ * navegación por categorías y grid paginado. Las páginas 2+ viven en
+ * /blog/pagina/[page] para no chocar con /blog/[slug].
+ */
+import CTASection from '@/components/sections/CTASection.astro'
+import CategoryChips from '@/components/sections/CategoryChips.astro'
+import PostGrid from '@/components/sections/PostGrid.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import PayloadImage from '@/components/PayloadImage.astro'
+import Card from '@/components/ui/Card.astro'
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Pagination from '@/components/ui/Pagination.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { POSTS_PER_PAGE, formatDateShort, postCategories, readingTimeMinutes } from '@/lib/blog'
+import { getCollection } from '@/lib/payload'
+
+const [posts, categories] = await Promise.all([
+  getCollection('posts', { sort: '-publishedAt', limit: POSTS_PER_PAGE, page: 1 }),
+  getCollection('categories', { sort: 'createdAt', limit: 100 }),
+])
+
+const featured = posts.docs[0] ?? null
+const rest = posts.docs.slice(1)
+const featuredCategory = featured ? (postCategories(featured)[0] ?? null) : null
+---
+
+<BaseLayout
+  title="Blog"
+  description="Guías prácticas sobre desarrollo web, marketing digital, SEO, e-commerce, automatización e IA — escritas desde proyectos reales, sin humo."
+>
+  <Section class="md:pb-16">
+    <Container>
+      <SectionIntro
+        eyebrow={`Blog · ${posts.totalDocs} ${posts.totalDocs === 1 ? 'artículo' : 'artículos'}`}
+        title="Ideas que convierten"
+        text="Lo que aprendemos construyendo proyectos reales: guías honestas sobre web, marketing, automatización e IA para decidir con criterio, no con humo."
+        as="h1"
+        size="display"
+      />
+    </Container>
+  </Section>
+
+  <Section tone="surface">
+    <Container>
+      <CategoryChips categories={categories.docs} class="mb-10" />
+
+      {
+        featured && featured.slug && (
+          <Card
+            href={`/blog/${featured.slug}`}
+            padding="none"
+            class="mb-10 grid overflow-hidden lg:grid-cols-[3fr_2fr]"
+          >
+            <PayloadImage
+              media={featured.coverImage}
+              priority
+              class="aspect-[3/2] w-full border-b border-line object-cover lg:h-full lg:border-r lg:border-b-0"
+              sizes="(min-width: 1024px) 60vw, 100vw"
+            />
+            <div class="flex flex-col p-6 md:p-10">
+              <p class="font-mono text-xs tracking-[0.18em] text-muted uppercase">
+                Último artículo{featuredCategory && ` · ${featuredCategory.title}`}
+              </p>
+              <Heading as="h2" size="lg" class="mt-4 transition-colors group-hover:text-zift">
+                {featured.title}
+              </Heading>
+              <Text muted class="mt-4 pb-8">
+                {featured.excerpt}
+              </Text>
+              <p class="mt-auto border-t border-line pt-4 font-mono text-xs tracking-[0.14em] text-muted uppercase">
+                {featured.publishedAt && (
+                  <time datetime={featured.publishedAt}>
+                    {formatDateShort(featured.publishedAt)}
+                  </time>
+                )}
+                {featured.publishedAt && ' · '}
+                {readingTimeMinutes(featured.content)} min
+              </p>
+            </div>
+          </Card>
+        )
+      }
+
+      {rest.length > 0 && <PostGrid posts={rest} />}
+
+      {
+        !featured && (
+          <Text muted>
+            Aún no hay artículos publicados. Vuelve pronto — o síguenos por RSS en
+            <a href="/rss.xml" class="text-zift underline underline-offset-4">
+              /rss.xml
+            </a>
+            .
+          </Text>
+        )
+      }
+
+      <Pagination currentPage={1} totalPages={posts.totalPages} class="mt-12" />
+    </Container>
+  </Section>
+
+  <CTASection
+    title="¿Prefieres que lo hagamos por ti?"
+    text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos con tu proyecto y qué resultados puedes esperar."
+    cta={{ label: 'Agenda una asesoría', href: '/contacto' }}
+  />
+</BaseLayout>

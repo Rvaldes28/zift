@@ -11,9 +11,22 @@ interface Props {
   image?: string | null
   siteName: string
   noindex?: boolean
+  /** article = posts del blog: añade og:type article y sus fechas */
+  type?: 'website' | 'article'
+  publishedTime?: string | undefined
+  modifiedTime?: string | undefined
 }
 
-const { title, description, image, siteName, noindex = false } = Astro.props
+const {
+  title,
+  description,
+  image,
+  siteName,
+  noindex = false,
+  type = 'website',
+  publishedTime,
+  modifiedTime,
+} = Astro.props
 
 // astro.config define `site` (PUBLIC_SITE_URL), así la canónica es absoluta
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.href
@@ -24,13 +37,23 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 <link rel="canonical" href={canonical} />
 {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-<meta property="og:type" content="website" />
+<meta property="og:type" content={type} />
 <meta property="og:locale" content="es_MX" />
 <meta property="og:site_name" content={siteName} />
 <meta property="og:title" content={title} />
 {description && <meta property="og:description" content={description} />}
 <meta property="og:url" content={canonical} />
 {image && <meta property="og:image" content={image} />}
+{
+  type === 'article' && publishedTime && (
+    <meta property="article:published_time" content={publishedTime} />
+  )
+}
+{
+  type === 'article' && modifiedTime && (
+    <meta property="article:modified_time" content={modifiedTime} />
+  )
+}
 
 <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
 <meta name="twitter:title" content={title} />
