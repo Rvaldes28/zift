@@ -1,73 +1,262 @@
 ---
 /**
- * Portada FASE 3: demuestra la conexión Astro ⇄ Payload y el sistema de
- * diseño base. La Home comercial completa llega en FASE 4.
+ * Home comercial (FASE 4): todo el contenido sale del global home-page.
+ * Cada sección solo se pinta si el CMS tiene contenido para ella.
+ * Orden según docs/FASES.MD §FASE 4.
  */
-import BaseLayout from '@/layouts/BaseLayout.astro'
+import BenefitsGrid from '@/components/sections/BenefitsGrid.astro'
+import CTASection from '@/components/sections/CTASection.astro'
+import LogoWall from '@/components/sections/LogoWall.astro'
+import ProcessSteps from '@/components/sections/ProcessSteps.astro'
+import ProjectCard from '@/components/sections/ProjectCard.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import ServiceCard from '@/components/sections/ServiceCard.astro'
+import TestimonialCard from '@/components/sections/TestimonialCard.astro'
 import Button from '@/components/ui/Button.astro'
-import Card from '@/components/ui/Card.astro'
 import Container from '@/components/ui/Container.astro'
 import Eyebrow from '@/components/ui/Eyebrow.astro'
 import Heading from '@/components/ui/Heading.astro'
 import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
-import { getCachedGlobal, getCollection } from '@/lib/payload'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getMediaUrl } from '@/lib/media'
+import { getCollection, getGlobal, resolveDocs } from '@/lib/payload'
+import type { Client, Project, Service, Testimonial } from '@cms/types'
 
-const settings = await getCachedGlobal('site-settings')
-const services = await getCollection('services', { sort: 'order', limit: 14 })
+const [home, clientsResult] = await Promise.all([
+  getGlobal('home-page', { depth: 2 }),
+  getCollection('clients', { sort: 'order', limit: 12 }),
+])
 
-const heroDescription =
-  settings.defaultSeo?.description ??
-  'Sitios web, sistemas digitales, automatizaciones y soluciones con IA para empresas que quieren escalar.'
+const hero = home.hero
+const primaryCta = hero?.primaryCta?.label && hero.primaryCta.href ? hero.primaryCta : null
+const secondaryCta = hero?.secondaryCta?.label && hero.secondaryCta.href ? hero.secondaryCta : null
+
+const featuredServices = resolveDocs<Service>(home.servicesSection?.featuredServices)
+const featuredProjects = resolveDocs<Project>(home.projectsSection?.featuredProjects)
+const featuredTestimonials = resolveDocs<Testimonial>(
+  home.testimonialsSection?.featuredTestimonials,
+)
+const clients: Client[] = clientsResult.docs
+const benefits = home.benefits?.items ?? []
+const steps = home.process?.steps ?? []
+const trustItems = home.trustBlock?.items ?? []
+const stats = home.stats ?? []
 ---
 
-<BaseLayout>
-  <Section class="md:py-32">
-    <Container>
-      <div class="max-w-3xl">
-        <Eyebrow>Agencia digital · {settings.tagline ?? settings.siteName}</Eyebrow>
-        <Heading as="h1" size="display" class="mt-6">
-          Tecnología moderna para empresas que quieren vender más
-        </Heading>
-        <Text size="lead" muted class="mt-6 max-w-2xl">
-          {heroDescription}
-        </Text>
-        <div class="mt-10 flex flex-wrap gap-4">
-          <Button href="#servicios" size="lg">Ver servicios</Button>
-          {
-            settings.contactEmail && (
-              <Button href={`mailto:${settings.contactEmail}`} variant="secondary" size="lg">
-                Escríbenos
-              </Button>
-            )
-          }
-        </div>
+<BaseLayout
+  absoluteTitle={home.meta?.title ?? undefined}
+  description={home.meta?.description ?? undefined}
+  ogImage={getMediaUrl(home.meta?.image)}
+>
+  {/* Hero — umbral del laboratorio: tinta + retícula milimétrica */}
+  <Section tone="ink" class="relative overflow-hidden md:py-32">
+    <div class="lab-grid absolute inset-0" aria-hidden="true"></div>
+    <Container class="relative">
+      {hero?.eyebrow && <Eyebrow tone="dark">{hero.eyebrow}</Eyebrow>}
+      <Heading as="h1" size="display" class="mt-6 max-w-4xl text-white">
+        {hero?.title}
+      </Heading>
+      {
+        hero?.subtitle && (
+          <Text size="lead" class="mt-6 max-w-2xl text-ink-muted">
+            {hero.subtitle}
+          </Text>
+        )
+      }
+      <div class="mt-10 flex flex-wrap gap-4">
+        {
+          primaryCta && (
+            <Button href={primaryCta.href!} newTab={primaryCta.newTab ?? false} size="lg">
+              {primaryCta.label}
+            </Button>
+          )
+        }
+        {
+          secondaryCta && (
+            <Button
+              href={secondaryCta.href!}
+              newTab={secondaryCta.newTab ?? false}
+              variant="inverse"
+              size="lg"
+            >
+              {secondaryCta.label}
+            </Button>
+          )
+        }
       </div>
     </Container>
   </Section>
 
-  <Section tone="surface" id="servicios">
-    <Container>
-      <div class="max-w-2xl">
-        <Eyebrow>Servicios · {services.totalDocs} publicados en Payload</Eyebrow>
-        <Heading as="h2" size="xl" class="mt-6">Lo que construimos</Heading>
-      </div>
-      <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
-        {
-          services.docs.map((service) => (
-            <li>
-              <Card class="h-full">
-                <Heading as="h3" size="sm">
-                  {service.title}
-                </Heading>
-                <Text size="sm" muted class="mt-3">
-                  {service.excerpt}
-                </Text>
-              </Card>
-            </li>
-          ))
-        }
-      </ul>
-    </Container>
-  </Section>
+  {/* Propuesta de valor */}
+  {
+    home.valueProposition?.title && (
+      <Section>
+        <Container size="narrow">
+          <SectionIntro
+            eyebrow="Propuesta de valor"
+            title={home.valueProposition.title}
+            text={home.valueProposition.text}
+            class="max-w-none"
+          />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Servicios destacados */}
+  {
+    featuredServices.length > 0 && (
+      <Section tone="surface" id="servicios">
+        <Container>
+          <SectionIntro
+            eyebrow="Servicios"
+            title={home.servicesSection?.title}
+            text={home.servicesSection?.subtitle}
+          />
+          <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+            {featuredServices.map((service) => (
+              <li>
+                <ServiceCard service={service} />
+              </li>
+            ))}
+          </ul>
+          <div class="mt-10">
+            <Button href="/servicios" variant="secondary">
+              Ver los 14 servicios
+            </Button>
+          </div>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Beneficios */}
+  {
+    home.benefits?.title && benefits.length > 0 && (
+      <Section>
+        <Container>
+          <SectionIntro eyebrow="Beneficios" title={home.benefits.title} />
+          <BenefitsGrid items={benefits} class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Proceso de trabajo — vuelta a tinta */}
+  {
+    home.process?.title && steps.length > 0 && (
+      <Section tone="ink">
+        <Container>
+          <SectionIntro
+            eyebrow="Proceso"
+            title={home.process.title}
+            text={home.process.subtitle}
+            tone="dark"
+          />
+          <ProcessSteps steps={steps} tone="ink" class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Logos de clientes */}
+  {
+    home.clientsSection?.title && clients.length > 0 && (
+      <Section>
+        <Container>
+          <SectionIntro eyebrow="Clientes" title={home.clientsSection.title} />
+          <LogoWall clients={clients} class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Casos destacados */}
+  {
+    featuredProjects.length > 0 && (
+      <Section tone="surface">
+        <Container>
+          <SectionIntro
+            eyebrow="Casos"
+            title={home.projectsSection?.title}
+            text={home.projectsSection?.subtitle}
+          />
+          <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+            {featuredProjects.map((project) => (
+              <li>
+                <ProjectCard project={project} />
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Testimonios */}
+  {
+    featuredTestimonials.length > 0 && (
+      <Section>
+        <Container>
+          <SectionIntro eyebrow="Testimonios" title={home.testimonialsSection?.title} />
+          <ul class="mt-12 grid gap-5 sm:grid-cols-2" role="list">
+            {featuredTestimonials.map((testimonial) => (
+              <li>
+                <TestimonialCard testimonial={testimonial} />
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Bloque de confianza + cifras */}
+  {
+    home.trustBlock?.title && (
+      <Section tone="surface">
+        <Container>
+          <div class="grid gap-12 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <SectionIntro
+                eyebrow="Confianza"
+                title={home.trustBlock.title}
+                text={home.trustBlock.text}
+              />
+              {trustItems.length > 0 && (
+                <ul class="mt-8 space-y-3" role="list">
+                  {trustItems.map((item) => (
+                    <li class="flex items-start gap-3">
+                      <span class="mt-2 size-2 shrink-0 bg-zift" aria-hidden="true" />
+                      <Text>{item.text}</Text>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {stats.length > 0 && (
+              <dl class="grid content-start gap-px border border-line bg-line sm:grid-cols-2">
+                {stats.map((stat) => (
+                  <div class="bg-paper p-6 md:p-8">
+                    <dd class="font-display text-4xl">{stat.value}</dd>
+                    <dt class="mt-2 font-mono text-xs tracking-[0.18em] text-muted uppercase">
+                      {stat.label}
+                    </dt>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* CTA final */}
+  <CTASection
+    title={home.ctaSection?.title}
+    text={home.ctaSection?.text}
+    cta={home.ctaSection?.cta}
+  />
 </BaseLayout>
