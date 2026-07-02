@@ -1,0 +1,41 @@
+---
+/** Catálogo completo de servicios (FASE 4). */
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import ServiceCard from '@/components/sections/ServiceCard.astro'
+import Container from '@/components/ui/Container.astro'
+import Section from '@/components/ui/Section.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCollection } from '@/lib/payload'
+
+const services = await getCollection('services', { sort: 'order', limit: 100 })
+---
+
+<BaseLayout
+  title="Servicios"
+  description="Catálogo completo de servicios ZiftLab: desarrollo web, e-commerce, marketing, automatización e inteligencia artificial."
+>
+  <Section class="md:pb-16">
+    <Container>
+      <SectionIntro
+        eyebrow={`Catálogo · ${services.totalDocs} servicios`}
+        title="Lo que construimos"
+        text="Cada servicio funciona solo o combinado con los demás. Todos empiezan igual: entendiendo tu negocio."
+        as="h1"
+        size="display"
+      />
+    </Container>
+  </Section>
+  <Section tone="surface">
+    <Container>
+      <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+        {
+          services.docs.map((service) => (
+            <li>
+              <ServiceCard service={service} />
+            </li>
+          ))
+        }
+      </ul>
+    </Container>
+  </Section>
+</BaseLayout>

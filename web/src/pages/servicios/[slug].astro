@@ -1,0 +1,159 @@
+---
+/**
+ * Detalle de servicio (FASE 4): H1 único, descripción, beneficios, qué
+ * incluye, proceso, casos relacionados, FAQs y CTA a asesoría. El SEO
+ * sale del grupo meta del plugin con fallback a título + excerpt.
+ */
+import PayloadImage from '@/components/PayloadImage.astro'
+import BenefitsGrid from '@/components/sections/BenefitsGrid.astro'
+import CTASection from '@/components/sections/CTASection.astro'
+import FaqAccordion from '@/components/sections/FaqAccordion.astro'
+import ProcessSteps from '@/components/sections/ProcessSteps.astro'
+import ProjectCard from '@/components/sections/ProjectCard.astro'
+import RichText from '@/components/sections/RichText.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import Eyebrow from '@/components/ui/Eyebrow.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getMediaUrl } from '@/lib/media'
+import { getCollection, resolveDocs } from '@/lib/payload'
+import type { Faq, Project, Service } from '@cms/types'
+
+export async function getStaticPaths() {
+  const services = await getCollection('services', { sort: 'order', limit: 100, depth: 2 })
+  return services.docs
+    .filter((service): service is Service & { slug: string } => Boolean(service.slug))
+    .map((service) => ({ params: { slug: service.slug }, props: { service } }))
+}
+
+// El tipo de props lo infiere Astro desde getStaticPaths
+const { service } = Astro.props
+
+const code = service.order ? `SRV-${String(service.order).padStart(2, '0')}` : null
+const benefits = service.benefits ?? []
+const features = service.features ?? []
+const steps = service.process ?? []
+const relatedProjects = resolveDocs<Project>(service.relatedProjects)
+const faqs = resolveDocs<Faq>(service.faqs)
+const contactHref = `/contacto?servicio=${service.slug}`
+---
+
+<BaseLayout
+  absoluteTitle={service.meta?.title ?? undefined}
+  title={service.meta?.title ? undefined : service.title}
+  description={service.meta?.description ?? service.excerpt}
+  ogImage={getMediaUrl(service.meta?.image)}
+>
+  {/* Cabecera: espécimen del catálogo */}
+  <Section class="md:pb-16">
+    <Container>
+      <Eyebrow>{code ? `Servicios · ${code}` : 'Servicios'}</Eyebrow>
+      <Heading as="h1" size="display" class="mt-6 max-w-4xl">
+        {service.title}
+      </Heading>
+      <Text size="lead" muted class="mt-6 max-w-2xl">
+        {service.excerpt}
+      </Text>
+      <div class="mt-10 flex flex-wrap gap-4">
+        <Button href={contactHref} size="lg">Agenda una asesoría</Button>
+      </div>
+      <PayloadImage
+        media={service.image}
+        priority
+        class="mt-14 w-full rounded-xl border border-line object-cover"
+        sizes="(min-width: 1152px) 1152px, 100vw"
+      />
+    </Container>
+  </Section>
+
+  {/* Descripción larga */}
+  <Section tone="surface" class="border-t-0">
+    <Container size="narrow">
+      <RichText content={service.content} />
+    </Container>
+  </Section>
+
+  {/* Beneficios */}
+  {
+    benefits.length > 0 && (
+      <Section>
+        <Container>
+          <SectionIntro eyebrow="Beneficios" title="Qué gana tu negocio" />
+          <BenefitsGrid items={benefits} class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Qué incluye */}
+  {
+    features.length > 0 && (
+      <Section tone="surface">
+        <Container>
+          <SectionIntro eyebrow="Alcance" title="Qué incluye" />
+          <ul class="mt-12 grid gap-x-10 gap-y-4 sm:grid-cols-2" role="list">
+            {features.map((feature) => (
+              <li class="flex items-start gap-3 border-b border-line pb-4">
+                <span class="mt-2 size-2 shrink-0 bg-zift" aria-hidden="true" />
+                <Text>{feature.text}</Text>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Proceso */}
+  {
+    steps.length > 0 && (
+      <Section>
+        <Container>
+          <SectionIntro eyebrow="Proceso" title="Cómo lo trabajamos" />
+          <ProcessSteps steps={steps} class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Casos relacionados */}
+  {
+    relatedProjects.length > 0 && (
+      <Section tone="surface">
+        <Container>
+          <SectionIntro eyebrow="Casos" title="Casos relacionados" />
+          <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+            {relatedProjects.map((project) => (
+              <li>
+                <ProjectCard project={project} />
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Preguntas frecuentes */}
+  {
+    faqs.length > 0 && (
+      <Section>
+        <Container size="narrow">
+          <SectionIntro eyebrow="FAQs" title="Preguntas frecuentes" />
+          <FaqAccordion faqs={faqs} class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* CTA a asesoría */}
+  <CTASection
+    title="¿Hablamos de tu proyecto?"
+    text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos y cuánto costaría, sin compromiso."
+    cta={{ label: 'Agenda una asesoría', href: contactHref }}
+  />
+</BaseLayout>
