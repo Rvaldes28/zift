@@ -1,0 +1,93 @@
+---
+/** Contacto (FASE 4): intro del global + datos de site-settings + LeadForm. */
+import LeadForm from '@/components/sections/LeadForm.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Container from '@/components/ui/Container.astro'
+import Section from '@/components/ui/Section.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCachedGlobal, getCollection, getGlobal } from '@/lib/payload'
+
+const [page, settings, services] = await Promise.all([
+  getGlobal('contact-page'),
+  getCachedGlobal('site-settings'),
+  getCollection('services', { sort: 'order', limit: 100 }),
+])
+
+const whatsappHref = settings.whatsapp
+  ? `https://wa.me/${settings.whatsapp.replace(/[^\d]/g, '')}`
+  : null
+---
+
+<BaseLayout title={page.title ?? 'Contacto'} description={page.text ?? undefined}>
+  <Section>
+    <Container>
+      <div class="grid gap-14 lg:grid-cols-[2fr_1fr] lg:gap-20">
+        <div>
+          <SectionIntro
+            eyebrow="Contacto"
+            title={page.title}
+            text={page.text}
+            as="h1"
+            size="display"
+          />
+          <div class="mt-12">
+            <LeadForm services={services.docs} />
+          </div>
+        </div>
+
+        <aside class="h-fit rounded-xl border border-line bg-surface p-6 md:p-8">
+          <h2 class="font-mono text-xs tracking-[0.18em] text-muted uppercase">
+            Datos de contacto
+          </h2>
+          <dl class="mt-6 space-y-5 text-sm">
+            {
+              settings.contactEmail && (
+                <div>
+                  <dt class="font-medium">Email</dt>
+                  <dd class="mt-1">
+                    <a href={`mailto:${settings.contactEmail}`} class="text-zift hover:underline">
+                      {settings.contactEmail}
+                    </a>
+                  </dd>
+                </div>
+              )
+            }
+            {
+              settings.phone && (
+                <div>
+                  <dt class="font-medium">Teléfono</dt>
+                  <dd class="mt-1 text-muted">{settings.phone}</dd>
+                </div>
+              )
+            }
+            {
+              whatsappHref && (
+                <div>
+                  <dt class="font-medium">WhatsApp</dt>
+                  <dd class="mt-1">
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-zift hover:underline"
+                    >
+                      Escríbenos por WhatsApp
+                    </a>
+                  </dd>
+                </div>
+              )
+            }
+            {
+              settings.address && (
+                <div>
+                  <dt class="font-medium">Dirección</dt>
+                  <dd class="mt-1 text-muted">{settings.address}</dd>
+                </div>
+              )
+            }
+          </dl>
+        </aside>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

@@ -1,0 +1,109 @@
+---
+/**
+ * Formulario de lead FASE 4: validación HTML5 + fetch a /api/leads
+ * (create: anyone + CORS, FASE 1). El hardening (Zod, honeypot, rate
+ * limiting, emails) llega en FASE 7 sobre este mismo markup.
+ */
+import Button from '@/components/ui/Button.astro'
+import { PAYLOAD_URL } from '@/lib/payload'
+import type { Service } from '@cms/types'
+
+interface Props {
+  services: Service[]
+}
+
+const { services } = Astro.props
+
+const inputClasses =
+  'h-11 rounded-md border border-line bg-white px-4 text-base font-normal transition-colors placeholder:text-muted/60 focus:border-zift focus:outline-none'
+---
+
+<form id="lead-form" data-api={`${PAYLOAD_URL}/api/leads`} class="grid gap-5">
+  <div class="grid gap-5 sm:grid-cols-2">
+    <label class="grid gap-2 text-sm font-medium">
+      Nombre
+      <input name="name" required autocomplete="name" class={inputClasses} />
+    </label>
+    <label class="grid gap-2 text-sm font-medium">
+      Email
+      <input name="email" type="email" required autocomplete="email" class={inputClasses} />
+    </label>
+    <label class="grid gap-2 text-sm font-medium">
+      Teléfono / WhatsApp <span class="font-normal text-muted">(opcional)</span>
+      <input name="phone" type="tel" autocomplete="tel" class={inputClasses} />
+    </label>
+    <label class="grid gap-2 text-sm font-medium">
+      Empresa <span class="font-normal text-muted">(opcional)</span>
+      <input name="company" autocomplete="organization" class={inputClasses} />
+    </label>
+  </div>
+  <label class="grid gap-2 text-sm font-medium">
+    Servicio de interés <span class="font-normal text-muted">(opcional)</span>
+    <select name="service" class={inputClasses}>
+      <option value="">Aún no lo sé</option>
+      {
+        services.map((service) => (
+          <option value={service.id} data-slug={service.slug}>
+            {service.title}
+          </option>
+        ))
+      }
+    </select>
+  </label>
+  <label class="grid gap-2 text-sm font-medium">
+    Cuéntanos tu proyecto <span class="font-normal text-muted">(opcional)</span>
+    <textarea
+      name="message"
+      rows="5"
+      class="rounded-md border border-line bg-white px-4 py-3 text-base font-normal transition-colors placeholder:text-muted/60 focus:border-zift focus:outline-none"
+      placeholder="Qué necesitas, plazos, contexto…"></textarea>
+  </label>
+  <div class="flex flex-wrap items-center gap-4">
+    <Button type="submit" size="lg">Enviar mensaje</Button>
+    <p id="lead-form-status" class="text-sm text-muted" role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<script>
+  const form = document.getElementById('lead-form') as HTMLFormElement
+  const status = document.getElementById('lead-form-status') as HTMLParagraphElement
+  const submit = form.querySelector('button[type="submit"]') as HTMLButtonElement
+
+  // Preselección del servicio vía ?servicio=<slug> (CTA del detalle de servicio)
+  const slug = new URLSearchParams(window.location.search).get('servicio')
+  if (slug) {
+    const option = form.querySelector<HTMLOptionElement>(`option[data-slug="${CSS.escape(slug)}"]`)
+    if (option) option.selected = true
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const data = new FormData(form)
+    const service = data.get('service')
+
+    submit.disabled = true
+    status.textContent = 'Enviando…'
+
+    try {
+      const response = await fetch(form.dataset.api!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.get('name'),
+          email: data.get('email'),
+          phone: data.get('phone') || undefined,
+          company: data.get('company') || undefined,
+          service: service ? Number(service) : undefined,
+          message: data.get('message') || undefined,
+          source: 'formulario-contacto',
+        }),
+      })
+      if (!response.ok) throw new Error(`Payload respondió ${response.status}`)
+      window.location.assign('/gracias')
+    } catch {
+      submit.disabled = false
+      status.textContent =
+        'No se pudo enviar el mensaje. Inténtalo de nuevo o escríbenos por email.'
+    }
+  })
+</script>

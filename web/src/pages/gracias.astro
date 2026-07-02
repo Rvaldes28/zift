@@ -1,0 +1,26 @@
+---
+/** Confirmación de lead (FASE 4). noindex: es una página de flujo, no de búsqueda. */
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import Eyebrow from '@/components/ui/Eyebrow.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+---
+
+<BaseLayout title="Mensaje enviado" noindex>
+  <Section class="md:py-32">
+    <Container size="narrow" class="text-center">
+      <Eyebrow as="p" class="justify-center">Mensaje enviado</Eyebrow>
+      <Heading as="h1" size="display" class="mt-6">Gracias — te leemos ya</Heading>
+      <Text size="lead" muted class="mx-auto mt-6 max-w-xl">
+        Recibimos tu mensaje. Te respondemos en menos de 24 horas hábiles con próximos pasos claros.
+      </Text>
+      <div class="mt-10 flex flex-wrap justify-center gap-4">
+        <Button href="/servicios" size="lg">Ver servicios</Button>
+        <Button href="/" variant="secondary" size="lg">Volver al inicio</Button>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
