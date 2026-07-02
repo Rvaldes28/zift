@@ -1026,6 +1026,13 @@ export interface HomePage {
     };
     image?: (number | null) | Media;
   };
+  valueProposition?: {
+    title?: string | null;
+    text?: string | null;
+  };
+  /**
+   * Se muestran dentro del bloque de confianza
+   */
   stats?:
     | {
         /**
@@ -1047,6 +1054,36 @@ export interface HomePage {
      */
     featuredServices?: (number | Service)[] | null;
   };
+  benefits?: {
+    title?: string | null;
+    items?:
+      | {
+          title: string;
+          text?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  process?: {
+    title?: string | null;
+    subtitle?: string | null;
+    /**
+     * Secuencia real de trabajo — el frontend los numera en orden
+     */
+    steps?:
+      | {
+          title: string;
+          text?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Los logos salen de la colección Clientes, ordenada por su campo order
+   */
+  clientsSection?: {
+    title?: string | null;
+  };
   projectsSection?: {
     title?: string | null;
     subtitle?: string | null;
@@ -1061,6 +1098,16 @@ export interface HomePage {
      * Testimonios destacados en el home, en este orden
      */
     featuredTestimonials?: (number | Testimonial)[] | null;
+  };
+  trustBlock?: {
+    title?: string | null;
+    text?: string | null;
+    items?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
   };
   ctaSection?: {
     title?: string | null;
@@ -1191,6 +1238,12 @@ export interface HomePageSelect<T extends boolean = true> {
             };
         image?: T;
       };
+  valueProposition?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+      };
   stats?:
     | T
     | {
@@ -1205,6 +1258,36 @@ export interface HomePageSelect<T extends boolean = true> {
         subtitle?: T;
         featuredServices?: T;
       };
+  benefits?:
+    | T
+    | {
+        title?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  process?:
+    | T
+    | {
+        title?: T;
+        subtitle?: T;
+        steps?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  clientsSection?:
+    | T
+    | {
+        title?: T;
+      };
   projectsSection?:
     | T
     | {
@@ -1217,6 +1300,18 @@ export interface HomePageSelect<T extends boolean = true> {
     | {
         title?: T;
         featuredTestimonials?: T;
+      };
+  trustBlock?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        items?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
       };
   ctaSection?:
     | T

@@ -57,10 +57,28 @@ export const HomePage: GlobalConfig = {
       ],
     },
     {
+      name: 'valueProposition',
+      type: 'group',
+      label: 'Propuesta de valor',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+        },
+        {
+          name: 'text',
+          type: 'textarea',
+        },
+      ],
+    },
+    {
       name: 'stats',
       type: 'array',
       label: 'Cifras destacadas',
       maxRows: 4,
+      admin: {
+        description: 'Se muestran dentro del bloque de confianza',
+      },
       fields: [
         {
           name: 'value',
@@ -105,6 +123,81 @@ export const HomePage: GlobalConfig = {
       ],
     },
     {
+      name: 'benefits',
+      type: 'group',
+      label: 'Beneficios',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+        },
+        {
+          name: 'items',
+          type: 'array',
+          maxRows: 6,
+          fields: [
+            {
+              name: 'title',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'text',
+              type: 'textarea',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'process',
+      type: 'group',
+      label: 'Proceso de trabajo',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+        },
+        {
+          name: 'subtitle',
+          type: 'textarea',
+        },
+        {
+          name: 'steps',
+          type: 'array',
+          maxRows: 6,
+          admin: {
+            description: 'Secuencia real de trabajo — el frontend los numera en orden',
+          },
+          fields: [
+            {
+              name: 'title',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'text',
+              type: 'textarea',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'clientsSection',
+      type: 'group',
+      label: 'Logos de clientes',
+      admin: {
+        description: 'Los logos salen de la colección Clientes, ordenada por su campo order',
+      },
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+        },
+      ],
+    },
+    {
       name: 'projectsSection',
       type: 'group',
       label: 'Sección de proyectos',
@@ -145,6 +238,34 @@ export const HomePage: GlobalConfig = {
           admin: {
             description: 'Testimonios destacados en el home, en este orden',
           },
+        },
+      ],
+    },
+    {
+      name: 'trustBlock',
+      type: 'group',
+      label: 'Bloque de confianza',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+        },
+        {
+          name: 'text',
+          type: 'textarea',
+        },
+        {
+          name: 'items',
+          type: 'array',
+          maxRows: 6,
+          label: 'Garantías',
+          fields: [
+            {
+              name: 'text',
+              type: 'text',
+              required: true,
+            },
+          ],
         },
       ],
     },
