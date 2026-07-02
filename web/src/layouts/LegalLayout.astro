@@ -1,0 +1,78 @@
+---
+/**
+ * Layout de documentos legales (FASE 16): expediente numerado del sistema
+ * ZiftLab — cabecera con metadatos en mono (n.º de documento y fecha) e
+ * índice lateral pegajoso en desktop. El índice se genera de `sections` y
+ * debe listar los h2 del contenido en su mismo orden: la numeración visible
+ * de los h2 la pone el contador CSS de `.legal-prose` (global.css).
+ */
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+interface Props {
+  title: string
+  description: string
+  /** Posición dentro del expediente legal: 1 = privacidad, 2 = términos, 3 = cookies */
+  docNumber: number
+  docTotal?: number
+  /** Fecha de última revisión, formato DD.MM.AAAA */
+  updated: string
+  intro?: string
+  sections: { id: string; label: string }[]
+}
+
+const { title, description, docNumber, docTotal = 3, updated, intro, sections } = Astro.props
+
+const pad = (n: number) => String(n).padStart(2, '0')
+---
+
+<BaseLayout {title} {description}>
+  <div class="border-b border-line">
+    <Container class="pt-14 pb-10 md:pt-20 md:pb-12">
+      <div
+        class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-mono text-xs tracking-[0.18em] text-muted uppercase"
+      >
+        <p class="flex items-center gap-2.5">
+          <span class="size-2 shrink-0 bg-zift" aria-hidden="true"></span>
+          Legal — Doc. {pad(docNumber)}/{pad(docTotal)}
+        </p>
+        <p>Actualizado {updated}</p>
+      </div>
+      <Heading as="h1" size="xl" class="mt-6">{title}</Heading>
+      {
+        intro && (
+          <Text size="lead" muted class="mt-4 max-w-2xl">
+            {intro}
+          </Text>
+        )
+      }
+    </Container>
+  </div>
+
+  <Container class="py-12 md:py-16">
+    <div class="grid gap-12 lg:grid-cols-[240px_1fr] lg:gap-16">
+      <nav aria-label="Índice del documento" class="lg:sticky lg:top-8 lg:self-start">
+        <ol class="space-y-2.5">
+          {
+            sections.map((section, index) => (
+              <li>
+                <a href={`#${section.id}`} class="group flex gap-3 font-mono text-xs leading-5">
+                  <span class="shrink-0 text-zift">§ {pad(index + 1)}</span>
+                  <span class="text-muted transition-colors group-hover:text-ink">
+                    {section.label}
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
+
+      <div class="legal-prose min-w-0 max-w-2xl">
+        <slot />
+      </div>
+    </div>
+  </Container>
+</BaseLayout>

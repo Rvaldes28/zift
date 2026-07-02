@@ -172,6 +172,14 @@ const errorId = (field: string) => `${uid}-error-${field}`
     <Button type="submit" size="lg">{submitLabel}</Button>
     <p data-form-status class="text-sm text-muted" role="status" aria-live="polite"></p>
   </div>
+
+  {/* Capa informativa RGPD (FASE 16): primera capa junto al envío */}
+  <p class="text-sm font-normal text-muted">
+    Usamos tus datos solo para responder a tu solicitud, como explica la
+    <a href="/privacidad" class="underline underline-offset-4 transition-colors hover:text-ink"
+      >política de privacidad</a
+    >.
+  </p>
 </form>
 
 <script>

@@ -6,10 +6,12 @@
  */
 import '@/styles/global.css'
 
+import CookieConsent from '@/components/CookieConsent.astro'
 import Footer from '@/components/Footer.astro'
 import Header from '@/components/Header.astro'
 import SEO from '@/components/SEO.astro'
 import WhatsAppButton from '@/components/WhatsAppButton.astro'
+import { CONSENT_KEY } from '@/lib/consent'
 import { getMediaUrl } from '@/lib/media'
 import { getCachedGlobal } from '@/lib/payload'
 
@@ -41,6 +43,27 @@ const defaultTitle =
 const seoTitle = absoluteTitle ?? (title ? `${title} | ${siteName}` : defaultTitle)
 const seoDescription = description ?? settings.defaultSeo?.description ?? undefined
 const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
+
+// Bloqueo previo de cookies (FASE 16): Consent Mode v2 arranca en denied de
+// forma síncrona, antes de cualquier script de analítica (GA4/Clarity, FASE 12
+// — respetan este estado sin cambios). Va como texto (set:html) para que
+// Astro no lo procese ni lo difiera; la clave viene de lib/consent.ts.
+const consentInit = `
+window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+try{
+  var c = JSON.parse(localStorage.getItem('${CONSENT_KEY}') || 'null');
+  if (c && c.v === 1) {
+    gtag('consent','update',{
+      analytics_storage: c.analytics ? 'granted' : 'denied',
+      ad_storage: c.marketing ? 'granted' : 'denied',
+      ad_user_data: c.marketing ? 'granted' : 'denied',
+      ad_personalization: c.marketing ? 'granted' : 'denied'
+    });
+  }
+} catch (e) {}
+`
 ---
 
 <!doctype html>
@@ -49,6 +72,7 @@ const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
+    <script is:inline set:html={consentInit} />
     <SEO
       title={seoTitle}
       description={seoDescription}
@@ -82,5 +106,6 @@ const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
     </main>
     <Footer footer={footer} settings={settings} />
     {settings.whatsapp && <WhatsAppButton phone={settings.whatsapp} />}
+    <CookieConsent />
   </body>
 </html>

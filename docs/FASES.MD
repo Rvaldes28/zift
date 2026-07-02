@@ -1270,7 +1270,11 @@ Debe incluir:
 - Emails automáticos
 - Política de privacidad
 - Términos
-- Cookies
+- Cookies (política + banner de consentimiento). Elementos indispensables del banner:
+  - Opciones equivalentes: botones claros para Aceptar todo, Rechazar todo y Configurar/Personalizar. El diseño no debe manipular al usuario para obligarlo a aceptar.
+  - Información básica: una breve explicación de que el sitio utiliza cookies propias y de terceros para finalidades como el análisis, personalización o publicidad.
+  - Enlace a la política: un enlace directo a la página de Política de Cookies y Política de Privacidad para que el usuario pueda leer los detalles completos.
+  - Bloqueo previo: las cookies de análisis o publicidad deben bloquearse y no ejecutarse hasta que el usuario dé su consentimiento explícito.
 - Blog inicial
 
 Tono recomendado:

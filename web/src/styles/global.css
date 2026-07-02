@@ -83,6 +83,57 @@
   .rich-text strong {
     @apply font-semibold;
   }
+
+  /* Prosa de documentos legales (LegalLayout, FASE 16). La numeración § de
+     los h2 sale de un contador CSS: es estructura del documento, no adorno,
+     y no puede desincronizarse aunque se reordenen secciones. */
+  .legal-prose {
+    counter-reset: legal-section;
+    @apply text-base leading-relaxed;
+  }
+  .legal-prose > * + * {
+    margin-top: calc(var(--spacing) * 4);
+  }
+  .legal-prose h2 {
+    counter-increment: legal-section;
+    scroll-margin-top: calc(var(--spacing) * 8);
+    @apply font-display mt-12 text-xl sm:text-2xl;
+  }
+  .legal-prose > h2:first-child {
+    @apply mt-0;
+  }
+  .legal-prose h2::before {
+    content: '§ ' counter(legal-section, decimal-leading-zero);
+    @apply mb-2 block font-mono text-xs font-normal tracking-[0.18em] text-zift;
+  }
+  .legal-prose h3 {
+    @apply font-display mt-8 text-lg;
+  }
+  .legal-prose ul {
+    @apply list-disc pl-6;
+  }
+  .legal-prose li + li {
+    margin-top: calc(var(--spacing) * 2);
+  }
+  .legal-prose a {
+    @apply text-zift underline underline-offset-4 hover:text-zift-deep;
+  }
+  .legal-prose strong {
+    @apply font-semibold;
+  }
+  .legal-prose code {
+    @apply rounded bg-surface px-1.5 py-0.5 font-mono text-[0.8125rem];
+  }
+  .legal-prose table {
+    @apply w-full border-collapse text-sm;
+  }
+  .legal-prose th {
+    @apply border-b border-line py-2.5 pr-4 text-left align-bottom font-mono text-xs font-medium tracking-[0.08em] uppercase;
+    color: var(--color-muted);
+  }
+  .legal-prose td {
+    @apply border-b border-line py-2.5 pr-4 align-top;
+  }
 }
 
 @layer base {

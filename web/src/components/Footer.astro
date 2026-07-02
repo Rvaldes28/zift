@@ -22,6 +22,14 @@ const bottomText =
   footer.bottomText ??
   `© ${new Date().getFullYear()} ${settings.siteName}. Todos los derechos reservados.`
 
+// Fijos en código, no en el CMS: los enlaces legales no pueden desaparecer
+// por una edición en /admin (FASE 16)
+const legalLinks = [
+  { label: 'Privacidad', href: '/privacidad' },
+  { label: 'Términos', href: '/terminos' },
+  { label: 'Cookies', href: '/cookies' },
+]
+
 const socialNames: Record<string, string> = {
   linkedin: 'LinkedIn',
   instagram: 'Instagram',
@@ -110,28 +118,45 @@ const linkClass = 'text-sm text-ink-muted transition-colors hover:text-white'
       }
     </div>
 
-    <div
-      class="mt-14 flex flex-col gap-4 border-t border-ink-line pt-6 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p class="text-sm text-ink-muted">{bottomText}</p>
-      {
-        socials.length > 0 && (
-          <ul class="flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs tracking-wider uppercase">
-            {socials.map((social) => (
+    <div class="mt-14 border-t border-ink-line pt-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <ul class="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {
+            legalLinks.map((link) => (
               <li>
-                <a
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-ink-muted transition-colors hover:text-white"
-                >
-                  {socialNames[social.platform] ?? social.platform} ↗
+                <a href={link.href} class={linkClass}>
+                  {link.label}
                 </a>
               </li>
-            ))}
-          </ul>
-        )
-      }
+            ))
+          }
+          <li>
+            {/* Reabre el banner de consentimiento (CookieConsent.astro) */}
+            <button type="button" data-cookie-settings class:list={[linkClass, 'cursor-pointer']}>
+              Configurar cookies
+            </button>
+          </li>
+        </ul>
+        {
+          socials.length > 0 && (
+            <ul class="flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs tracking-wider uppercase">
+              {socials.map((social) => (
+                <li>
+                  <a
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-ink-muted transition-colors hover:text-white"
+                  >
+                    {socialNames[social.platform] ?? social.platform} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+      <p class="mt-4 text-sm text-ink-muted">{bottomText}</p>
     </div>
   </Container>
 </footer>
