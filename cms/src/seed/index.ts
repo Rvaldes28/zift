@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
+import { seedCompany } from './company'
 import { seedGlobals } from './globals'
 import { lexicalParagraphs } from './lexical'
 import { services } from './services'
@@ -45,6 +46,8 @@ const seed = async (): Promise<void> => {
   }
 
   payload.logger.info(`Seed de servicios: ${created} creados, ${skipped} ya existían`)
+
+  await seedCompany(payload)
 
   await seedGlobals(payload)
 }
