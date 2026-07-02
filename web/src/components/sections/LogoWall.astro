@@ -1,0 +1,34 @@
+---
+/** Muro de logos de clientes en escala de grises, hairlines de índice. */
+import PayloadImage from '@/components/PayloadImage.astro'
+import type { Client } from '@cms/types'
+
+interface Props {
+  clients: Client[]
+  class?: string
+}
+
+const { clients, class: className } = Astro.props
+---
+
+{
+  clients.length > 0 && (
+    <ul
+      class:list={[
+        'grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-3 lg:grid-cols-6',
+        className,
+      ]}
+      role="list"
+    >
+      {clients.map((client) => (
+        <li class="flex h-24 items-center justify-center bg-paper px-6">
+          <PayloadImage
+            media={client.logo}
+            class="max-h-10 w-auto opacity-70 grayscale"
+            sizes="160px"
+          />
+        </li>
+      ))}
+    </ul>
+  )
+}

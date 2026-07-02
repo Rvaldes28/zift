@@ -1,0 +1,47 @@
+---
+/**
+ * Caso destacado. Sin link: la página de detalle de portafolio llega en
+ * FASE 5 — entonces esta card recibirá href.
+ */
+import PayloadImage from '@/components/PayloadImage.astro'
+import Card from '@/components/ui/Card.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Text from '@/components/ui/Text.astro'
+import { resolveMedia } from '@/lib/media'
+import type { Project } from '@cms/types'
+
+interface Props {
+  project: Project
+  class?: string
+}
+
+const { project, class: className } = Astro.props
+
+const client = typeof project.client === 'object' ? project.client : null
+const cover = resolveMedia(project.coverImage)
+---
+
+<Card padding="none" class:list={['flex h-full flex-col overflow-hidden', className]}>
+  {
+    cover && (
+      <PayloadImage
+        media={cover}
+        class="aspect-[3/2] w-full border-b border-line object-cover"
+        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+      />
+    )
+  }
+  <div class="flex flex-1 flex-col p-6 md:p-8">
+    {
+      client && (
+        <p class="font-mono text-xs tracking-[0.18em] text-muted uppercase">{client.name}</p>
+      )
+    }
+    <Heading as="h3" size="sm" class="mt-3">
+      {project.title}
+    </Heading>
+    <Text size="sm" muted class="mt-3">
+      {project.excerpt}
+    </Text>
+  </div>
+</Card>
