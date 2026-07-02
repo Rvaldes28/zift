@@ -236,6 +236,25 @@ export interface Service {
         id?: string | null;
       }[]
     | null;
+  benefits?:
+    | {
+        title: string;
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Secuencia real de trabajo — el frontend los numera en orden
+   */
+  process?:
+    | {
+        title: string;
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  relatedProjects?: (number | Project)[] | null;
+  faqs?: (number | Faq)[] | null;
   /**
    * Orden en listados (menor = primero)
    */
@@ -329,6 +348,35 @@ export interface Client {
    * URL pública del cliente (opcional)
    */
   website?: string | null;
+  /**
+   * Orden en listados (menor = primero)
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  question: string;
+  answer: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
   /**
    * Orden en listados (menor = primero)
    */
@@ -441,35 +489,6 @@ export interface Testimonial {
    */
   client?: (number | null) | Client;
   avatar?: (number | null) | Media;
-  /**
-   * Orden en listados (menor = primero)
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "faqs".
- */
-export interface Faq {
-  id: number;
-  question: string;
-  answer: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
   /**
    * Orden en listados (menor = primero)
    */
@@ -697,6 +716,22 @@ export interface ServicesSelect<T extends boolean = true> {
         text?: T;
         id?: T;
       };
+  benefits?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  process?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  relatedProjects?: T;
+  faqs?: T;
   order?: T;
   meta?:
     | T

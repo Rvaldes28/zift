@@ -63,7 +63,7 @@ export const Services: CollectionConfig = {
     {
       name: 'features',
       type: 'array',
-      label: 'Puntos clave',
+      label: 'Qué incluye',
       fields: [
         {
           name: 'text',
@@ -71,6 +71,55 @@ export const Services: CollectionConfig = {
           required: true,
         },
       ],
+    },
+    {
+      name: 'benefits',
+      type: 'array',
+      label: 'Beneficios',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'text',
+          type: 'textarea',
+        },
+      ],
+    },
+    {
+      name: 'process',
+      type: 'array',
+      label: 'Proceso',
+      admin: {
+        description: 'Secuencia real de trabajo — el frontend los numera en orden',
+      },
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'text',
+          type: 'textarea',
+        },
+      ],
+    },
+    {
+      name: 'relatedProjects',
+      type: 'relationship',
+      relationTo: 'projects',
+      hasMany: true,
+      label: 'Casos relacionados',
+    },
+    {
+      name: 'faqs',
+      type: 'relationship',
+      relationTo: 'faqs',
+      hasMany: true,
+      label: 'Preguntas frecuentes',
     },
     {
       name: 'order',
