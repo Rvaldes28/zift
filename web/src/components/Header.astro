@@ -78,7 +78,13 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
           /* En móvil el CTA vive dentro del panel del menú */
           cta && (
             <div class="hidden sm:block">
-              <Button href={cta.href} size="sm" newTab={cta.newTab}>
+              <Button
+                href={cta.href}
+                size="sm"
+                newTab={cta.newTab}
+                data-track-cta={cta.label}
+                data-track-location="header"
+              >
                 {cta.label}
               </Button>
             </div>
@@ -137,7 +143,13 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
         {
           cta && (
             <li class="pt-3">
-              <Button href={cta.href} newTab={cta.newTab} class="w-full">
+              <Button
+                href={cta.href}
+                newTab={cta.newTab}
+                class="w-full"
+                data-track-cta={cta.label}
+                data-track-location="header"
+              >
                 {cta.label}
               </Button>
             </li>

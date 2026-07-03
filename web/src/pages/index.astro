@@ -89,7 +89,13 @@ const stats = home.stats ?? []
       <div class="animate-fade-up mt-10 flex flex-wrap gap-4 [animation-delay:270ms]">
         {
           primaryCta && (
-            <Button href={primaryCta.href!} newTab={primaryCta.newTab ?? false} size="lg">
+            <Button
+              href={primaryCta.href!}
+              newTab={primaryCta.newTab ?? false}
+              size="lg"
+              data-track-cta={primaryCta.label!}
+              data-track-location="hero"
+            >
               {primaryCta.label}
             </Button>
           )
@@ -101,6 +107,8 @@ const stats = home.stats ?? []
               newTab={secondaryCta.newTab ?? false}
               variant="inverse"
               size="lg"
+              data-track-cta={secondaryCta.label!}
+              data-track-location="hero"
             >
               {secondaryCta.label}
             </Button>

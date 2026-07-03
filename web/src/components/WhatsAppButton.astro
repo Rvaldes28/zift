@@ -2,8 +2,8 @@
 /**
  * Botón flotante de WhatsApp (FASE 7). Píldora ink del sistema ZiftLab con
  * punto verde de estado — no el círculo verde genérico. En hover/focus se
- * despliega la etiqueta mono; el clic emite el evento de conversión
- * whatsapp_click (dataLayer, lo consume GA4 en FASE 12).
+ * despliega la etiqueta mono; el clic emite whatsapp_click vía el listener
+ * global de Analytics.astro sobre [data-track-whatsapp] (FASE 12).
  */
 interface Props {
   /** Número en formato internacional, ej. +5075512345678 */
@@ -20,7 +20,7 @@ const href = `https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${encodeURICompo
   href={href}
   target="_blank"
   rel="noopener noreferrer"
-  data-whatsapp-fab
+  data-track-whatsapp="fab"
   aria-label="Escríbenos por WhatsApp (se abre en otra pestaña)"
   class="group fixed right-5 bottom-5 z-40 flex h-13 items-center rounded-full bg-ink px-3.5 text-white shadow-lg transition-colors hover:bg-ink-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zift print:hidden"
 >
@@ -41,11 +41,3 @@ const href = `https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${encodeURICompo
     WhatsApp
   </span>
 </a>
-
-<script>
-  import { track } from '@/lib/analytics'
-
-  document
-    .querySelector('[data-whatsapp-fab]')
-    ?.addEventListener('click', () => track('whatsapp_click'))
-</script>

@@ -33,7 +33,13 @@ const button = cta?.label && cta?.href ? cta : null
         )}
         {button && (
           <div class="mt-10">
-            <Button href={button.href!} newTab={button.newTab ?? false} size="lg">
+            <Button
+              href={button.href!}
+              newTab={button.newTab ?? false}
+              size="lg"
+              data-track-cta={button.label!}
+              data-track-location="cta-banner"
+            >
               {button.label}
             </Button>
           </div>

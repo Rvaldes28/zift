@@ -97,8 +97,23 @@ const localFacts = [
         {landing.excerpt}
       </Text>
       <div class="mt-10 flex flex-wrap gap-4">
-        <Button href={quoteHref} size="lg">Pedir cotización</Button>
-        <Button href="/asesoria" variant="secondary" size="lg">Agenda una asesoría</Button>
+        <Button
+          href={quoteHref}
+          size="lg"
+          data-track-cta="pedir-cotizacion"
+          data-track-location="landing"
+        >
+          Pedir cotización
+        </Button>
+        <Button
+          href="/asesoria"
+          variant="secondary"
+          size="lg"
+          data-track-cta="agenda-asesoria"
+          data-track-location="landing"
+        >
+          Agenda una asesoría
+        </Button>
       </div>
 
       <dl class="mt-14 grid gap-px border border-line bg-line sm:grid-cols-3" data-reveal>
