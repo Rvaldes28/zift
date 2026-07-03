@@ -51,20 +51,34 @@ const stats = home.stats ?? []
 >
   {/* Hero — umbral del laboratorio: tinta + retícula milimétrica */}
   <Section tone="ink" class="relative overflow-hidden md:py-32">
-    <div class="lab-grid absolute inset-0" aria-hidden="true"></div>
+    <div class="hero-glow absolute inset-0" aria-hidden="true"></div>
+    <div class="lab-grid animate-fade-in absolute inset-0" aria-hidden="true"></div>
     <Container class="relative">
-      {hero?.eyebrow && <Eyebrow tone="dark">{hero.eyebrow}</Eyebrow>}
-      <Heading as="h1" size="display" class="mt-6 max-w-4xl text-white">
+      {
+        hero?.eyebrow && (
+          <div class="animate-fade-up">
+            <Eyebrow tone="dark">{hero.eyebrow}</Eyebrow>
+          </div>
+        )
+      }
+      <Heading
+        as="h1"
+        size="display"
+        class="animate-fade-up mt-6 max-w-4xl text-white [animation-delay:90ms]"
+      >
         {hero?.title}
       </Heading>
       {
         hero?.subtitle && (
-          <Text size="lead" class="mt-6 max-w-2xl text-ink-muted">
+          <Text
+            size="lead"
+            class="animate-fade-up mt-6 max-w-2xl text-ink-muted [animation-delay:180ms]"
+          >
             {hero.subtitle}
           </Text>
         )
       }
-      <div class="mt-10 flex flex-wrap gap-4">
+      <div class="animate-fade-up mt-10 flex flex-wrap gap-4 [animation-delay:270ms]">
         {
           primaryCta && (
             <Button href={primaryCta.href!} newTab={primaryCta.newTab ?? false} size="lg">
@@ -245,7 +259,10 @@ const stats = home.stats ?? []
               )}
             </div>
             {stats.length > 0 && (
-              <dl class="grid content-start gap-px border border-line bg-line sm:grid-cols-2" data-reveal>
+              <dl
+                class="grid content-start gap-px border border-line bg-line sm:grid-cols-2"
+                data-reveal
+              >
                 {stats.map((stat) => (
                   <div class="bg-paper p-6 md:p-8">
                     <dd class="font-display text-4xl">{stat.value}</dd>

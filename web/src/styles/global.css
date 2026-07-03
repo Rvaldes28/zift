@@ -83,6 +83,11 @@
   mask-image: radial-gradient(120% 90% at 18% 0%, black 35%, transparent 78%);
 }
 
+/* Resplandor ultramar del mundo tinta (hero y 404): profundidad sin imagen */
+@utility hero-glow {
+  background: radial-gradient(100% 80% at 75% -20%, rgb(70 51 255 / 0.28), transparent 65%);
+}
+
 /* Prosa del rich text de Payload (componente RichText.astro) */
 @layer components {
   .rich-text {
