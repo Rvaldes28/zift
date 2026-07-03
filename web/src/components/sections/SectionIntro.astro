@@ -28,7 +28,7 @@ const {
 
 {
   (eyebrow || title || text) && (
-    <div class:list={['max-w-2xl', className]}>
+    <div class:list={['max-w-2xl', className]} data-reveal>
       {eyebrow && <Eyebrow tone={tone}>{eyebrow}</Eyebrow>}
       {title && (
         <Heading as={as} size={size} class="mt-6">

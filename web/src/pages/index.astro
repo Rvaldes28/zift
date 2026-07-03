@@ -115,8 +115,8 @@ const stats = home.stats ?? []
             text={home.servicesSection?.subtitle}
           />
           <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
-            {featuredServices.map((service) => (
-              <li>
+            {featuredServices.map((service, index) => (
+              <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
                 <ServiceCard service={service} />
               </li>
             ))}
@@ -137,7 +137,9 @@ const stats = home.stats ?? []
       <Section>
         <Container>
           <SectionIntro eyebrow="Beneficios" title={home.benefits.title} />
-          <BenefitsGrid items={benefits} class="mt-12" />
+          <div data-reveal>
+            <BenefitsGrid items={benefits} class="mt-12" />
+          </div>
         </Container>
       </Section>
     )
@@ -154,7 +156,9 @@ const stats = home.stats ?? []
             text={home.process.subtitle}
             tone="dark"
           />
-          <ProcessSteps steps={steps} tone="ink" class="mt-12" />
+          <div data-reveal>
+            <ProcessSteps steps={steps} tone="ink" class="mt-12" />
+          </div>
         </Container>
       </Section>
     )
@@ -183,8 +187,8 @@ const stats = home.stats ?? []
             text={home.projectsSection?.subtitle}
           />
           <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
-            {featuredProjects.map((project) => (
-              <li>
+            {featuredProjects.map((project, index) => (
+              <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
                 <ProjectCard project={project} />
               </li>
             ))}
@@ -206,8 +210,8 @@ const stats = home.stats ?? []
         <Container>
           <SectionIntro eyebrow="Testimonios" title={home.testimonialsSection?.title} />
           <ul class="mt-12 grid gap-5 sm:grid-cols-2" role="list">
-            {featuredTestimonials.map((testimonial) => (
-              <li>
+            {featuredTestimonials.map((testimonial, index) => (
+              <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
                 <TestimonialCard testimonial={testimonial} />
               </li>
             ))}
@@ -241,7 +245,7 @@ const stats = home.stats ?? []
               )}
             </div>
             {stats.length > 0 && (
-              <dl class="grid content-start gap-px border border-line bg-line sm:grid-cols-2">
+              <dl class="grid content-start gap-px border border-line bg-line sm:grid-cols-2" data-reveal>
                 {stats.map((stat) => (
                   <div class="bg-paper p-6 md:p-8">
                     <dd class="font-display text-4xl">{stat.value}</dd>

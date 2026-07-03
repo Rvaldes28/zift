@@ -78,8 +78,12 @@ const chipClasses =
       <p id="filter-status" class="sr-only" aria-live="polite"></p>
       <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
         {
-          projects.docs.map((project) => (
-            <li data-services={projectServiceSlugs(project)}>
+          projects.docs.map((project, index) => (
+            <li
+              data-services={projectServiceSlugs(project)}
+              data-reveal
+              style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}
+            >
               <ProjectCard project={project} class="h-full" />
             </li>
           ))
