@@ -1,0 +1,86 @@
+---
+/**
+ * Analítica (FASE 12): carga GA4 y Clarity SOLO tras consentimiento de
+ * analítica — modo básico de Consent Mode, criterio AEPD; el default denied
+ * inline de BaseLayout queda como segunda red. Sin IDs en web/.env no se
+ * inyecta nada (dev limpio). También captura las UTMs de la sesión y delega
+ * los clics de CTA ([data-track-cta]) y WhatsApp ([data-track-whatsapp]).
+ */
+---
+
+<script>
+  import { track } from '@/lib/analytics'
+  import { CONSENT_EVENT, readConsent, type StoredConsent } from '@/lib/consent'
+  import { captureUtm } from '@/lib/utm'
+
+  const GA4_ID = (import.meta.env.PUBLIC_GA4_ID as string | undefined) || undefined
+  const CLARITY_ID = (import.meta.env.PUBLIC_CLARITY_ID as string | undefined) || undefined
+
+  captureUtm()
+
+  // --- Carga consent-gated: nada de Google/Microsoft sin analytics granted ---
+
+  let loaded = false
+
+  const inject = (src: string): void => {
+    const script = document.createElement('script')
+    script.src = src
+    script.async = true
+    document.head.appendChild(script)
+  }
+
+  const loadVendors = (): void => {
+    if (loaded) return
+    loaded = true
+    if (GA4_ID) {
+      window.dataLayer ??= []
+      // gtag exige `arguments`, como en lib/consent.ts
+      function gtag(..._args: unknown[]) {
+        window.dataLayer!.push(arguments as unknown as Record<string, unknown>)
+      }
+      gtag('js', new Date())
+      gtag('config', GA4_ID)
+      inject(`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`)
+    }
+    if (CLARITY_ID) {
+      // Equivalente tipado del snippet oficial: stub con cola + tag del proyecto
+      window.clarity ??= Object.assign(
+        function (...args: unknown[]) {
+          ;(window.clarity!.q ??= []).push(args)
+        },
+        { q: [] as unknown[] },
+      )
+      inject(`https://www.clarity.ms/tag/${CLARITY_ID}`)
+    }
+  }
+
+  if (GA4_ID || CLARITY_ID) {
+    if (readConsent()?.analytics) loadVendors()
+    window.addEventListener(CONSENT_EVENT, (event) => {
+      const consent = (event as CustomEvent<StoredConsent>).detail
+      if (consent.analytics) {
+        if (loaded) window.clarity?.('start')
+        else loadVendors()
+      } else {
+        window.clarity?.('stop')
+      }
+    })
+  }
+
+  // --- Delegación de clics: CTAs y WhatsApp (atributos data-track-*) ---
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element | null
+    const cta = target?.closest<HTMLElement>('[data-track-cta]')
+    if (cta) {
+      track('cta_click', {
+        label: cta.dataset.trackCta,
+        location: cta.dataset.trackLocation,
+        href: cta.getAttribute('href') ?? undefined,
+      })
+      return
+    }
+    const whatsapp = target?.closest<HTMLElement>('[data-track-whatsapp]')
+    if (whatsapp) track('whatsapp_click', { location: whatsapp.dataset.trackWhatsapp })
+  })
+</script>

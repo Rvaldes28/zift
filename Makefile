@@ -67,6 +67,8 @@ env:
 		{ \
 			echo "PUBLIC_SITE_URL=http://localhost:4321"; \
 			echo "PUBLIC_PAYLOAD_API_URL=http://localhost:3000"; \
+			echo "PUBLIC_GA4_ID="; \
+			echo "PUBLIC_CLARITY_ID="; \
 		} > web/.env; \
 		echo "→ web/.env creado"; \
 	fi

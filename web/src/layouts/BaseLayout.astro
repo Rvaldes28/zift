@@ -6,6 +6,7 @@
  */
 import '@/styles/global.css'
 
+import Analytics from '@/components/Analytics.astro'
 import CookieConsent from '@/components/CookieConsent.astro'
 import Footer from '@/components/Footer.astro'
 import Header from '@/components/Header.astro'
@@ -124,6 +125,7 @@ try{
     <Footer footer={footer} settings={settings} />
     {settings.whatsapp && <WhatsAppButton phone={settings.whatsapp} />}
     <CookieConsent />
+    <Analytics />
     <script>
       if (document.documentElement.classList.contains('js-reveal')) {
         const observer = new IntersectionObserver(
