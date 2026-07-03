@@ -34,6 +34,35 @@
 
   --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Movimiento y elevación (FASE 9). Ningún componente declara curvas,
+     tiempos ni sombras ad hoc: todo movimiento referencia estos tokens. */
+  --ease-zift: cubic-bezier(0.22, 1, 0.36, 1);
+  --shadow-lift: 0 2px 6px -2px rgb(20 22 28 / 0.06), 0 8px 20px -6px rgb(20 22 28 / 0.1);
+  --shadow-lift-lg: 0 4px 12px -4px rgb(20 22 28 / 0.08), 0 16px 40px -12px rgb(20 22 28 / 0.14);
+
+  --animate-fade-up: fade-up 0.7s var(--ease-zift) both;
+  --animate-fade-in: fade-in 0.9s var(--ease-zift) both;
+  --animate-menu: fade-up 0.25s var(--ease-zift) both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 /* Voz display: Archivo expandida, peso alto, tracking cerrado.
