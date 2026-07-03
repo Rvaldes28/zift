@@ -212,6 +212,15 @@
       block-size: auto;
     }
   }
+
+  /* Fade-in de imágenes lazy: el estado oculto solo existe con JS activo
+     (html.js-reveal); onload o el chequeo de BaseLayout lo levantan. */
+  img.img-fade {
+    transition: opacity 0.6s var(--ease-zift);
+  }
+  html.js-reveal img.img-fade:not(.is-loaded) {
+    opacity: 0;
+  }
 }
 
 @layer base {

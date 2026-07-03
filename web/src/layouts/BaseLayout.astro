@@ -131,6 +131,11 @@ try{
           { threshold: 0.15, rootMargin: '0px 0px -8% 0px' },
         )
         document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el))
+
+        // Imágenes que ya estaban completas cuando corrió este script
+        document.querySelectorAll<HTMLImageElement>('img.img-fade').forEach((img) => {
+          if (img.complete) img.classList.add('is-loaded')
+        })
       }
     </script>
   </body>

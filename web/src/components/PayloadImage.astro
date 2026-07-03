@@ -31,7 +31,8 @@ const src = getMediaUrl(media)
       decoding={priority ? 'sync' : 'async'}
       fetchpriority={priority ? 'high' : undefined}
       sizes={sizes}
-      class={className}
+      class:list={[!priority && 'img-fade', className]}
+      onload={!priority ? "this.classList.add('is-loaded')" : undefined}
     />
   )
 }
