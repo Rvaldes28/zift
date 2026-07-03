@@ -185,6 +185,7 @@ const errorId = (field: string) => `${uid}-error-${field}`
 <script>
   import { track } from '@/lib/analytics'
   import { validateLead, type LeadFieldErrors, type LeadFormValues } from '@/lib/leads'
+  import { readUtm } from '@/lib/utm'
 
   document.querySelectorAll<HTMLFormElement>('form[data-lead-form]').forEach((form) => {
     const statusEl = form.querySelector<HTMLElement>('[data-form-status]')!
@@ -274,6 +275,7 @@ const errorId = (field: string) => `${uid}-error-${field}`
             budget: values.budget || undefined,
             message: values.message || undefined,
             source: form.dataset.source,
+            utm: readUtm() ?? undefined,
             website: String(data.get('website') ?? '') || undefined,
           }),
         })

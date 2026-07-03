@@ -84,6 +84,22 @@ export const Leads: CollectionConfig = {
       },
     },
     {
+      name: 'utm',
+      type: 'group',
+      admin: {
+        position: 'sidebar',
+        description: 'Atribución de campaña capturada al enviar el formulario (FASE 12)',
+        readOnly: true,
+      },
+      fields: [
+        { name: 'source', type: 'text' },
+        { name: 'medium', type: 'text' },
+        { name: 'campaign', type: 'text' },
+        { name: 'term', type: 'text' },
+        { name: 'content', type: 'text' },
+      ],
+    },
+    {
       name: 'status',
       type: 'select',
       required: true,

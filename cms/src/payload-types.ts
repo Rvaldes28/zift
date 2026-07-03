@@ -562,6 +562,16 @@ export interface Lead {
    * Página o campaña de origen, ej. "/servicios/seo" o "google-ads"
    */
   source?: string | null;
+  /**
+   * Atribución de campaña capturada al enviar el formulario (FASE 12)
+   */
+  utm?: {
+    source?: string | null;
+    medium?: string | null;
+    campaign?: string | null;
+    term?: string | null;
+    content?: string | null;
+  };
   status: 'new' | 'contacted' | 'won' | 'lost';
   /**
    * Notas internas de seguimiento (no públicas)
@@ -1003,6 +1013,15 @@ export interface LeadsSelect<T extends boolean = true> {
   message?: T;
   formType?: T;
   source?: T;
+  utm?:
+    | T
+    | {
+        source?: T;
+        medium?: T;
+        campaign?: T;
+        term?: T;
+        content?: T;
+      };
   status?: T;
   notes?: T;
   updatedAt?: T;

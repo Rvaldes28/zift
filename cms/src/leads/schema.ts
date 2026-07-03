@@ -46,6 +46,16 @@ export const leadSubmitSchema = z
     budget: z.preprocess(emptyToUndefined, z.enum(BUDGETS).optional()),
     message: z.preprocess(emptyToUndefined, text(5000).optional()),
     source: z.preprocess(emptyToUndefined, text(200).optional()),
+    // Atribución UTM (FASE 12): la captura el cliente (web/src/lib/utm.ts)
+    utm: z
+      .object({
+        source: z.preprocess(emptyToUndefined, text(200).optional()),
+        medium: z.preprocess(emptyToUndefined, text(200).optional()),
+        campaign: z.preprocess(emptyToUndefined, text(200).optional()),
+        term: z.preprocess(emptyToUndefined, text(200).optional()),
+        content: z.preprocess(emptyToUndefined, text(200).optional()),
+      })
+      .optional(),
     // Honeypot: los humanos no ven este campo; si llega con valor es un bot
     website: z.preprocess(emptyToUndefined, z.string().optional()),
   })
