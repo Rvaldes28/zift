@@ -14,7 +14,8 @@ const { href, padding = 'default', class: className } = Astro.props
 const classes = [
   'block rounded-xl border border-line bg-white',
   padding === 'default' && 'p-6 md:p-8',
-  href && 'group transition-colors hover:border-zift',
+  href &&
+    'group transition duration-300 ease-zift hover:-translate-y-0.5 hover:border-zift hover:shadow-lift',
   className,
 ]
 ---

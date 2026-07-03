@@ -28,7 +28,7 @@ const href = project.slug ? `/portafolio/${project.slug}` : undefined
     cover && (
       <PayloadImage
         media={cover}
-        class="aspect-[3/2] w-full border-b border-line object-cover"
+        class="aspect-[3/2] w-full border-b border-line object-cover transition-transform duration-700 ease-zift group-hover:scale-[1.03]"
         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
       />
     )
