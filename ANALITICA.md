@@ -11,14 +11,14 @@ Sin IDs no se inyecta ningún script (dev queda limpio).
 
 ## Taxonomía de eventos
 
-| Evento | Cuándo | Parámetros | Origen |
-| --- | --- | --- | --- |
-| `page_view` | Cada página | automáticos | gtag config |
-| `form_start` | Primer input en un form | automáticos | Enhanced measurement |
-| `cta_click` | Clic en un CTA instrumentado | `label`, `location` (header \| hero \| servicio-detalle \| landing \| cta-banner), `href` | `[data-track-cta]` |
-| `whatsapp_click` | Clic en WhatsApp | `location` (fab \| footer) | `[data-track-whatsapp]` |
-| `generate_lead` | Submit OK del formulario | `form_type` (contacto \| asesoria \| cotizacion) | `LeadForm.astro` |
-| `asesoria_agendada` | Reserva confirmada en Calendly | — | postMessage en `asesoria.astro` |
+| Evento              | Cuándo                         | Parámetros                                                                                | Origen                          |
+| ------------------- | ------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------- |
+| `page_view`         | Cada página                    | automáticos                                                                               | gtag config                     |
+| `form_start`        | Primer input en un form        | automáticos                                                                               | Enhanced measurement            |
+| `cta_click`         | Clic en un CTA instrumentado   | `label`, `location` (header \| hero \| servicio-detalle \| landing \| cta-banner), `href` | `[data-track-cta]`              |
+| `whatsapp_click`    | Clic en WhatsApp               | `location` (fab \| footer)                                                                | `[data-track-whatsapp]`         |
+| `generate_lead`     | Submit OK del formulario       | `form_type` (contacto \| asesoria \| cotizacion)                                          | `LeadForm.astro`                |
+| `asesoria_agendada` | Reserva confirmada en Calendly | —                                                                                         | postMessage en `asesoria.astro` |
 
 Para instrumentar un CTA nuevo basta con atributos — el listener global de
 `Analytics.astro` hace el resto:

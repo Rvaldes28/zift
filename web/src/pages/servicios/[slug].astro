@@ -57,7 +57,10 @@ const canonical = new URL(Astro.url.pathname, site).href
 >
   <JsonLd
     slot="head"
-    data={serviceSchema({ name: service.title, description: service.excerpt, url: canonical }, site)}
+    data={serviceSchema(
+      { name: service.title, description: service.excerpt, url: canonical },
+      site,
+    )}
   />
   {faqs.length > 0 && <JsonLd slot="head" data={faqPageSchema(faqs)} />}
 

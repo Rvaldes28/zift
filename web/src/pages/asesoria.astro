@@ -33,6 +33,23 @@ if (settings.calendlyUrl) {
   }
 }
 
+// UTMs de la sesión → URL del widget ANTES de que Calendly la lea (widget.js
+// es async y escanea data-url al inicializar; este script inline va antes en
+// el DOM y es síncrono, así que gana la carrera). Calendly persiste los
+// utm_* con cada reserva. Va como texto (set:html), igual que el consentInit
+// de BaseLayout; la clave viene de lib/utm.ts.
+const calendlyUtmInit = `
+try {
+  var utm = JSON.parse(sessionStorage.getItem('${UTM_KEY}') || 'null');
+  var el = document.querySelector('.calendly-inline-widget');
+  if (utm && el) {
+    var url = new URL(el.getAttribute('data-url'));
+    for (var key in utm) if (utm[key]) url.searchParams.set('utm_' + key, utm[key]);
+    el.setAttribute('data-url', url.toString());
+  }
+} catch (e) {}
+`
+
 const takeaways = [
   'Diagnóstico honesto de tu situación digital',
   'Qué haríamos nosotros, en qué orden y por qué',
@@ -79,21 +96,7 @@ const takeaways = [
                 data-url={calendlyUrl}
                 style="min-width:320px;height:680px"
               />
-              <script is:inline define:vars={{ utmKey: UTM_KEY }}>
-                // UTMs de la sesión → URL del widget ANTES de que Calendly la lea
-                // (widget.js es async y escanea data-url al inicializar; este script
-                // es síncrono y va antes en el DOM, así que siempre gana la carrera).
-                // Calendly persiste los utm_* con cada reserva.
-                try {
-                  var utm = JSON.parse(sessionStorage.getItem(utmKey) || 'null')
-                  var el = document.querySelector('.calendly-inline-widget')
-                  if (utm && el) {
-                    var url = new URL(el.getAttribute('data-url'))
-                    for (var key in utm) if (utm[key]) url.searchParams.set('utm_' + key, utm[key])
-                    el.setAttribute('data-url', url.toString())
-                  }
-                } catch (e) {}
-              </script>
+              <script is:inline set:html={calendlyUtmInit} />
               <script src="https://assets.calendly.com/assets/external/widget.js" is:inline async />
             </div>
           ) : (

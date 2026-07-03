@@ -82,7 +82,10 @@ const localFacts = [
 >
   <JsonLd
     slot="head"
-    data={serviceSchema({ name: landing.title, description: landing.excerpt, url: canonical }, site)}
+    data={serviceSchema(
+      { name: landing.title, description: landing.excerpt, url: canonical },
+      site,
+    )}
   />
   {faqs.length > 0 && <JsonLd slot="head" data={faqPageSchema(faqs)} />}
 
