@@ -29,7 +29,9 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/'
 const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === currentPath
 ---
 
-<header class="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur">
+<header
+  class="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur transition-shadow duration-300 ease-zift data-scrolled:shadow-lift"
+>
   <Container>
     <div class="flex h-16 items-center justify-between gap-6">
       <a href="/" class="font-display text-xl" aria-label={`${siteName} — inicio`}>
@@ -57,8 +59,9 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
                     rel={item.newTab ? 'noopener noreferrer' : undefined}
                     aria-current={isCurrent(item.href) ? 'page' : undefined}
                     class:list={[
-                      'text-sm font-medium transition-colors hover:text-ink',
-                      isCurrent(item.href) ? 'text-ink' : 'text-muted',
+                      'relative py-1 text-sm font-medium transition-colors hover:text-ink',
+                      'after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-zift after:transition-transform after:duration-300 after:ease-zift hover:after:scale-x-100',
+                      isCurrent(item.href) ? 'text-ink after:scale-x-100' : 'text-muted',
                     ]}
                   >
                     {item.label}
@@ -83,7 +86,7 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
         }
         <button
           type="button"
-          class="inline-flex size-10 items-center justify-center rounded-md border border-line text-ink md:hidden"
+          class="inline-flex size-11 items-center justify-center rounded-md border border-line text-ink md:hidden"
           aria-expanded="false"
           aria-controls="nav-movil"
           data-nav-toggle
@@ -107,7 +110,7 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
 
   <nav
     id="nav-movil"
-    class="hidden border-t border-line bg-paper md:hidden"
+    class="animate-menu hidden border-t border-line bg-paper md:hidden"
     aria-label="Principal"
     data-nav-panel
   >
@@ -122,7 +125,7 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
                 rel={item.newTab ? 'noopener noreferrer' : undefined}
                 aria-current={isCurrent(item.href) ? 'page' : undefined}
                 class:list={[
-                  'block py-2.5 font-medium transition-colors hover:text-ink',
+                  'block py-3 font-medium transition-colors hover:text-ink',
                   isCurrent(item.href) ? 'text-ink' : 'text-muted',
                 ]}
               >
@@ -149,8 +152,26 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
   const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]')
   const panel = document.querySelector<HTMLElement>('[data-nav-panel]')
 
+  const setOpen = (open: boolean) => {
+    panel?.classList.toggle('hidden', !open)
+    toggle?.setAttribute('aria-expanded', String(open))
+  }
+
   toggle?.addEventListener('click', () => {
-    const isOpen = panel?.classList.toggle('hidden') === false
-    toggle.setAttribute('aria-expanded', String(isOpen))
+    setOpen(panel?.classList.contains('hidden') ?? false)
   })
+
+  // Cerrar con Escape devolviendo el foco al botón (teclado/a11y)
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel && !panel.classList.contains('hidden')) {
+      setOpen(false)
+      toggle?.focus()
+    }
+  })
+
+  // Sombra de elevación solo cuando el header despega del borde superior
+  const header = document.querySelector<HTMLElement>('header')
+  const onScroll = () => header?.toggleAttribute('data-scrolled', window.scrollY > 4)
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
 </script>
