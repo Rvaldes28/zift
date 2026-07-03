@@ -70,8 +70,9 @@ por decisión explícita del propietario (igual que FASE 16 se adelantó).
   apertura suavizada como mejora progresiva (`interpolate-size` /
   `::details-content` donde exista soporte; sin JS extra).
 - **LogoWall**: logos en escala de grises → color en hover/focus.
-- **LeadForm**: focus ring consistente con el sistema, errores con transición
-  de entrada (no shake), botón de envío usa `loading`.
+- **LeadForm**: botón de envío con estado `loading` (spinner + `aria-busy`) y
+  anuncio «Enviando…» vía el status `aria-live`; el tratamiento de focus y
+  errores por campo de FASE 7 ya es accesible y se mantiene tal cual.
 
 ### 5. Estados
 
@@ -89,8 +90,10 @@ por decisión explícita del propietario (igual que FASE 16 se adelantó).
 
 - Escala de espaciado vertical consistente entre secciones (auditar `Section`:
   un solo sistema py-16/24/32 según variante, sin valores sueltos por página).
-- **Skip-link** («Saltar al contenido») en `BaseLayout` + `id` en el `main`.
-- Tap targets ≥ 44 px en nav móvil, chips de categoría y paginación.
+- Skip-link: **ya existe** en `BaseLayout` («Saltar al contenido» → `#contenido`);
+  solo verificar que sigue funcionando tras los cambios.
+- Tap targets: ≥ 44 px en nav móvil y botón de menú; chips y paginación ya
+  cumplen el mínimo AA real (24 px, WCAG 2.5.8) y mantienen su altura.
 - Auditoría de jerarquía de encabezados y landmarks en las plantillas.
 - Contraste: ya verificado (ver Contexto); solo vigilar que los estados nuevos
   (hover/disabled) no caigan por debajo de 4.5:1 (texto) / 3:1 (UI).
