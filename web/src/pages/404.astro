@@ -1,0 +1,33 @@
+---
+/**
+ * 404 en el mundo tinta (FASE 9): misma señalética que el hero,
+ * con salidas claras a home, servicios y contacto. noindex.
+ */
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+---
+
+<BaseLayout title="Página no encontrada" noindex>
+  <Section tone="ink" class="relative overflow-hidden md:py-40">
+    <div class="hero-glow absolute inset-0" aria-hidden="true"></div>
+    <div class="lab-grid absolute inset-0" aria-hidden="true"></div>
+    <Container class="relative">
+      <p class="font-mono text-xs tracking-[0.18em] text-ink-muted uppercase">Error 404</p>
+      <Heading as="h1" size="display" class="mt-6 max-w-3xl text-white">
+        Esta página no existe.
+      </Heading>
+      <Text size="lead" class="mt-6 max-w-2xl text-ink-muted">
+        El enlace puede estar roto o la página se movió. Estos caminos sí llevan a algún sitio:
+      </Text>
+      <div class="mt-10 flex flex-wrap gap-4">
+        <Button href="/" size="lg">Ir al inicio</Button>
+        <Button href="/servicios" variant="inverse" size="lg">Ver servicios</Button>
+        <Button href="/contacto" variant="inverse" size="lg">Contacto</Button>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
