@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 7 (lead capture and forms) complete**, plus **FASE 16 (final commercial content: legal pages, cookie consent with prior blocking, RGPD form notice) done out of order** — next up is FASE 8 (advanced technical SEO). Consent state lives in `web/src/lib/consent.ts` + the inline Consent Mode script in `BaseLayout.astro`; FASE 12 analytics must load through it, not around it. MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`). The Payload CMS must be running for `pnpm dev:web` / `pnpm build:web` to render real data (the web fetches at build/request time).
+ZiftLab: the official site/platform for a digital agency. `docs/FASES.MD` is the authoritative master spec/roadmap (FASE 0–16); `docs/1.md` documents the agency's stack choices for other project types. Current state: **FASE 9 (premium UX/UI) complete** (FASE 7 y 16 ya completadas; FASE 16 done out of order) — next up is FASE 8 (advanced technical SEO). Consent state lives in `web/src/lib/consent.ts` + the inline Consent Mode script in `BaseLayout.astro`; FASE 12 analytics must load through it, not around it. MinIO must be running for media uploads (`./infra/scripts/start-minio.sh`; bucket via `./infra/scripts/create-minio-bucket.sh`). The Payload CMS must be running for `pnpm dev:web` / `pnpm build:web` to render real data (the web fetches at build/request time).
 
 ## Commands
 
