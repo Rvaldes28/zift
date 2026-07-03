@@ -1,0 +1,27 @@
+---
+/**
+ * Estado vacío del sistema: marcador mono + mensaje + acción opcional (slot).
+ * Se usa en listados sin resultados (filtro del portafolio, blog).
+ */
+interface Props {
+  title: string
+  text?: string
+  class?: string
+}
+
+const { title, text, class: className } = Astro.props
+---
+
+<div
+  class:list={[
+    'rounded-xl border border-dashed border-line bg-surface/60 px-6 py-16 text-center',
+    className,
+  ]}
+>
+  <p class="font-mono text-xs tracking-[0.18em] text-muted uppercase" aria-hidden="true">
+    [ sin resultados ]
+  </p>
+  <p class="font-display mt-4 text-xl">{title}</p>
+  {text && <p class="mx-auto mt-2 max-w-md text-sm text-muted">{text}</p>}
+  <slot />
+</div>

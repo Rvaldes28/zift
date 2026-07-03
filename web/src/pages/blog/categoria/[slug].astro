@@ -8,9 +8,10 @@ import CTASection from '@/components/sections/CTASection.astro'
 import CategoryChips from '@/components/sections/CategoryChips.astro'
 import PostGrid from '@/components/sections/PostGrid.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
+import Button from '@/components/ui/Button.astro'
 import Container from '@/components/ui/Container.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
 import Section from '@/components/ui/Section.astro'
-import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getCollection } from '@/lib/payload'
 import type { Category } from '@cms/types'
@@ -58,12 +59,13 @@ const posts = await getCollection('posts', {
         posts.docs.length > 0 ? (
           <PostGrid posts={posts.docs} />
         ) : (
-          <Text muted>
-            Aún no hay artículos en esta categoría.
-            <a href="/blog" class="text-zift underline underline-offset-4">
-              Ver todos los artículos
-            </a>
-          </Text>
+          <EmptyState title="Aún no hay artículos en esta categoría">
+            <div class="mt-6">
+              <Button href="/blog" variant="secondary" size="sm">
+                Ver todos los artículos
+              </Button>
+            </div>
+          </EmptyState>
         )
       }
     </Container>

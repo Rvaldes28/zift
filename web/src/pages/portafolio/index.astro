@@ -8,6 +8,7 @@ import CTASection from '@/components/sections/CTASection.astro'
 import ProjectCard from '@/components/sections/ProjectCard.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
 import Container from '@/components/ui/Container.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
 import Section from '@/components/ui/Section.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getCollection, resolveDocs } from '@/lib/payload'
@@ -89,6 +90,12 @@ const chipClasses =
           ))
         }
       </ul>
+      <div data-filter-empty hidden class="mt-6">
+        <EmptyState
+          title="Ningún caso con ese servicio"
+          text="Prueba con otro filtro o mira todos los casos."
+        />
+      </div>
     </Container>
   </Section>
 
@@ -105,6 +112,7 @@ const chipClasses =
   )
   const cards = Array.from(document.querySelectorAll<HTMLElement>('li[data-services]'))
   const status = document.getElementById('filter-status')
+  const emptyState = document.querySelector<HTMLElement>('[data-filter-empty]')
 
   const applyFilter = (slug: string): void => {
     for (const button of filterButtons) {
@@ -117,6 +125,7 @@ const chipClasses =
       if (match) visible += 1
     }
     if (status) status.textContent = `Mostrando ${visible} ${visible === 1 ? 'caso' : 'casos'}`
+    if (emptyState) emptyState.hidden = visible > 0
     const url = new URL(window.location.href)
     if (slug === 'todos') url.searchParams.delete('servicio')
     else url.searchParams.set('servicio', slug)

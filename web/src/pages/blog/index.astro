@@ -9,8 +9,10 @@ import CategoryChips from '@/components/sections/CategoryChips.astro'
 import PostGrid from '@/components/sections/PostGrid.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
 import PayloadImage from '@/components/PayloadImage.astro'
+import Button from '@/components/ui/Button.astro'
 import Card from '@/components/ui/Card.astro'
 import Container from '@/components/ui/Container.astro'
+import EmptyState from '@/components/ui/EmptyState.astro'
 import Heading from '@/components/ui/Heading.astro'
 import Pagination from '@/components/ui/Pagination.astro'
 import Section from '@/components/ui/Section.astro'
@@ -90,13 +92,16 @@ const featuredCategory = featured ? (postCategories(featured)[0] ?? null) : null
 
       {
         !featured && (
-          <Text muted>
-            Aún no hay artículos publicados. Vuelve pronto — o síguenos por RSS en
-            <a href="/rss.xml" class="text-zift underline underline-offset-4">
-              /rss.xml
-            </a>
-            .
-          </Text>
+          <EmptyState
+            title="Aún no hay artículos publicados"
+            text="Vuelve pronto — publicamos guías y casos con métricas reales."
+          >
+            <div class="mt-6">
+              <Button href="/rss.xml" variant="secondary" size="sm">
+                Seguir por RSS
+              </Button>
+            </div>
+          </EmptyState>
         )
       }
 
