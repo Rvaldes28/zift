@@ -184,6 +184,15 @@
     opacity: 1;
     translate: 0 0;
   }
+
+  /* Spinner de Button: oculto salvo con data-loading (lo activa el script
+     del formulario en runtime o la prop loading en server). */
+  .btn-spinner {
+    display: none;
+  }
+  button[data-loading='true'] .btn-spinner {
+    display: inline-block;
+  }
 }
 
 @layer base {

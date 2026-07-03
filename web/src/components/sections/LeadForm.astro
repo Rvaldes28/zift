@@ -189,7 +189,6 @@ const errorId = (field: string) => `${uid}-error-${field}`
   document.querySelectorAll<HTMLFormElement>('form[data-lead-form]').forEach((form) => {
     const statusEl = form.querySelector<HTMLElement>('[data-form-status]')!
     const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
-    const submitLabel = submitBtn.textContent
     const formType = form.dataset.formType ?? 'contacto'
 
     // Preselección del servicio vía ?servicio=<slug> (CTA del detalle de servicio)
@@ -257,8 +256,9 @@ const errorId = (field: string) => `${uid}-error-${field}`
       }
 
       submitBtn.disabled = true
-      submitBtn.textContent = 'Enviando…'
-      statusEl.textContent = ''
+      submitBtn.dataset.loading = 'true'
+      submitBtn.setAttribute('aria-busy', 'true')
+      statusEl.textContent = 'Enviando…'
 
       try {
         const response = await fetch(form.dataset.api!, {
@@ -288,7 +288,8 @@ const errorId = (field: string) => `${uid}-error-${field}`
         window.location.assign(`/gracias?de=${formType}`)
       } catch (error) {
         submitBtn.disabled = false
-        submitBtn.textContent = submitLabel
+        delete submitBtn.dataset.loading
+        submitBtn.removeAttribute('aria-busy')
         statusEl.textContent =
           error instanceof Error && error.message
             ? error.message

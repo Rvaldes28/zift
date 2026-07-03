@@ -2,7 +2,8 @@
 /**
  * Botón del sistema. Renderiza <a> si recibe href, <button> si no.
  * primary = acción principal (ultramar), secondary = alternativa sobre fondos
- * claros, ghost = terciaria de bajo peso.
+ * claros, ghost = terciaria de bajo peso. Con href en primary/inverse pinta
+ * flecha que se desliza en hover; loading muestra spinner y deshabilita.
  */
 interface Props {
   href?: string
@@ -10,6 +11,7 @@ interface Props {
   size?: 'sm' | 'md' | 'lg'
   newTab?: boolean
   type?: 'button' | 'submit'
+  loading?: boolean
   class?: string
 }
 
@@ -19,6 +21,7 @@ const {
   size = 'md',
   newTab = false,
   type = 'button',
+  loading = false,
   class: className,
 } = Astro.props
 
@@ -37,11 +40,13 @@ const sizes = {
 }
 
 const classes = [
-  'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors',
+  'group/btn inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition duration-150 ease-zift active:scale-[0.98] disabled:opacity-60',
   variants[variant],
   sizes[size],
   className,
 ]
+
+const showArrow = Boolean(href) && (variant === 'primary' || variant === 'inverse')
 ---
 
 {
@@ -53,9 +58,27 @@ const classes = [
       rel={newTab ? 'noopener noreferrer' : undefined}
     >
       <slot />
+      {showArrow && (
+        <span
+          aria-hidden="true"
+          class="transition-transform duration-150 ease-zift group-hover/btn:translate-x-1"
+        >
+          →
+        </span>
+      )}
     </a>
   ) : (
-    <button {type} class:list={classes}>
+    <button
+      {type}
+      class:list={classes}
+      disabled={loading || undefined}
+      data-loading={loading ? 'true' : undefined}
+      aria-busy={loading ? 'true' : undefined}
+    >
+      <span
+        class="btn-spinner size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+        aria-hidden="true"
+      />
       <slot />
     </button>
   )
