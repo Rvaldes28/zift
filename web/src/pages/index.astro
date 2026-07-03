@@ -18,15 +18,21 @@ import Eyebrow from '@/components/ui/Eyebrow.astro'
 import Heading from '@/components/ui/Heading.astro'
 import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
+import JsonLd from '@/components/JsonLd.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getMediaUrl } from '@/lib/media'
-import { getCollection, getGlobal, resolveDocs } from '@/lib/payload'
+import { getCachedGlobal, getCollection, getGlobal, resolveDocs } from '@/lib/payload'
+import { localBusinessSchema } from '@/lib/schema'
 import type { Client, Project, Service, Testimonial } from '@cms/types'
 
-const [home, clientsResult] = await Promise.all([
+const [home, clientsResult, settings] = await Promise.all([
   getGlobal('home-page', { depth: 2 }),
   getCollection('clients', { sort: 'order', limit: 12 }),
+  getCachedGlobal('site-settings'),
 ])
+
+// Ficha del negocio para SEO local (FASE 8): solo home y /contacto la emiten
+const site = Astro.site ?? new URL(Astro.url.origin)
 
 const hero = home.hero
 const primaryCta = hero?.primaryCta?.label && hero.primaryCta.href ? hero.primaryCta : null
@@ -49,6 +55,8 @@ const stats = home.stats ?? []
   description={home.meta?.description ?? undefined}
   ogImage={getMediaUrl(home.meta?.image)}
 >
+  <JsonLd slot="head" data={localBusinessSchema(settings, site)} />
+
   {/* Hero — umbral del laboratorio: tinta + retícula milimétrica */}
   <Section tone="ink" class="relative overflow-hidden md:py-32">
     <div class="hero-glow absolute inset-0" aria-hidden="true"></div>

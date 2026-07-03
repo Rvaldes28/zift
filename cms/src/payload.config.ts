@@ -19,6 +19,7 @@ import { Testimonials } from './collections/Testimonials'
 import { TeamMembers } from './collections/TeamMembers'
 import { FAQs } from './collections/FAQs'
 import { Leads } from './collections/Leads'
+import { Landings } from './collections/Landings'
 import { Redirects } from './collections/Redirects'
 import { SiteSettings } from './globals/SiteSettings'
 import { Header } from './globals/Header'
@@ -51,6 +52,7 @@ export default buildConfig({
     TeamMembers,
     FAQs,
     Leads,
+    Landings,
     Redirects,
   ],
   globals: [SiteSettings, Header, Footer, HomePage, AboutPage, ContactPage],
@@ -92,7 +94,7 @@ export default buildConfig({
       },
     }),
     seoPlugin({
-      collections: ['services', 'projects', 'posts'],
+      collections: ['services', 'projects', 'posts', 'landings'],
       globals: ['home-page'],
       uploadsCollection: 'media',
       generateTitle: ({ doc }) => (doc?.title ? `${doc.title} | ZiftLab` : 'ZiftLab'),

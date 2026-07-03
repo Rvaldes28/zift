@@ -78,6 +78,7 @@ export interface Config {
     'team-members': TeamMember;
     faqs: Faq;
     leads: Lead;
+    landings: Landing;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -97,6 +98,7 @@ export interface Config {
     'team-members': TeamMembersSelect<false> | TeamMembersSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
+    landings: LandingsSelect<false> | LandingsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -569,6 +571,65 @@ export interface Lead {
   createdAt: string;
 }
 /**
+ * Páginas de aterrizaje para SEO local (FASE 8). Se publican en la raíz del sitio: /desarrollo-web-panama
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "landings".
+ */
+export interface Landing {
+  id: number;
+  /**
+   * H1 de la página — la keyword exacta, corta: "Desarrollo web en Panamá"
+   */
+  title: string;
+  /**
+   * Se genera desde "title" si se deja vacío
+   */
+  slug?: string | null;
+  /**
+   * Entrada bajo el H1: la propuesta de valor en una o dos frases
+   */
+  excerpt: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Alimenta el bloque "El servicio, en detalle", el CTA de cotización y las FAQs si la landing no define las suyas
+   */
+  service?: (number | null) | Service;
+  /**
+   * Si se deja vacío se usan las del servicio relacionado
+   */
+  faqs?: (number | Faq)[] | null;
+  /**
+   * Orden en listados (menor = primero)
+   */
+  order?: number | null;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -656,6 +717,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'leads';
         value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'landings';
+        value: number | Landing;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -942,6 +1007,29 @@ export interface LeadsSelect<T extends boolean = true> {
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "landings_select".
+ */
+export interface LandingsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  content?: T;
+  service?: T;
+  faqs?: T;
+  order?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

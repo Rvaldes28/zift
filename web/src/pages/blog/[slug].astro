@@ -4,6 +4,7 @@
  * (autor · fecha · tiempo de lectura), prosa en ancho de lectura, artículos
  * relacionados por categoría y Schema.org Article para resultados enriquecidos.
  */
+import JsonLd from '@/components/JsonLd.astro'
 import PayloadImage from '@/components/PayloadImage.astro'
 import CTASection from '@/components/sections/CTASection.astro'
 import PostGrid from '@/components/sections/PostGrid.astro'
@@ -17,6 +18,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 import { formatDateLong, postAuthor, postCategories, readingTimeMinutes } from '@/lib/blog'
 import { getMediaUrl } from '@/lib/media'
 import { getCachedGlobal, getCollection } from '@/lib/payload'
+import { articleSchema, breadcrumbSchema } from '@/lib/schema'
 import type { Post } from '@cms/types'
 
 export async function getStaticPaths() {
@@ -53,22 +55,27 @@ if (related.length < 3) {
   related = [...related, ...recent.docs.filter((doc) => !seen.has(doc.id))].slice(0, 3)
 }
 
-const canonical = new URL(Astro.url.pathname, Astro.site).href
+const site = Astro.site ?? new URL(Astro.url.origin)
+const canonical = new URL(Astro.url.pathname, site).href
 const coverUrl = getMediaUrl(post.meta?.image) ?? getMediaUrl(post.coverImage)
 
-// Schema.org Article para resultados enriquecidos de Google
-const articleSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
+// Schema Article para resultados enriquecidos + BreadcrumbList (FASE 8).
+// La miga visible aquí es la línea de categorías; el schema declara la
+// jerarquía real Inicio → Blog → artículo.
+const article = articleSchema({
   headline: post.title,
   description: post.excerpt,
-  ...(coverUrl && { image: [coverUrl] }),
+  image: coverUrl,
   datePublished: publishedAt,
   dateModified: post.updatedAt,
-  ...(author && { author: [{ '@type': 'Person', name: author.name, jobTitle: author.role }] }),
-  publisher: { '@type': 'Organization', name: settings.siteName },
-  mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
-}
+  author: author ? { name: author.name, jobTitle: author.role } : null,
+  publisherName: settings.siteName,
+  canonical,
+})
+const breadcrumbs = breadcrumbSchema(
+  [{ name: 'Inicio', href: '/' }, { name: 'Blog', href: '/blog' }, { name: post.title }],
+  site,
+)
 ---
 
 <BaseLayout
@@ -78,12 +85,8 @@ const articleSchema = {
   ogImage={coverUrl}
   article={{ publishedTime: publishedAt, modifiedTime: post.updatedAt }}
 >
-  <script
-    is:inline
-    slot="head"
-    type="application/ld+json"
-    set:html={JSON.stringify(articleSchema).replace(/</g, '\\u003c')}
-  />
+  <JsonLd slot="head" data={article} />
+  <JsonLd slot="head" data={breadcrumbs} />
 
   {/* Cabecera del artículo */}
   <Section class="md:pb-16">

@@ -3,13 +3,15 @@ import { getPayload } from 'payload'
 import config from '../payload.config'
 import { coreFaqQuestions, seedCompany } from './company'
 import { seedGlobals } from './globals'
+import { seedLandings } from './landings'
 import { lexicalParagraphs } from './lexical'
 import { seedPosts } from './posts'
 import { seedProjects } from './projects'
 import { serviceProcess, services } from './services'
 
 // Siembra idempotente: 14 servicios (FASE 2 + campos FASE 4), datos de
-// empresa, casos de ejemplo, blog (FASE 6) y globals del frontend.
+// empresa, casos de ejemplo, blog (FASE 6), landings SEO y redirecciones
+// (FASE 8) y globals del frontend.
 // Correr con: pnpm seed (desde /cms). Requiere PostgreSQL y MinIO.
 const seed = async (): Promise<void> => {
   const payload = await getPayload({ config })
@@ -83,6 +85,7 @@ const seed = async (): Promise<void> => {
 
   await seedProjects(payload)
   await seedPosts(payload)
+  await seedLandings(payload)
   await seedGlobals(payload)
 }
 

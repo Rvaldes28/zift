@@ -1,0 +1,158 @@
+---
+/**
+ * Landing de SEO local (FASE 8): página raíz por keyword (/desarrollo-web-panama)
+ * editable desde la colección landings del CMS. H1 exacto a la búsqueda,
+ * ficha local como señal de cercanía, cuerpo editable, enlace interno al
+ * servicio del catálogo y FAQs con su schema FAQPage.
+ */
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import JsonLd from '@/components/JsonLd.astro'
+import CTASection from '@/components/sections/CTASection.astro'
+import FaqAccordion from '@/components/sections/FaqAccordion.astro'
+import RichText from '@/components/sections/RichText.astro'
+import SectionIntro from '@/components/sections/SectionIntro.astro'
+import ServiceCard from '@/components/sections/ServiceCard.astro'
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getMediaUrl } from '@/lib/media'
+import { getCollection, resolveDocs } from '@/lib/payload'
+import { faqPageSchema, serviceSchema } from '@/lib/schema'
+import type { Faq, Landing } from '@cms/types'
+
+export async function getStaticPaths() {
+  // Rutas ya ocupadas por páginas del sitio: una landing con ese slug no se
+  // publica (la ruta estática ganaría y quedaría contenido invisible)
+  const reserved = new Set([
+    'servicios',
+    'portafolio',
+    'blog',
+    'contacto',
+    'cotizacion',
+    'asesoria',
+    'gracias',
+    'quienes-somos',
+    'privacidad',
+    'terminos',
+    'cookies',
+    '404',
+    '500',
+  ])
+  // depth 2: resuelve el servicio relacionado con sus FAQs pobladas
+  const landings = await getCollection('landings', { sort: 'order', limit: 100, depth: 2 })
+  return landings.docs
+    .filter(
+      (landing): landing is Landing & { slug: string } =>
+        Boolean(landing.slug) && !reserved.has(landing.slug!),
+    )
+    .map((landing) => ({ params: { slug: landing.slug }, props: { landing } }))
+}
+
+// El tipo de props lo infiere Astro desde getStaticPaths
+const { landing } = Astro.props
+
+const service = typeof landing.service === 'object' ? landing.service : null
+// FAQs propias de la landing; si no define, hereda las del servicio
+const ownFaqs = resolveDocs<Faq>(landing.faqs)
+const faqs = ownFaqs.length > 0 ? ownFaqs : resolveDocs<Faq>(service?.faqs)
+
+// FASE 7: la cotización preselecciona el servicio relacionado
+const quoteHref = service ? `/cotizacion?servicio=${service.slug}` : '/cotizacion'
+
+const site = Astro.site ?? new URL(Astro.url.origin)
+const canonical = new URL(Astro.url.pathname, site).href
+
+// Ficha local: la señal de cercanía de estas páginas, en el idioma del
+// catálogo (numeral display + rótulo mono, como las cifras del home)
+const localFacts = [
+  { value: 'Panamá', label: 'Base local · GMT−5' },
+  { value: '< 24 h', label: 'Respuesta a tu solicitud' },
+  { value: 'ES · EN', label: 'Atención en dos idiomas' },
+]
+---
+
+<BaseLayout
+  absoluteTitle={landing.meta?.title ?? undefined}
+  title={landing.meta?.title ? undefined : landing.title}
+  description={landing.meta?.description ?? landing.excerpt}
+  ogImage={getMediaUrl(landing.meta?.image)}
+>
+  <JsonLd
+    slot="head"
+    data={serviceSchema({ name: landing.title, description: landing.excerpt, url: canonical }, site)}
+  />
+  {faqs.length > 0 && <JsonLd slot="head" data={faqPageSchema(faqs)} />}
+
+  {/* Cabecera: keyword exacta como H1 + ficha local */}
+  <Section class="md:pb-16">
+    <Container>
+      <Breadcrumbs items={[{ label: landing.title }]} />
+      <Heading as="h1" size="display" class="mt-6 max-w-4xl">
+        {landing.title}
+      </Heading>
+      <Text size="lead" muted class="mt-6 max-w-2xl">
+        {landing.excerpt}
+      </Text>
+      <div class="mt-10 flex flex-wrap gap-4">
+        <Button href={quoteHref} size="lg">Pedir cotización</Button>
+        <Button href="/asesoria" variant="secondary" size="lg">Agenda una asesoría</Button>
+      </div>
+
+      <dl class="mt-14 grid gap-px border border-line bg-line sm:grid-cols-3" data-reveal>
+        {
+          localFacts.map((fact) => (
+            <div class="bg-paper p-6 md:p-8">
+              <dd class="font-display text-2xl sm:text-3xl">{fact.value}</dd>
+              <dt class="mt-2 font-mono text-xs tracking-[0.18em] text-muted uppercase">
+                {fact.label}
+              </dt>
+            </div>
+          ))
+        }
+      </dl>
+    </Container>
+  </Section>
+
+  {/* Cuerpo editable desde el CMS */}
+  <Section tone="surface" class="border-t-0">
+    <Container size="narrow">
+      <RichText content={landing.content} />
+    </Container>
+  </Section>
+
+  {/* Enlace interno al servicio del catálogo */}
+  {
+    service && (
+      <Section>
+        <Container size="narrow">
+          <SectionIntro eyebrow="Servicios" title="El servicio, en detalle" />
+          <div class="mt-12" data-reveal>
+            <ServiceCard service={service} />
+          </div>
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* Preguntas frecuentes */}
+  {
+    faqs.length > 0 && (
+      <Section tone="surface">
+        <Container size="narrow">
+          <SectionIntro eyebrow="FAQs" title="Preguntas frecuentes" />
+          <FaqAccordion faqs={faqs} class="mt-12" />
+        </Container>
+      </Section>
+    )
+  }
+
+  {/* CTA a asesoría */}
+  <CTASection
+    title="¿Hablamos de tu proyecto?"
+    text="Agenda una asesoría gratuita de 30 minutos. Te decimos qué haríamos y cuánto costaría, sin compromiso."
+    cta={{ label: 'Agenda una asesoría', href: '/asesoria' }}
+  />
+</BaseLayout>

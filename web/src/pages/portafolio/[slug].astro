@@ -5,6 +5,7 @@
  * entrega, sitio) junto a la narrativa problema → solución, resultados
  * medibles en numerales display, galería, testimonio y CTA final.
  */
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PayloadImage from '@/components/PayloadImage.astro'
 import CTASection from '@/components/sections/CTASection.astro'
 import RichText from '@/components/sections/RichText.astro'
@@ -64,7 +65,12 @@ const hasSheet = Boolean(client || project.industry || services.length || stack.
   {/* Cabecera del expediente */}
   <Section class="md:pb-16">
     <Container>
-      <Eyebrow>{client ? `Portafolio · ${client.name}` : 'Portafolio'}</Eyebrow>
+      <Breadcrumbs
+        items={[
+          { label: 'Portafolio', href: '/portafolio' },
+          { label: client?.name ?? project.title, name: project.title },
+        ]}
+      />
       <Heading as="h1" size="display" class="mt-6 max-w-4xl">
         {project.title}
       </Heading>

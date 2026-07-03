@@ -1,0 +1,64 @@
+---
+/**
+ * Miga de pan (FASE 8): ocupa el lugar del Eyebrow en las páginas de detalle
+ * con su mismo lenguaje — mono en versalitas y marcador cuadrado ultramar —
+ * pero navegable y con su schema BreadcrumbList. "Inicio" se antepone solo.
+ */
+import JsonLd from '@/components/JsonLd.astro'
+import { breadcrumbSchema } from '@/lib/schema'
+
+interface Item {
+  /** Texto visible del tramo (puede ser un código de catálogo: "SRV-01") */
+  label: string
+  href?: string
+  /** Nombre real para el schema cuando el label visible es un código */
+  name?: string
+}
+
+interface Props {
+  /** Tramos después de Inicio; el último es la página actual (sin href) */
+  items: Item[]
+  /** dark = para usar sobre fondos ink */
+  tone?: 'light' | 'dark'
+  class?: string
+}
+
+const { items, tone = 'light', class: className }: Props = Astro.props
+
+const site = Astro.site ?? new URL(Astro.url.origin)
+const schemaItems = [
+  { name: 'Inicio', href: '/' },
+  ...items.map((item) => ({ name: item.name ?? item.label, href: item.href })),
+]
+---
+
+<nav aria-label="Ruta de navegación" class={className}>
+  <ol
+    class:list={[
+      'flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-xs tracking-[0.18em] uppercase',
+      tone === 'dark' ? 'text-ink-muted' : 'text-muted',
+    ]}
+  >
+    <li class="flex items-center gap-2.5">
+      <span class="size-2 shrink-0 bg-zift" aria-hidden="true"></span>
+      <a href="/" class="transition-colors hover:text-zift">Inicio</a>
+    </li>
+    {
+      items.map((item) => (
+        <li class="flex items-center gap-2.5">
+          <span aria-hidden="true">/</span>
+          {item.href ? (
+            <a href={item.href} class="transition-colors hover:text-zift">
+              {item.label}
+            </a>
+          ) : (
+            <span aria-current="page" class={tone === 'dark' ? 'text-white' : 'text-ink'}>
+              {item.label}
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+<JsonLd data={breadcrumbSchema(schemaItems, site)} />

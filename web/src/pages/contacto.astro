@@ -1,11 +1,13 @@
 ---
 /** Contacto (FASE 4): intro del global + datos de site-settings + LeadForm. */
+import JsonLd from '@/components/JsonLd.astro'
 import LeadForm from '@/components/sections/LeadForm.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
 import Container from '@/components/ui/Container.astro'
 import Section from '@/components/ui/Section.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getCachedGlobal, getCollection, getGlobal } from '@/lib/payload'
+import { localBusinessSchema } from '@/lib/schema'
 
 const [page, settings, services] = await Promise.all([
   getGlobal('contact-page'),
@@ -16,9 +18,13 @@ const [page, settings, services] = await Promise.all([
 const whatsappHref = settings.whatsapp
   ? `https://wa.me/${settings.whatsapp.replace(/[^\d]/g, '')}`
   : null
+
+// Ficha del negocio para SEO local (FASE 8): solo home y /contacto la emiten
+const site = Astro.site ?? new URL(Astro.url.origin)
 ---
 
 <BaseLayout title={page.title ?? 'Contacto'} description={page.text ?? undefined}>
+  <JsonLd slot="head" data={localBusinessSchema(settings, site)} />
   <Section>
     <Container>
       <div class="grid gap-14 lg:grid-cols-[2fr_1fr] lg:gap-20">

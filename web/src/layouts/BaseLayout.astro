@@ -9,11 +9,13 @@ import '@/styles/global.css'
 import CookieConsent from '@/components/CookieConsent.astro'
 import Footer from '@/components/Footer.astro'
 import Header from '@/components/Header.astro'
+import JsonLd from '@/components/JsonLd.astro'
 import SEO from '@/components/SEO.astro'
 import WhatsAppButton from '@/components/WhatsAppButton.astro'
 import { CONSENT_KEY } from '@/lib/consent'
 import { getMediaUrl } from '@/lib/media'
 import { getCachedGlobal } from '@/lib/payload'
+import { organizationSchema } from '@/lib/schema'
 
 interface Props {
   /** Título de la página; se compone como "Título | SiteName". Si falta, se usa el SEO por defecto del CMS. */
@@ -43,6 +45,10 @@ const defaultTitle =
 const seoTitle = absoluteTitle ?? (title ? `${title} | ${siteName}` : defaultTitle)
 const seoDescription = description ?? settings.defaultSeo?.description ?? undefined
 const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
+
+// Schema Organization en todas las páginas (FASE 8); LocalBusiness solo lo
+// añaden el home y /contacto vía slot="head"
+const site = Astro.site ?? new URL(Astro.url.origin)
 
 // Bloqueo previo de cookies (FASE 16): Consent Mode v2 arranca en denied de
 // forma síncrona, antes de cualquier script de analítica (GA4/Clarity, FASE 12
@@ -100,6 +106,7 @@ try{
       href="/rss.xml"
     />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <JsonLd data={organizationSchema(settings, site)} />
     {/* JSON-LD y metas específicas de cada página (p. ej. Schema Article) */}
     <slot name="head" />
   </head>

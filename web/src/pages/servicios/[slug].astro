@@ -4,6 +4,8 @@
  * incluye, proceso, casos relacionados, FAQs y CTA a asesoría. El SEO
  * sale del grupo meta del plugin con fallback a título + excerpt.
  */
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import JsonLd from '@/components/JsonLd.astro'
 import PayloadImage from '@/components/PayloadImage.astro'
 import BenefitsGrid from '@/components/sections/BenefitsGrid.astro'
 import CTASection from '@/components/sections/CTASection.astro'
@@ -14,13 +16,13 @@ import RichText from '@/components/sections/RichText.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
 import Button from '@/components/ui/Button.astro'
 import Container from '@/components/ui/Container.astro'
-import Eyebrow from '@/components/ui/Eyebrow.astro'
 import Heading from '@/components/ui/Heading.astro'
 import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getMediaUrl } from '@/lib/media'
 import { getCollection, resolveDocs } from '@/lib/payload'
+import { faqPageSchema, serviceSchema } from '@/lib/schema'
 import type { Faq, Project, Service } from '@cms/types'
 
 export async function getStaticPaths() {
@@ -41,6 +43,10 @@ const relatedProjects = resolveDocs<Project>(service.relatedProjects)
 const faqs = resolveDocs<Faq>(service.faqs)
 // FASE 7: la cotización preselecciona el servicio; la asesoría es la vía suave
 const quoteHref = `/cotizacion?servicio=${service.slug}`
+
+// Schema Service + FAQPage (FASE 8)
+const site = Astro.site ?? new URL(Astro.url.origin)
+const canonical = new URL(Astro.url.pathname, site).href
 ---
 
 <BaseLayout
@@ -49,10 +55,21 @@ const quoteHref = `/cotizacion?servicio=${service.slug}`
   description={service.meta?.description ?? service.excerpt}
   ogImage={getMediaUrl(service.meta?.image)}
 >
+  <JsonLd
+    slot="head"
+    data={serviceSchema({ name: service.title, description: service.excerpt, url: canonical }, site)}
+  />
+  {faqs.length > 0 && <JsonLd slot="head" data={faqPageSchema(faqs)} />}
+
   {/* Cabecera: espécimen del catálogo */}
   <Section class="md:pb-16">
     <Container>
-      <Eyebrow>{code ? `Servicios · ${code}` : 'Servicios'}</Eyebrow>
+      <Breadcrumbs
+        items={[
+          { label: 'Servicios', href: '/servicios' },
+          { label: code ?? service.title, name: service.title },
+        ]}
+      />
       <Heading as="h1" size="display" class="mt-6 max-w-4xl">
         {service.title}
       </Heading>
