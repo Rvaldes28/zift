@@ -10,13 +10,14 @@ SHELL := /bin/bash
 
 BREW_FORMULAS := node pnpm postgresql@16 minio minio-mc
 DB_NAME       := ziftlab_dev
+ADMIN_DB_NAME := ziftlab_admin_dev
 MINIO_LABEL   := com.ziftlab.minio
 CMS_LOG       := $(HOME)/Library/Logs/ziftlab-cms.log
 WEB_LOG       := $(HOME)/Library/Logs/ziftlab-web.log
 CMS_PID       := /tmp/ziftlab-cms.pid
 WEB_PID       := /tmp/ziftlab-web.pid
 
-.PHONY: help install brew formulas env db minio deps seed start stop status
+.PHONY: help install brew formulas env db admin-db minio deps seed start stop status
 
 help:
 	@echo "ZiftLab — targets disponibles (correr desde la raíz del repo):"
@@ -24,6 +25,7 @@ help:
 	@echo "  make start     Arranca todos los servicios y deja los puertos listos"
 	@echo "  make stop      Apaga dev servers, MinIO y PostgreSQL"
 	@echo "  make status    Muestra qué está corriendo"
+	@echo "  make admin-db  Crea la DB propia del dashboard sin tocar Payload"
 
 # ────────────────────────────── INSTALL ──────────────────────────────
 
@@ -82,6 +84,16 @@ db: formulas
 	if "$$PGBIN/psql" -h localhost -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname='$(DB_NAME)'" | grep -q 1; \
 	then echo "✓ DB $(DB_NAME)"; \
 	else "$$PGBIN/createdb" -h localhost $(DB_NAME) && echo "→ DB $(DB_NAME) creada"; fi
+
+admin-db: formulas
+	@brew services list | grep postgresql@16 | grep -q started || \
+		{ echo "→ Arrancando PostgreSQL…"; brew services start postgresql@16; }
+	@PGBIN="$$(brew --prefix postgresql@16)/bin"; \
+	for i in $$(seq 1 30); do "$$PGBIN/pg_isready" -q -h localhost && break; sleep 1; done; \
+	"$$PGBIN/pg_isready" -q -h localhost || { echo "✗ PostgreSQL no respondió en :5432"; exit 1; }; \
+	if "$$PGBIN/psql" -h localhost -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname='$(ADMIN_DB_NAME)'" | grep -q 1; \
+	then echo "✓ DB $(ADMIN_DB_NAME)"; \
+	else "$$PGBIN/createdb" -h localhost $(ADMIN_DB_NAME) && echo "→ DB $(ADMIN_DB_NAME) creada"; fi
 
 minio: formulas
 	@./infra/scripts/install-minio-autostart.sh

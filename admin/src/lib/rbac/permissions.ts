@@ -1,0 +1,43 @@
+export const PERMISSIONS = [
+  'dashboard.access',
+  'users.read',
+  'users.manage',
+  'roles.read',
+  'roles.manage',
+  'content.read',
+  'content.manage',
+  'media.read',
+  'media.manage',
+  'seo.read',
+  'seo.manage',
+  'leads.read',
+  'leads.manage',
+  'analytics.read',
+  'performance.read',
+  'settings.read',
+  'settings.manage',
+  'audit.read',
+] as const
+
+export type PermissionSlug = (typeof PERMISSIONS)[number]
+
+export const PERMISSION_LABELS: Record<PermissionSlug, string> = {
+  'dashboard.access': 'Acceso al dashboard',
+  'users.read': 'Ver usuarios',
+  'users.manage': 'Gestionar usuarios',
+  'roles.read': 'Ver roles',
+  'roles.manage': 'Gestionar roles',
+  'content.read': 'Ver contenido',
+  'content.manage': 'Gestionar contenido',
+  'media.read': 'Ver media',
+  'media.manage': 'Gestionar media',
+  'seo.read': 'Ver SEO',
+  'seo.manage': 'Gestionar SEO',
+  'leads.read': 'Ver leads',
+  'leads.manage': 'Gestionar leads',
+  'analytics.read': 'Ver analitica',
+  'performance.read': 'Ver performance',
+  'settings.read': 'Ver configuracion',
+  'settings.manage': 'Gestionar configuracion',
+  'audit.read': 'Ver actividad',
+}

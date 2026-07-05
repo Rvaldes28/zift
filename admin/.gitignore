@@ -1,0 +1,13 @@
+# dependencias
+node_modules/
+
+# builds y cache
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# variables de entorno locales
+.env
+.env.*
+!.env.example

@@ -8,11 +8,16 @@
     "node": ">=20.9.0"
   },
   "scripts": {
+    "dev:admin": "pnpm --filter @ziftlab/db build && pnpm --filter admin dev",
     "dev:cms": "pnpm --filter cms dev",
     "dev:web": "pnpm --filter web dev",
     "build": "pnpm -r build",
+    "build:admin": "pnpm --filter @ziftlab/db build && pnpm --filter admin build",
     "build:cms": "pnpm --filter cms build",
     "build:web": "pnpm --filter web build",
+    "db:generate": "pnpm --filter @ziftlab/db db:generate",
+    "db:migrate": "pnpm --filter @ziftlab/db db:migrate",
+    "db:seed": "pnpm --filter @ziftlab/db db:seed",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write .",
