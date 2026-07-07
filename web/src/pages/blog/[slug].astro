@@ -5,7 +5,7 @@
  * relacionados por categoría y Schema.org Article para resultados enriquecidos.
  */
 import JsonLd from '@/components/JsonLd.astro'
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import CTASection from '@/components/sections/CTASection.astro'
 import PostGrid from '@/components/sections/PostGrid.astro'
 import RichText from '@/components/sections/RichText.astro'
@@ -16,10 +16,10 @@ import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { formatDateLong, postAuthor, postCategories, readingTimeMinutes } from '@/lib/blog'
+import { getCachedGlobal, getCollection } from '@/lib/api'
 import { getMediaUrl } from '@/lib/media'
-import { getCachedGlobal, getCollection } from '@/lib/payload'
 import { articleSchema, breadcrumbSchema } from '@/lib/schema'
-import type { Post } from '@cms/types'
+import type { Post } from '@ziftlab/types'
 
 export async function getStaticPaths() {
   // depth 2: resuelve categorías, portada y el autor con su foto
@@ -123,7 +123,7 @@ const breadcrumbs = breadcrumbSchema(
         {
           author && (
             <div class="flex items-center gap-3 normal-case">
-              <PayloadImage
+              <MediaImage
                 media={author.photo}
                 class="size-9 rounded-full object-cover"
                 sizes="36px"
@@ -140,7 +140,7 @@ const breadcrumbs = breadcrumbSchema(
       </div>
     </Container>
     <Container>
-      <PayloadImage
+      <MediaImage
         media={post.coverImage}
         priority
         class="mt-14 w-full rounded-xl border border-line object-cover"

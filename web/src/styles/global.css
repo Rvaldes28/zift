@@ -88,7 +88,7 @@
   background: radial-gradient(100% 80% at 75% -20%, rgb(70 51 255 / 0.28), transparent 65%);
 }
 
-/* Prosa del rich text de Payload (componente RichText.astro) */
+/* Prosa del rich text publico (componente RichText.astro) */
 @layer components {
   .rich-text {
     @apply text-base leading-relaxed;

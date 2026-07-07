@@ -1,3 +1,4 @@
+import { CsrfField } from '@/components/security/csrf-field'
 import { createUser } from '@/lib/users/actions'
 import { requirePermission } from '@/lib/rbac/access'
 import { listRoles } from '@/lib/users/queries'
@@ -29,6 +30,7 @@ export default async function NewUserPage({ searchParams }: NewUserPageProps) {
         action={createUser}
         className="mt-8 grid max-w-xl gap-4 rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm"
       >
+        <CsrfField />
         <label className="grid gap-2 text-sm font-medium">
           Nombre
           <input

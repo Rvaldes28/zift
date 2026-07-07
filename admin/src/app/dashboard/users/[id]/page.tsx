@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation'
 
+import { CsrfField } from '@/components/security/csrf-field'
 import { resetUserPassword, resetUserTotp, setUserStatus, updateUser } from '@/lib/users/actions'
 import { requirePermission } from '@/lib/rbac/access'
+import { revokeUserSession } from '@/lib/security/actions'
+import { listSessionsForUser } from '@/lib/security/queries'
 import { getUserForEdit, listActivity, listRoles } from '@/lib/users/queries'
 
 interface UserDetailPageProps {
@@ -17,10 +20,11 @@ interface UserDetailPageProps {
 export default async function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
   await requirePermission('users.manage')
   const [{ id }, query] = await Promise.all([params, searchParams])
-  const [target, roles, activity] = await Promise.all([
+  const [target, roles, activity, userSessions] = await Promise.all([
     getUserForEdit(id),
     listRoles(),
     listActivity(30),
+    listSessionsForUser(id),
   ])
 
   if (!target) notFound()
@@ -51,6 +55,7 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
           action={updateUser}
           className="grid gap-4 rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm"
         >
+          <CsrfField />
           <input type="hidden" name="userId" value={target.user.id} />
           <label className="grid gap-2 text-sm font-medium">
             Nombre
@@ -102,6 +107,7 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
             </p>
             <p className="mt-2 text-lg font-semibold">{target.user.status}</p>
             <form action={setUserStatus} className="mt-4">
+              <CsrfField />
               <input type="hidden" name="userId" value={target.user.id} />
               <input
                 type="hidden"
@@ -121,6 +127,7 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
             action={resetUserPassword}
             className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-sm"
           >
+            <CsrfField />
             <input type="hidden" name="userId" value={target.user.id} />
             <label className="grid gap-2 text-sm font-medium">
               Nueva contrasena temporal
@@ -144,6 +151,7 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
             action={resetUserTotp}
             className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-sm"
           >
+            <CsrfField />
             <input type="hidden" name="userId" value={target.user.id} />
             <p className="text-sm text-[var(--muted)]">
               2FA: {target.user.twoFactorEnabled ? 'activo' : 'inactivo'}
@@ -169,6 +177,48 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
           ))}
           {userActivity.length === 0 && (
             <p className="text-sm text-[var(--muted)]">Sin actividad registrada todavia.</p>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold">Sesiones del usuario</h2>
+        <div className="mt-4 grid gap-3">
+          {userSessions.map((item) => (
+            <article
+              key={item.id}
+              className="grid gap-3 rounded-md border border-[var(--line)] p-4 md:grid-cols-[1fr_auto]"
+            >
+              <div>
+                <p className="text-sm font-semibold">{item.ipAddress ?? 'IP desconocida'}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  Ultima actividad: {item.lastSeenAt.toLocaleString('es-PA')} · Expira:{' '}
+                  {item.expiresAt.toLocaleString('es-PA')}
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
+                  {item.userAgent ?? 'User agent no registrado'}
+                </p>
+                {item.revokedAt && (
+                  <p className="mt-2 text-xs text-red-700">
+                    Revocada: {item.revokedAt.toLocaleString('es-PA')} ·{' '}
+                    {item.revocationReason ?? 'sin motivo'}
+                  </p>
+                )}
+              </div>
+              {!item.revokedAt && (
+                <form action={revokeUserSession}>
+                  <CsrfField />
+                  <input type="hidden" name="userId" value={target.user.id} />
+                  <input type="hidden" name="sessionId" value={item.id} />
+                  <button className="h-10 rounded-md border border-red-200 px-3 text-sm font-semibold text-red-700">
+                    Cerrar sesion
+                  </button>
+                </form>
+              )}
+            </article>
+          ))}
+          {userSessions.length === 0 && (
+            <p className="text-sm text-[var(--muted)]">Sin sesiones registradas.</p>
           )}
         </div>
       </section>

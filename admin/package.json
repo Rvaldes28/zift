@@ -7,15 +7,19 @@
   "type": "module",
   "scripts": {
     "build": "next build",
+    "dev:user": "node scripts/create-dev-user.mjs",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1077.0",
     "@ziftlab/db": "workspace:*",
+    "@ziftlab/types": "workspace:*",
     "argon2": "^0.44.0",
     "drizzle-orm": "0.45.2",
+    "image-size": "2.0.2",
     "next": "16.2.6",
     "otpauth": "^9.5.1",
     "qrcode": "^1.5.4",

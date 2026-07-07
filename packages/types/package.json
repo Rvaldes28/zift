@@ -1,0 +1,26 @@
+{
+  "name": "@ziftlab/types",
+  "version": "0.1.0",
+  "description": "Tipos compartidos para la API publica y la web de ZiftLab",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.7.3"
+  },
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": "^9 || ^10 || ^11"
+  }
+}

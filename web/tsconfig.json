@@ -6,8 +6,7 @@
     // Sin baseUrl (deprecado en TS 6+): los paths son relativos a este archivo.
     // Astro resuelve estos alias también en runtime (imports de valor).
     "paths": {
-      "@/*": ["./src/*"],
-      "@cms/types": ["../cms/src/payload-types.ts"]
+      "@/*": ["./src/*"]
     }
   }
 }

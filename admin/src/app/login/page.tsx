@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { CsrfField } from '@/components/security/csrf-field'
 import { login } from '@/lib/auth/actions'
 import { initialRegistrationStatus } from '@/lib/auth/queries'
 import { getCurrentSession } from '@/lib/auth/session'
@@ -31,6 +32,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
 
         <form action={login} className="mt-8 grid gap-4">
+          <CsrfField />
           <input type="hidden" name="next" value={next} />
           <label className="grid gap-2 text-sm font-medium">
             Email

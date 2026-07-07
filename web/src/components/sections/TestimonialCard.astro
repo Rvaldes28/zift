@@ -1,9 +1,9 @@
 ---
 /** Testimonio: cita + autor con cargo. El avatar es opcional. */
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import Card from '@/components/ui/Card.astro'
 import Text from '@/components/ui/Text.astro'
-import type { Testimonial } from '@cms/types'
+import type { Testimonial } from '@ziftlab/types'
 
 interface Props {
   testimonial: Testimonial
@@ -19,11 +19,7 @@ const { testimonial, class: className } = Astro.props
     <Text>{testimonial.quote}</Text>
   </blockquote>
   <footer class="mt-6 flex items-center gap-3 border-t border-line pt-5">
-    <PayloadImage
-      media={testimonial.avatar}
-      class="size-10 rounded-full object-cover"
-      sizes="40px"
-    />
+    <MediaImage media={testimonial.avatar} class="size-10 rounded-full object-cover" sizes="40px" />
     <div>
       <p class="text-sm font-medium">{testimonial.authorName}</p>
       {

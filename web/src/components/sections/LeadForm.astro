@@ -2,13 +2,13 @@
 /**
  * Formulario de lead (FASE 7): validación con Zod en cliente (espejo del
  * servidor), honeypot, errores por campo accesibles y envío al endpoint
- * endurecido POST /api/leads/submit (Zod + rate limit + emails en el CMS).
+ * endurecido POST /api/leads/submit de la API propia.
  * El presupuesto se elige con chips mono — la firma del sistema ZiftLab.
  */
 import Button from '@/components/ui/Button.astro'
+import { API_URL } from '@/lib/api'
 import { BUDGET_OPTIONS, type LeadFormType } from '@/lib/leads'
-import { PAYLOAD_URL } from '@/lib/payload'
-import type { Service } from '@cms/types'
+import type { Service } from '@ziftlab/types'
 
 interface Props {
   services: Service[]
@@ -48,7 +48,7 @@ const errorId = (field: string) => `${uid}-error-${field}`
 
 <form
   data-lead-form
-  data-api={`${PAYLOAD_URL}/api/leads/submit`}
+  data-api={`${API_URL}/api/leads/submit`}
   data-form-type={formType}
   data-source={source}
   data-require-message={requireMessage ? 'true' : undefined}
@@ -183,7 +183,7 @@ const errorId = (field: string) => `${uid}-error-${field}`
 </form>
 
 <script>
-  import { track } from '@/lib/analytics'
+  import { analyticsAttribution, reportPerformance, track } from '@/lib/analytics'
   import { validateLead, type LeadFieldErrors, type LeadFormValues } from '@/lib/leads'
   import { readUtm } from '@/lib/utm'
 
@@ -191,6 +191,7 @@ const errorId = (field: string) => `${uid}-error-${field}`
     const statusEl = form.querySelector<HTMLElement>('[data-form-status]')!
     const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]')!
     const formType = form.dataset.formType ?? 'contacto'
+    let formStarted = false
 
     // Preselección del servicio vía ?servicio=<slug> (CTA del detalle de servicio)
     const slug = new URLSearchParams(window.location.search).get('servicio')
@@ -231,6 +232,10 @@ const errorId = (field: string) => `${uid}-error-${field}`
     form.addEventListener('input', (event) => {
       const name = (event.target as HTMLInputElement).name
       if (name && name !== 'website') setFieldError(name, undefined)
+      if (!formStarted && name && name !== 'website') {
+        formStarted = true
+        track('form_start', { form_type: formType })
+      }
     })
 
     form.addEventListener('submit', async (event) => {
@@ -261,17 +266,22 @@ const errorId = (field: string) => `${uid}-error-${field}`
       submitBtn.setAttribute('aria-busy', 'true')
       statusEl.textContent = 'Enviando…'
 
+      let formErrorReported = false
+
       try {
+        const attribution = analyticsAttribution()
+        const submitStartedAt = performance.now()
         const response = await fetch(form.dataset.api!, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            ...attribution,
             formType,
             name: values.name,
             email: values.email,
             phone: values.phone || undefined,
             company: values.company || undefined,
-            service: values.service ? Number(values.service) : undefined,
+            service: values.service || undefined,
             budget: values.budget || undefined,
             message: values.message || undefined,
             source: form.dataset.source,
@@ -279,16 +289,49 @@ const errorId = (field: string) => `${uid}-error-${field}`
             website: String(data.get('website') ?? '') || undefined,
           }),
         })
+        const durationMs = Math.round(performance.now() - submitStartedAt)
+        reportPerformance('api_timing', {
+          durationMs,
+          method: 'POST',
+          name: 'lead_submit',
+          status: response.status,
+          url: form.dataset.api,
+          value: durationMs,
+        })
 
         if (response.status === 429) {
           const body = (await response.json().catch(() => null)) as { message?: string } | null
+          formErrorReported = true
+          reportPerformance('form_error', {
+            message: body?.message ?? 'Lead form rate limited',
+            name: formType,
+            status: response.status,
+            url: form.dataset.api,
+          })
           throw new Error(body?.message ?? 'Demasiados envíos seguidos. Espera unos minutos.')
         }
-        if (!response.ok) throw new Error('No se pudo enviar tu solicitud. Inténtalo de nuevo.')
+        if (!response.ok) {
+          formErrorReported = true
+          reportPerformance('form_error', {
+            message: 'Lead form HTTP error',
+            name: formType,
+            status: response.status,
+            url: form.dataset.api,
+          })
+          throw new Error('No se pudo enviar tu solicitud. Inténtalo de nuevo.')
+        }
 
-        track('generate_lead', { form_type: formType })
+        const body = (await response.json().catch(() => null)) as { id?: string | null } | null
+        track('generate_lead', { form_type: formType, lead_id: body?.id ?? undefined })
         window.location.assign(`/gracias?de=${formType}`)
       } catch (error) {
+        if (!formErrorReported) {
+          reportPerformance('form_error', {
+            message: error instanceof Error ? error.message : 'Lead form network error',
+            name: formType,
+            url: form.dataset.api,
+          })
+        }
         submitBtn.disabled = false
         delete submitBtn.dataset.loading
         submitBtn.removeAttribute('aria-busy')

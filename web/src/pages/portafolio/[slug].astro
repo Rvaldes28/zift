@@ -6,7 +6,7 @@
  * medibles en numerales display, galería, testimonio y CTA final.
  */
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import CTASection from '@/components/sections/CTASection.astro'
 import RichText from '@/components/sections/RichText.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
@@ -16,9 +16,9 @@ import Heading from '@/components/ui/Heading.astro'
 import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCollection, resolveDocs } from '@/lib/api'
 import { getMediaUrl } from '@/lib/media'
-import { getCollection, resolveDocs } from '@/lib/payload'
-import type { Project, Service } from '@cms/types'
+import type { Project, Service } from '@ziftlab/types'
 
 export async function getStaticPaths() {
   // depth 2: resuelve cliente, servicios, galería y el avatar del testimonio
@@ -77,7 +77,7 @@ const hasSheet = Boolean(client || project.industry || services.length || stack.
       <Text size="lead" muted class="mt-6 max-w-2xl">
         {project.excerpt}
       </Text>
-      <PayloadImage
+      <MediaImage
         media={project.coverImage}
         priority
         class="mt-14 w-full rounded-xl border border-line object-cover"
@@ -240,7 +240,7 @@ const hasSheet = Boolean(client || project.industry || services.length || stack.
           <ul class="mt-12 grid gap-5 sm:grid-cols-2" role="list">
             {gallery.map((item) => (
               <li>
-                <PayloadImage
+                <MediaImage
                   media={item.image}
                   class="w-full rounded-xl border border-line object-cover"
                   sizes="(min-width: 640px) 50vw, 100vw"
@@ -267,7 +267,7 @@ const hasSheet = Boolean(client || project.industry || services.length || stack.
             </Text>
           </blockquote>
           <footer class="mt-8 flex items-center gap-4 border-t border-line pt-6">
-            <PayloadImage
+            <MediaImage
               media={testimonial.avatar}
               class="size-12 rounded-full object-cover"
               sizes="48px"

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { EmptyState, PageHeader } from '@/components/dashboard/ui'
 import { requirePermission } from '@/lib/rbac/access'
 import { listRoles, listUsers } from '@/lib/users/queries'
 
@@ -22,22 +23,21 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
   return (
     <main className="px-6 py-8 lg:px-10">
-      <section className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="font-mono text-xs tracking-[0.18em] text-[var(--muted)] uppercase">
-            Accesos
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight">Usuarios</h1>
-        </div>
-        {access.permissions.includes('users.manage') && (
-          <Link
-            href="/dashboard/users/new"
-            className="inline-flex h-11 items-center rounded-md bg-[var(--zift)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--zift-dark)]"
-          >
-            Crear usuario
-          </Link>
-        )}
-      </section>
+      <PageHeader
+        eyebrow="Accesos"
+        title="Usuarios"
+        description="Administra cuentas del dashboard, estados, roles y 2FA."
+        actions={
+          access.permissions.includes('users.manage') && (
+            <Link
+              href="/dashboard/users/new"
+              className="inline-flex h-11 items-center rounded-md bg-[var(--zift)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--zift-dark)]"
+            >
+              Crear usuario
+            </Link>
+          )
+        }
+      />
 
       <form className="mt-8 flex flex-wrap gap-3 rounded-lg border border-[var(--line)] bg-white p-4 shadow-sm">
         <input
@@ -105,7 +105,12 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           </Link>
         ))}
         {users.length === 0 && (
-          <p className="px-4 py-8 text-sm text-[var(--muted)]">No hay usuarios para ese filtro.</p>
+          <div className="p-4">
+            <EmptyState
+              title="No hay usuarios para ese filtro"
+              message="Ajusta la busqueda o limpia los filtros para ver otras cuentas."
+            />
+          </div>
         )}
       </section>
     </main>

@@ -7,7 +7,7 @@ import { confirmTotpSetup, type TotpSetupState } from '@/lib/auth/actions'
 
 const initialState: TotpSetupState = { ok: false }
 
-export function TotpSetupForm({ qrDataUrl }: { qrDataUrl: string }) {
+export function TotpSetupForm({ csrfToken, qrDataUrl }: { csrfToken: string; qrDataUrl: string }) {
   const [state, formAction, pending] = useActionState(confirmTotpSetup, initialState)
 
   if (state.ok && state.recoveryCodes) {
@@ -40,6 +40,7 @@ export function TotpSetupForm({ qrDataUrl }: { qrDataUrl: string }) {
         className="mt-4 h-[220px] w-[220px] rounded-md bg-white"
       />
       <form action={formAction} className="mt-4 grid gap-3">
+        <input type="hidden" name="csrfToken" value={csrfToken} />
         <label className="grid gap-2 text-sm font-medium">
           Codigo de 6 digitos
           <input

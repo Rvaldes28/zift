@@ -1,7 +1,7 @@
 ---
 /** Muro de logos de clientes en escala de grises, hairlines de índice. */
-import PayloadImage from '@/components/PayloadImage.astro'
-import type { Client } from '@cms/types'
+import MediaImage from '@/components/MediaImage.astro'
+import type { Client } from '@ziftlab/types'
 
 interface Props {
   clients: Client[]
@@ -22,7 +22,7 @@ const { clients, class: className } = Astro.props
     >
       {clients.map((client) => (
         <li class="group flex h-24 items-center justify-center bg-paper px-6">
-          <PayloadImage
+          <MediaImage
             media={client.logo}
             class="max-h-10 w-auto opacity-70 grayscale transition duration-300 ease-zift group-hover:opacity-100 group-hover:grayscale-0"
             sizes="160px"

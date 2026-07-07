@@ -5,8 +5,30 @@
  */
 import type { APIRoute } from 'astro'
 
-export const GET: APIRoute = ({ site }) => {
-  const sitemap = new URL('/sitemap-index.xml', site ?? 'http://localhost:4321').href
+const CONTENT_API_URL = (
+  import.meta.env.PUBLIC_CONTENT_API_URL ??
+  import.meta.env.PUBLIC_API_URL ??
+  'http://localhost:3000'
+).replace(/\/+$/, '')
+
+export const GET: APIRoute = async ({ site }) => {
+  const publicSite = site ?? new URL('http://localhost:4321')
+
+  try {
+    const response = await fetch(
+      `${CONTENT_API_URL}/api/public/seo/robots?site=${encodeURIComponent(publicSite.href)}`,
+      { headers: { Accept: 'text/plain' }, signal: AbortSignal.timeout(3000) },
+    )
+    if (response.ok) {
+      return new Response(await response.text(), {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
+    }
+  } catch {
+    // Fallback estatico si la API propia no esta disponible durante build/dev.
+  }
+
+  const sitemap = new URL('/sitemap-index.xml', publicSite).href
   const body = [
     'User-agent: *',
     'Allow: /',

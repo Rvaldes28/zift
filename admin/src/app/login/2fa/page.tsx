@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { CsrfField } from '@/components/security/csrf-field'
 import { verifyTwoFactorLogin } from '@/lib/auth/actions'
 import { getTwoFactorChallenge } from '@/lib/totp/challenge'
 
@@ -27,6 +28,7 @@ export default async function TwoFactorPage({ searchParams }: TwoFactorPageProps
         </p>
 
         <form action={verifyTwoFactorLogin} className="mt-8 grid gap-4">
+          <CsrfField />
           <input type="hidden" name="next" value={next} />
           <label className="grid gap-2 text-sm font-medium">
             Codigo

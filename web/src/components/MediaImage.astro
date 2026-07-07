@@ -1,15 +1,10 @@
 ---
-/**
- * Imagen servida desde Payload/MinIO. Renderiza width/height reales del
- * upload (evita CLS) y no pinta nada si la relación viene vacía o sin poblar.
- */
-import { getMediaUrl, resolveMedia, type MediaRef } from '@/lib/media'
+import { getMediaUrl, resolveMedia } from '@/lib/media'
+import type { MediaRef } from '@ziftlab/types'
 
 interface Props {
   media: MediaRef
-  /** Para imágenes above-the-fold (hero): eager + fetchpriority high */
   priority?: boolean
-  /** Atributo sizes para responsive, ej. "(min-width: 768px) 50vw, 100vw" */
   sizes?: string
   class?: string
 }

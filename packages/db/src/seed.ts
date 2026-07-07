@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 
 import { closeDb, db } from './client.js'
-import { permissions, rolePermissions, roles, siteSettings } from './schema.js'
+import { pageSections, pages, permissions, rolePermissions, roles, siteSettings } from './schema.js'
 
 const roleSeeds = [
   {
@@ -143,11 +143,75 @@ async function seedSiteSettings() {
   })
 }
 
+async function seedPages() {
+  const pageSeeds = [
+    {
+      excerpt: 'Administra la home publica desde el dashboard propio.',
+      routePath: '/',
+      slug: 'home',
+      title: 'Home',
+      type: 'home',
+    },
+    {
+      excerpt: 'Pagina institucional de ZiftLab.',
+      routePath: '/quienes-somos',
+      slug: 'quienes-somos',
+      title: 'Quienes somos',
+      type: 'about',
+    },
+    {
+      excerpt: 'Formulario y datos de contacto.',
+      routePath: '/contacto',
+      slug: 'contacto',
+      title: 'Contacto',
+      type: 'contact',
+    },
+  ]
+
+  for (const page of pageSeeds) {
+    await db.insert(pages).values(page).onConflictDoNothing({ target: pages.slug })
+  }
+
+  const createdPages = await db
+    .select({ id: pages.id, slug: pages.slug, type: pages.type })
+    .from(pages)
+
+  for (const page of createdPages.filter((item) =>
+    pageSeeds.some((seedPage) => seedPage.slug === item.slug),
+  )) {
+    const existingSection = await db.query.pageSections.findFirst({
+      where: (section, { eq }) => eq(section.pageId, page.id),
+    })
+    if (existingSection) continue
+
+    await db.insert(pageSections).values({
+      data:
+        page.type === 'home'
+          ? {
+              eyebrow: 'Dashboard propio',
+              primaryCta: { href: '/contacto', label: 'Hablemos' },
+              secondaryCta: { href: '/servicios', label: 'Ver servicios' },
+              subtitle: 'Esta home puede administrarse desde el dashboard propio.',
+              title: 'ZiftLab',
+            }
+          : {
+              text: 'Edita este contenido desde el dashboard propio.',
+              title: page.type === 'contact' ? 'Contacto' : 'Quienes somos',
+            },
+      kind: page.type === 'home' ? 'hero' : 'text',
+      label: page.type === 'home' ? 'Hero' : 'Intro',
+      pageId: page.id,
+      position: 0,
+    })
+  }
+}
+
 async function seed() {
   await seedRoles()
   await seedPermissions()
   await seedRolePermissions()
   await seedSiteSettings()
+  await seedPages()
 }
 
 try {

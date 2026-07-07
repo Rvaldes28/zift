@@ -5,8 +5,8 @@
 import rss from '@astrojs/rss'
 import type { APIContext } from 'astro'
 
+import { getCachedGlobal, getCollection } from '@/lib/api'
 import { blogPageHref, postCategories } from '@/lib/blog'
-import { getCachedGlobal, getCollection } from '@/lib/payload'
 
 export async function GET(context: APIContext): Promise<Response> {
   const [settings, posts] = await Promise.all([

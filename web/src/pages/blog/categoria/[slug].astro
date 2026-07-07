@@ -13,8 +13,8 @@ import Container from '@/components/ui/Container.astro'
 import EmptyState from '@/components/ui/EmptyState.astro'
 import Section from '@/components/ui/Section.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { getCollection } from '@/lib/payload'
-import type { Category } from '@cms/types'
+import { getCollection } from '@/lib/api'
+import type { Category } from '@ziftlab/types'
 
 export async function getStaticPaths() {
   const categories = await getCollection('categories', { sort: 'createdAt', limit: 100 })

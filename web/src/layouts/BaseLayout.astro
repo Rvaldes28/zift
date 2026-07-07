@@ -1,8 +1,7 @@
 ---
 /**
- * Layout principal: <head> con SEO, header y footer con datos reales de
- * Payload. Los globals se piden en paralelo y quedan memoizados durante
- * el build (getCachedGlobal).
+ * Layout principal: <head> con SEO, header y footer desde la API publica.
+ * Los globals se piden en paralelo y quedan memoizados durante el build.
  */
 import '@/styles/global.css'
 
@@ -15,7 +14,7 @@ import SEO from '@/components/SEO.astro'
 import WhatsAppButton from '@/components/WhatsAppButton.astro'
 import { CONSENT_KEY } from '@/lib/consent'
 import { getMediaUrl } from '@/lib/media'
-import { getCachedGlobal } from '@/lib/payload'
+import { getCachedGlobal } from '@/lib/api'
 import { organizationSchema } from '@/lib/schema'
 
 interface Props {
@@ -23,15 +22,32 @@ interface Props {
   title?: string
   /** Título ya compuesto (p. ej. meta.title del plugin SEO) — se usa tal cual, sin añadir "| SiteName" */
   absoluteTitle?: string
+  canonicalUrl?: string
   description?: string
   /** URL absoluta de la imagen OG; default: ogImage de Ajustes del sitio */
   ogImage?: string | null
+  ogTitle?: string | null
+  ogDescription?: string | null
   noindex?: boolean
+  robotsDirectives?: string[]
+  schemaJsonLd?: Record<string, unknown> | Record<string, unknown>[] | null
   /** Posts del blog: og:type article con sus fechas de publicación/edición */
   article?: { publishedTime?: string; modifiedTime?: string }
 }
 
-const { title, absoluteTitle, description, ogImage, noindex = false, article } = Astro.props
+const {
+  title,
+  absoluteTitle,
+  canonicalUrl,
+  description,
+  ogDescription,
+  ogImage,
+  ogTitle,
+  noindex = false,
+  robotsDirectives,
+  schemaJsonLd,
+  article,
+} = Astro.props
 
 const [settings, header, footer] = await Promise.all([
   getCachedGlobal('site-settings'),
@@ -93,9 +109,13 @@ try{
     <SEO
       title={seoTitle}
       description={seoDescription}
+      canonical={canonicalUrl}
       image={seoImage}
       siteName={siteName}
       noindex={noindex}
+      ogTitle={ogTitle}
+      ogDescription={ogDescription}
+      robotsDirectives={robotsDirectives}
       type={article ? 'article' : 'website'}
       publishedTime={article?.publishedTime}
       modifiedTime={article?.modifiedTime}
@@ -108,6 +128,7 @@ try{
     />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <JsonLd data={organizationSchema(settings, site)} />
+    {schemaJsonLd && <JsonLd data={schemaJsonLd} />}
     {/* JSON-LD y metas específicas de cada página (p. ej. Schema Article) */}
     <slot name="head" />
   </head>

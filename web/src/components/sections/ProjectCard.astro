@@ -3,12 +3,12 @@
  * Card de caso de éxito. Enlaza a su detalle de portafolio (FASE 5) y
  * muestra el primer resultado medible como sello mono ultramar.
  */
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import Card from '@/components/ui/Card.astro'
 import Heading from '@/components/ui/Heading.astro'
 import Text from '@/components/ui/Text.astro'
 import { resolveMedia } from '@/lib/media'
-import type { Project } from '@cms/types'
+import type { Project } from '@ziftlab/types'
 
 interface Props {
   project: Project
@@ -26,7 +26,7 @@ const href = project.slug ? `/portafolio/${project.slug}` : undefined
 <Card {href} padding="none" class:list={['flex h-full flex-col overflow-hidden', className]}>
   {
     cover && (
-      <PayloadImage
+      <MediaImage
         media={cover}
         class="aspect-[3/2] w-full border-b border-line object-cover transition-transform duration-700 ease-zift group-hover:scale-[1.03]"
         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"

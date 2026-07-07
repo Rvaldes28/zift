@@ -1,0 +1,195 @@
+---
+import Button from '@/components/ui/Button.astro'
+import Container from '@/components/ui/Container.astro'
+import Heading from '@/components/ui/Heading.astro'
+import Section from '@/components/ui/Section.astro'
+import Text from '@/components/ui/Text.astro'
+import type { AdminPublicPage, AdminPageSection } from '@/lib/content'
+import { mediaById } from '@/lib/content'
+
+interface Props {
+  page: AdminPublicPage
+}
+
+const { page } = Astro.props
+const sections = [...page.sections]
+  .filter((section) => section.enabled)
+  .sort((a, b) => a.position - b.position)
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
+}
+
+function text(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
+function items(section: AdminPageSection) {
+  return Array.isArray(section.data.items) ? section.data.items.map(record) : []
+}
+---
+
+{
+  sections.map((section) => {
+    const data = section.data
+    const image = mediaById(page, data.imageId)
+    const primaryCta = record(data.primaryCta ?? data.cta)
+    const secondaryCta = record(data.secondaryCta)
+
+    if (section.kind === 'hero') {
+      return (
+        <Section tone="ink" class="relative overflow-hidden md:py-28">
+          <Container>
+            {text(data.eyebrow) && (
+              <p class="font-mono text-xs tracking-[0.18em] text-ink-muted uppercase">
+                {text(data.eyebrow)}
+              </p>
+            )}
+            <Heading as="h1" size="display" class="mt-6 max-w-4xl text-white">
+              {text(data.title)}
+            </Heading>
+            {text(data.subtitle) && (
+              <Text size="lead" class="mt-6 max-w-2xl text-ink-muted">
+                {text(data.subtitle)}
+              </Text>
+            )}
+            <div class="mt-10 flex flex-wrap gap-4">
+              {text(primaryCta.label) && text(primaryCta.href) && (
+                <Button href={text(primaryCta.href)} size="lg">
+                  {text(primaryCta.label)}
+                </Button>
+              )}
+              {text(secondaryCta.label) && text(secondaryCta.href) && (
+                <Button href={text(secondaryCta.href)} variant="inverse" size="lg">
+                  {text(secondaryCta.label)}
+                </Button>
+              )}
+            </div>
+          </Container>
+        </Section>
+      )
+    }
+
+    if (section.kind === 'cta') {
+      return (
+        <Section tone="ink">
+          <Container size="narrow">
+            <Heading as="h2" size="lg" class="text-white">
+              {text(data.title)}
+            </Heading>
+            {text(data.text) && (
+              <Text class="mt-4 text-ink-muted" size="lead">
+                {text(data.text)}
+              </Text>
+            )}
+            {text(primaryCta.label) && text(primaryCta.href) && (
+              <div class="mt-8">
+                <Button href={text(primaryCta.href)}>{text(primaryCta.label)}</Button>
+              </div>
+            )}
+          </Container>
+        </Section>
+      )
+    }
+
+    if (section.kind === 'stats') {
+      return (
+        <Section>
+          <Container>
+            {text(data.title) && (
+              <Heading as="h2" size="lg">
+                {text(data.title)}
+              </Heading>
+            )}
+            <dl class="mt-8 grid gap-px border border-line bg-line sm:grid-cols-3">
+              {items(section).map((item) => (
+                <div class="bg-paper p-6">
+                  <dd class="font-display text-3xl">{text(item.value)}</dd>
+                  <dt class="mt-2 text-sm text-muted">{text(item.label)}</dt>
+                </div>
+              ))}
+            </dl>
+          </Container>
+        </Section>
+      )
+    }
+
+    if (section.kind === 'image_banner') {
+      return (
+        <Section tone="surface">
+          <Container>
+            {image && (
+              <img
+                src={image.url}
+                alt={image.alt}
+                width={image.width ?? undefined}
+                height={image.height ?? undefined}
+                class="mb-10 w-full rounded-xl border border-line object-cover"
+                loading="lazy"
+              />
+            )}
+            <Heading as="h2" size="lg">
+              {text(data.title)}
+            </Heading>
+            {text(data.text) && (
+              <Text muted class="mt-4">
+                {text(data.text)}
+              </Text>
+            )}
+          </Container>
+        </Section>
+      )
+    }
+
+    if (section.kind === 'benefits' || section.kind === 'process' || section.kind === 'faq') {
+      return (
+        <Section tone={section.kind === 'process' ? 'surface' : undefined}>
+          <Container>
+            <Heading as="h2" size="lg">
+              {text(data.title)}
+            </Heading>
+            {text(data.subtitle) && (
+              <Text muted class="mt-4">
+                {text(data.subtitle)}
+              </Text>
+            )}
+            <ul class="mt-10 grid gap-5 md:grid-cols-2" role="list">
+              {items(section).map((item) => (
+                <li class="rounded-xl border border-line bg-white p-6">
+                  <Heading as="h3" size="sm">
+                    {text(item.title)}
+                  </Heading>
+                  {text(item.text) && (
+                    <Text size="sm" muted class="mt-3">
+                      {text(item.text)}
+                    </Text>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Container>
+        </Section>
+      )
+    }
+
+    return (
+      <Section>
+        <Container size="narrow">
+          <Heading
+            as={section.position === 0 ? 'h1' : 'h2'}
+            size={section.position === 0 ? 'display' : 'lg'}
+          >
+            {text(data.title)}
+          </Heading>
+          {(text(data.text) || text(data.body)) && (
+            <Text muted class="mt-5 whitespace-pre-line">
+              {text(data.text) || text(data.body)}
+            </Text>
+          )}
+        </Container>
+      </Section>
+    )
+  })
+}

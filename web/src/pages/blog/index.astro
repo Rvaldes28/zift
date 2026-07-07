@@ -8,7 +8,7 @@ import CTASection from '@/components/sections/CTASection.astro'
 import CategoryChips from '@/components/sections/CategoryChips.astro'
 import PostGrid from '@/components/sections/PostGrid.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import Button from '@/components/ui/Button.astro'
 import Card from '@/components/ui/Card.astro'
 import Container from '@/components/ui/Container.astro'
@@ -19,7 +19,7 @@ import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { POSTS_PER_PAGE, formatDateShort, postCategories, readingTimeMinutes } from '@/lib/blog'
-import { getCollection } from '@/lib/payload'
+import { getCollection } from '@/lib/api'
 
 const [posts, categories] = await Promise.all([
   getCollection('posts', { sort: '-publishedAt', limit: POSTS_PER_PAGE, page: 1 }),
@@ -58,7 +58,7 @@ const featuredCategory = featured ? (postCategories(featured)[0] ?? null) : null
             padding="none"
             class="mb-10 grid overflow-hidden lg:grid-cols-[3fr_2fr]"
           >
-            <PayloadImage
+            <MediaImage
               media={featured.coverImage}
               priority
               class="aspect-[3/2] w-full border-b border-line object-cover lg:h-full lg:border-r lg:border-b-0"

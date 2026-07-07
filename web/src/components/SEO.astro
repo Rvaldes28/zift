@@ -7,10 +7,14 @@
 interface Props {
   title: string
   description?: string | undefined
+  canonical?: string | null
   /** URL absoluta de la imagen para compartir (1200×630) */
   image?: string | null
   siteName: string
   noindex?: boolean
+  ogTitle?: string | null
+  ogDescription?: string | null
+  robotsDirectives?: string[]
   /** article = posts del blog: añade og:type article y sus fechas */
   type?: 'website' | 'article'
   publishedTime?: string | undefined
@@ -20,28 +24,41 @@ interface Props {
 const {
   title,
   description,
+  canonical: canonicalOverride,
   image,
   siteName,
   noindex = false,
+  ogTitle,
+  ogDescription,
+  robotsDirectives,
   type = 'website',
   publishedTime,
   modifiedTime,
 } = Astro.props
 
 // astro.config define `site` (PUBLIC_SITE_URL), así la canónica es absoluta
-const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.href
+const canonical =
+  canonicalOverride ?? (Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.href)
+const robotsContent =
+  robotsDirectives && robotsDirectives.length > 0
+    ? robotsDirectives.join(', ')
+    : noindex
+      ? 'noindex, nofollow'
+      : null
+const openGraphTitle = ogTitle ?? title
+const openGraphDescription = ogDescription ?? description
 ---
 
 <title>{title}</title>
 {description && <meta name="description" content={description} />}
 <link rel="canonical" href={canonical} />
-{noindex && <meta name="robots" content="noindex, nofollow" />}
+{robotsContent && <meta name="robots" content={robotsContent} />}
 
 <meta property="og:type" content={type} />
 <meta property="og:locale" content="es_PA" />
 <meta property="og:site_name" content={siteName} />
-<meta property="og:title" content={title} />
-{description && <meta property="og:description" content={description} />}
+<meta property="og:title" content={openGraphTitle} />
+{openGraphDescription && <meta property="og:description" content={openGraphDescription} />}
 <meta property="og:url" content={canonical} />
 {image && <meta property="og:image" content={image} />}
 {
@@ -56,6 +73,6 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 }
 
 <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
-<meta name="twitter:title" content={title} />
-{description && <meta name="twitter:description" content={description} />}
+<meta name="twitter:title" content={openGraphTitle} />
+{openGraphDescription && <meta name="twitter:description" content={openGraphDescription} />}
 {image && <meta name="twitter:image" content={image} />}

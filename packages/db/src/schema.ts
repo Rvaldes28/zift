@@ -134,12 +134,34 @@ export const sessions = pgTable(
     ipAddress: varchar('ip_address', { length: 80 }),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    revokedBy: uuid('revoked_by'),
+    revocationReason: varchar('revocation_reason', { length: 120 }),
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
     ...timestamps(),
   },
   (table) => [
     uniqueIndex('sessions_token_hash_idx').on(table.tokenHash),
     index('sessions_user_id_idx').on(table.userId),
+    index('sessions_last_seen_at_idx').on(table.lastSeenAt),
+    index('sessions_revoked_at_idx').on(table.revokedAt),
+  ],
+)
+
+export const securityIpBlocks = pgTable(
+  'security_ip_blocks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ipAddress: varchar('ip_address', { length: 80 }).notNull(),
+    reason: text('reason').notNull(),
+    blockedUntil: timestamp('blocked_until', { withTimezone: true }).notNull(),
+    createdBy: uuid('created_by'),
+    metadata: jsonb('metadata').$type<JsonRecord>().notNull().default({}),
+    ...timestamps(),
+  },
+  (table) => [
+    index('security_ip_blocks_ip_address_idx').on(table.ipAddress),
+    index('security_ip_blocks_blocked_until_idx').on(table.blockedUntil),
+    index('security_ip_blocks_created_by_idx').on(table.createdBy),
   ],
 )
 
@@ -213,17 +235,35 @@ export const mediaAssets = pgTable(
     filename: varchar('filename', { length: 255 }).notNull(),
     alt: text('alt').notNull(),
     url: text('url').notNull(),
+    storageKey: text('storage_key'),
+    bucket: varchar('bucket', { length: 160 }),
+    caption: text('caption'),
+    folderPath: varchar('folder_path', { length: 260 }).notNull().default('/'),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    status: varchar('status', { length: 40 }).notNull().default('active'),
     mimeType: varchar('mime_type', { length: 120 }),
     filesize: integer('filesize'),
     width: integer('width'),
     height: integer('height'),
+    checksum: varchar('checksum', { length: 128 }),
+    replacedAt: timestamp('replaced_at', { withTimezone: true }),
+    replacedById: uuid('replaced_by_id'),
+    deletedBy: uuid('deleted_by'),
+    deletedReason: text('deleted_reason'),
     metadata: jsonb('metadata').$type<JsonRecord>().notNull().default({}),
     ...payloadId(),
     ...timestamps(),
     ...actorColumns(),
     ...softDelete(),
   },
-  (table) => [uniqueIndex('media_assets_payload_id_idx').on(table.payloadId)],
+  (table) => [
+    uniqueIndex('media_assets_payload_id_idx').on(table.payloadId),
+    uniqueIndex('media_assets_storage_key_idx').on(table.storageKey),
+    index('media_assets_folder_path_idx').on(table.folderPath),
+    index('media_assets_status_idx').on(table.status),
+    index('media_assets_mime_type_idx').on(table.mimeType),
+    index('media_assets_created_at_idx').on(table.createdAt),
+  ],
 )
 
 export const pages = pgTable(
@@ -231,11 +271,17 @@ export const pages = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     slug: varchar('slug', { length: 220 }).notNull(),
+    routePath: varchar('route_path', { length: 260 }).notNull().default('/'),
     title: varchar('title', { length: 240 }).notNull(),
+    excerpt: text('excerpt'),
     type: varchar('type', { length: 80 }).notNull().default('page'),
     status: varchar('status', { length: 40 }).notNull().default('draft'),
     content: jsonb('content').$type<JsonRecord>().notNull().default({}),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    currentVersionId: uuid('current_version_id'),
+    publishedVersionId: uuid('published_version_id'),
     ...payloadId(),
     ...timestamps(),
     ...actorColumns(),
@@ -243,47 +289,82 @@ export const pages = pgTable(
   },
   (table) => [
     uniqueIndex('pages_slug_idx').on(table.slug),
+    uniqueIndex('pages_route_path_idx').on(table.routePath),
     uniqueIndex('pages_payload_id_idx').on(table.payloadId),
+    index('pages_status_idx').on(table.status),
+    index('pages_type_idx').on(table.type),
   ],
 )
 
-export const pageSections = pgTable('page_sections', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  pageId: uuid('page_id')
-    .notNull()
-    .references(() => pages.id, { onDelete: 'cascade' }),
-  kind: varchar('kind', { length: 120 }).notNull(),
-  position: integer('position').notNull().default(0),
-  data: jsonb('data').$type<JsonRecord>().notNull().default({}),
-  ...timestamps(),
-  ...actorColumns(),
-  ...softDelete(),
-})
+export const pageSections = pgTable(
+  'page_sections',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pageId: uuid('page_id')
+      .notNull()
+      .references(() => pages.id, { onDelete: 'cascade' }),
+    kind: varchar('kind', { length: 120 }).notNull(),
+    label: varchar('label', { length: 160 }).notNull().default('Seccion'),
+    enabled: boolean('enabled').notNull().default(true),
+    position: integer('position').notNull().default(0),
+    data: jsonb('data').$type<JsonRecord>().notNull().default({}),
+    settings: jsonb('settings').$type<JsonRecord>().notNull().default({}),
+    ...timestamps(),
+    ...actorColumns(),
+    ...softDelete(),
+  },
+  (table) => [
+    index('page_sections_page_id_idx').on(table.pageId),
+    index('page_sections_position_idx').on(table.position),
+  ],
+)
 
-export const pageVersions = pgTable('page_versions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  pageId: uuid('page_id')
-    .notNull()
-    .references(() => pages.id, { onDelete: 'cascade' }),
-  version: integer('version').notNull(),
-  data: jsonb('data').$type<JsonRecord>().notNull().default({}),
-  createdBy: uuid('created_by'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-})
+export const pageVersions = pgTable(
+  'page_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pageId: uuid('page_id')
+      .notNull()
+      .references(() => pages.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    data: jsonb('data').$type<JsonRecord>().notNull().default({}),
+    createdBy: uuid('created_by'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('page_versions_page_version_idx').on(table.pageId, table.version),
+    index('page_versions_page_id_idx').on(table.pageId),
+  ],
+)
 
-export const seoMetadata = pgTable('seo_metadata', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  entityType: varchar('entity_type', { length: 120 }).notNull(),
-  entityId: varchar('entity_id', { length: 120 }).notNull(),
-  title: varchar('title', { length: 240 }),
-  description: text('description'),
-  imageId: uuid('image_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
-  canonicalUrl: text('canonical_url'),
-  noindex: boolean('noindex').notNull().default(false),
-  metadata: jsonb('metadata').$type<JsonRecord>().notNull().default({}),
-  ...timestamps(),
-  ...softDelete(),
-})
+export const seoMetadata = pgTable(
+  'seo_metadata',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    entityType: varchar('entity_type', { length: 120 }).notNull(),
+    entityId: varchar('entity_id', { length: 120 }).notNull(),
+    title: varchar('title', { length: 240 }),
+    description: text('description'),
+    imageId: uuid('image_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
+    canonicalUrl: text('canonical_url'),
+    ogTitle: varchar('og_title', { length: 140 }),
+    ogDescription: text('og_description'),
+    ogImageId: uuid('og_image_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
+    schemaJsonLd: jsonb('schema_json_ld').$type<JsonRecord | JsonRecord[]>(),
+    robotsDirectives: jsonb('robots_directives').$type<string[]>().notNull().default([]),
+    sitemapInclude: boolean('sitemap_include').notNull().default(true),
+    noindex: boolean('noindex').notNull().default(false),
+    metadata: jsonb('metadata').$type<JsonRecord>().notNull().default({}),
+    ...timestamps(),
+    ...softDelete(),
+  },
+  (table) => [
+    uniqueIndex('seo_metadata_entity_idx').on(table.entityType, table.entityId),
+    index('seo_metadata_entity_type_idx').on(table.entityType),
+    index('seo_metadata_noindex_idx').on(table.noindex),
+    index('seo_metadata_sitemap_include_idx').on(table.sitemapInclude),
+  ],
+)
 
 export const redirects = pgTable(
   'redirects',
@@ -301,6 +382,8 @@ export const redirects = pgTable(
   (table) => [
     uniqueIndex('redirects_from_path_idx').on(table.fromPath),
     uniqueIndex('redirects_payload_id_idx').on(table.payloadId),
+    index('redirects_active_idx').on(table.active),
+    index('redirects_status_code_idx').on(table.statusCode),
   ],
 )
 
@@ -374,8 +457,14 @@ export const posts = pgTable(
     title: varchar('title', { length: 240 }).notNull(),
     excerpt: text('excerpt').notNull(),
     content: jsonb('content').$type<JsonRecord>().notNull().default({}),
+    authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+    coverImageId: uuid('cover_image_id').references(() => mediaAssets.id, {
+      onDelete: 'set null',
+    }),
     status: varchar('status', { length: 40 }).notNull().default('draft'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
     ...payloadId(),
     ...timestamps(),
     ...actorColumns(),
@@ -384,6 +473,30 @@ export const posts = pgTable(
   (table) => [
     uniqueIndex('posts_slug_idx').on(table.slug),
     uniqueIndex('posts_payload_id_idx').on(table.payloadId),
+    index('posts_author_id_idx').on(table.authorId),
+    index('posts_cover_image_id_idx').on(table.coverImageId),
+    index('posts_status_idx').on(table.status),
+    index('posts_published_at_idx').on(table.publishedAt),
+    index('posts_scheduled_at_idx').on(table.scheduledAt),
+  ],
+)
+
+export const postCategories = pgTable(
+  'post_categories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => categories.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex('post_categories_post_category_idx').on(table.postId, table.categoryId),
+    index('post_categories_post_id_idx').on(table.postId),
+    index('post_categories_category_id_idx').on(table.categoryId),
   ],
 )
 
@@ -413,6 +526,25 @@ export const postTags = pgTable(
   (table) => [uniqueIndex('post_tags_post_tag_idx').on(table.postId, table.tagId)],
 )
 
+export const postRelatedPosts = pgTable(
+  'post_related_posts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    relatedPostId: uuid('related_post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex('post_related_posts_post_related_idx').on(table.postId, table.relatedPostId),
+    index('post_related_posts_post_id_idx').on(table.postId),
+    index('post_related_posts_related_post_id_idx').on(table.relatedPostId),
+  ],
+)
+
 export const leads = pgTable(
   'leads',
   {
@@ -422,30 +554,60 @@ export const leads = pgTable(
     phone: varchar('phone', { length: 80 }),
     company: varchar('company', { length: 200 }),
     serviceId: uuid('service_id').references(() => services.id, { onDelete: 'set null' }),
+    assignedTo: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }),
     budget: varchar('budget', { length: 80 }),
     message: text('message'),
     formType: varchar('form_type', { length: 80 }).notNull(),
     source: text('source'),
     utm: jsonb('utm').$type<JsonRecord>().notNull().default({}),
+    analyticsSessionIdHash: varchar('analytics_session_id_hash', { length: 128 }),
+    landingPath: text('landing_path'),
+    referrer: text('referrer'),
+    deviceType: varchar('device_type', { length: 40 }),
     status: varchar('status', { length: 40 }).notNull().default('new'),
+    statusChangedAt: timestamp('status_changed_at', { withTimezone: true }),
+    crmStatus: varchar('crm_status', { length: 40 }),
+    crmSentAt: timestamp('crm_sent_at', { withTimezone: true }),
+    crmResponse: jsonb('crm_response').$type<JsonRecord>(),
+    notificationSentAt: timestamp('notification_sent_at', { withTimezone: true }),
+    ipAddress: varchar('ip_address', { length: 80 }),
+    userAgent: text('user_agent'),
+    spamReason: text('spam_reason'),
     payload: jsonb('payload').$type<JsonRecord>().notNull().default({}),
     ...payloadId(),
     ...timestamps(),
     ...softDelete(),
   },
-  (table) => [uniqueIndex('leads_payload_id_idx').on(table.payloadId)],
+  (table) => [
+    uniqueIndex('leads_payload_id_idx').on(table.payloadId),
+    index('leads_status_idx').on(table.status),
+    index('leads_created_at_idx').on(table.createdAt),
+    index('leads_assigned_to_idx').on(table.assignedTo),
+    index('leads_service_id_idx').on(table.serviceId),
+    index('leads_form_type_idx').on(table.formType),
+    index('leads_email_idx').on(table.email),
+    index('leads_analytics_session_id_hash_idx').on(table.analyticsSessionIdHash),
+    index('leads_landing_path_idx').on(table.landingPath),
+  ],
 )
 
-export const leadNotes = pgTable('lead_notes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  leadId: uuid('lead_id')
-    .notNull()
-    .references(() => leads.id, { onDelete: 'cascade' }),
-  body: text('body').notNull(),
-  authorId: uuid('author_id'),
-  ...timestamps(),
-  ...softDelete(),
-})
+export const leadNotes = pgTable(
+  'lead_notes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    leadId: uuid('lead_id')
+      .notNull()
+      .references(() => leads.id, { onDelete: 'cascade' }),
+    body: text('body').notNull(),
+    authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+    ...timestamps(),
+    ...softDelete(),
+  },
+  (table) => [
+    index('lead_notes_lead_id_idx').on(table.leadId),
+    index('lead_notes_author_id_idx').on(table.authorId),
+  ],
+)
 
 export const integrations = pgTable(
   'integrations',
@@ -461,21 +623,93 @@ export const integrations = pgTable(
   (table) => [uniqueIndex('integrations_key_idx').on(table.key)],
 )
 
-export const analyticsEvents = pgTable('analytics_events', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  eventName: varchar('event_name', { length: 160 }).notNull(),
-  source: varchar('source', { length: 120 }),
-  payload: jsonb('payload').$type<JsonRecord>().notNull().default({}),
-  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
-})
+export const analyticsEvents = pgTable(
+  'analytics_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    eventName: varchar('event_name', { length: 160 }).notNull(),
+    path: text('path'),
+    title: text('title'),
+    referrer: text('referrer'),
+    source: varchar('source', { length: 120 }),
+    utm: jsonb('utm').$type<JsonRecord>().notNull().default({}),
+    sessionIdHash: varchar('session_id_hash', { length: 128 }),
+    visitorIdHash: varchar('visitor_id_hash', { length: 128 }),
+    deviceType: varchar('device_type', { length: 40 }),
+    browser: varchar('browser', { length: 80 }),
+    os: varchar('os', { length: 80 }),
+    country: varchar('country', { length: 120 }),
+    city: varchar('city', { length: 160 }),
+    durationMs: integer('duration_ms'),
+    payload: jsonb('payload').$type<JsonRecord>().notNull().default({}),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('analytics_events_event_name_idx').on(table.eventName),
+    index('analytics_events_occurred_at_idx').on(table.occurredAt),
+    index('analytics_events_path_idx').on(table.path),
+    index('analytics_events_source_idx').on(table.source),
+    index('analytics_events_session_id_hash_idx').on(table.sessionIdHash),
+    index('analytics_events_country_idx').on(table.country),
+    index('analytics_events_city_idx').on(table.city),
+    index('analytics_events_device_type_idx').on(table.deviceType),
+  ],
+)
 
-export const performanceChecks = pgTable('performance_checks', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  url: text('url').notNull(),
-  score: integer('score'),
-  metrics: jsonb('metrics').$type<JsonRecord>().notNull().default({}),
-  checkedAt: timestamp('checked_at', { withTimezone: true }).notNull().defaultNow(),
-})
+export const performanceChecks = pgTable(
+  'performance_checks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    kind: varchar('kind', { length: 80 }).notNull().default('synthetic'),
+    status: varchar('status', { length: 40 }).notNull().default('pending'),
+    url: text('url').notNull(),
+    method: varchar('method', { length: 12 }).notNull().default('GET'),
+    httpStatus: integer('http_status'),
+    responseTimeMs: integer('response_time_ms'),
+    cacheStatus: varchar('cache_status', { length: 160 }),
+    cdnStatus: varchar('cdn_status', { length: 160 }),
+    errorMessage: text('error_message'),
+    score: integer('score'),
+    metrics: jsonb('metrics').$type<JsonRecord>().notNull().default({}),
+    checkedAt: timestamp('checked_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('performance_checks_kind_idx').on(table.kind),
+    index('performance_checks_status_idx').on(table.status),
+    index('performance_checks_url_idx').on(table.url),
+    index('performance_checks_response_time_ms_idx').on(table.responseTimeMs),
+    index('performance_checks_checked_at_idx').on(table.checkedAt),
+  ],
+)
+
+export const performanceAlerts = pgTable(
+  'performance_alerts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    severity: varchar('severity', { length: 40 }).notNull().default('warning'),
+    status: varchar('status', { length: 40 }).notNull().default('open'),
+    title: varchar('title', { length: 240 }).notNull(),
+    message: text('message').notNull(),
+    url: text('url'),
+    metric: varchar('metric', { length: 120 }),
+    value: integer('value'),
+    threshold: integer('threshold'),
+    source: varchar('source', { length: 120 }).notNull().default('performance'),
+    metadata: jsonb('metadata').$type<JsonRecord>().notNull().default({}),
+    firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (table) => [
+    index('performance_alerts_severity_idx').on(table.severity),
+    index('performance_alerts_status_idx').on(table.status),
+    index('performance_alerts_source_idx').on(table.source),
+    index('performance_alerts_url_idx').on(table.url),
+    index('performance_alerts_metric_idx').on(table.metric),
+    index('performance_alerts_last_seen_at_idx').on(table.lastSeenAt),
+  ],
+)
 
 export const notifications = pgTable('notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -513,12 +747,21 @@ export type Role = typeof roles.$inferSelect
 export type Permission = typeof permissions.$inferSelect
 export type RolePermission = typeof rolePermissions.$inferSelect
 export type Session = typeof sessions.$inferSelect
+export type SecurityIpBlock = typeof securityIpBlocks.$inferSelect
 export type AuthChallenge = typeof authChallenges.$inferSelect
 export type LoginAttempt = typeof loginAttempts.$inferSelect
 export type MediaAsset = typeof mediaAssets.$inferSelect
 export type Page = typeof pages.$inferSelect
+export type PageSection = typeof pageSections.$inferSelect
+export type PageVersion = typeof pageVersions.$inferSelect
 export type Service = typeof services.$inferSelect
 export type Project = typeof projects.$inferSelect
 export type Post = typeof posts.$inferSelect
+export type PostCategory = typeof postCategories.$inferSelect
+export type Tag = typeof tags.$inferSelect
+export type PostTag = typeof postTags.$inferSelect
+export type PostRelatedPost = typeof postRelatedPosts.$inferSelect
 export type Lead = typeof leads.$inferSelect
+export type PerformanceAlert = typeof performanceAlerts.$inferSelect
+export type PerformanceCheck = typeof performanceChecks.$inferSelect
 export type SiteSetting = typeof siteSettings.$inferSelect

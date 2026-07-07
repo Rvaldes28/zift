@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { CsrfField } from '@/components/security/csrf-field'
 import { registerInitialAdmin } from '@/lib/auth/actions'
 import { authConfig } from '@/lib/auth/config'
 import { initialRegistrationStatus } from '@/lib/auth/queries'
@@ -46,6 +47,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           </div>
         ) : (
           <form action={registerInitialAdmin} className="mt-8 grid gap-4">
+            <CsrfField />
             <label className="grid gap-2 text-sm font-medium">
               Nombre
               <input

@@ -5,7 +5,7 @@ import ServiceCard from '@/components/sections/ServiceCard.astro'
 import Container from '@/components/ui/Container.astro'
 import Section from '@/components/ui/Section.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { getCollection } from '@/lib/payload'
+import { getCollection } from '@/lib/api'
 
 const services = await getCollection('services', { sort: 'order', limit: 100 })
 ---

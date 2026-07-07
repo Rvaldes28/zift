@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
 import { getCurrentSession } from '@/lib/auth/session'
+import { requiresTwoFactorSetup } from '@/lib/security/two-factor-policy'
 
 import type { PermissionSlug } from './permissions'
 
@@ -61,7 +62,17 @@ export async function requirePermission(permission: PermissionSlug) {
 
   const access = await getUserAccess(current.user.id)
   if (!access.permissions.includes(permission)) {
+    await recordActivity({
+      actorId: current.user.id,
+      action: 'security.permission_denied',
+      entityType: 'permission',
+      entityId: permission,
+    }).catch(() => null)
     redirect('/login?error=forbidden')
+  }
+
+  if (permission !== 'dashboard.access' && requiresTwoFactorSetup(current.user, access)) {
+    redirect('/dashboard/account?required=2fa')
   }
 
   return { ...current, access }
@@ -75,7 +86,17 @@ export async function requireAnyPermission(requiredPermissions: PermissionSlug[]
   const allowed = requiredPermissions.some((permission) => access.permissions.includes(permission))
 
   if (!allowed) {
+    await recordActivity({
+      actorId: current.user.id,
+      action: 'security.permission_denied',
+      entityType: 'permission',
+      metadata: { requiredPermissions },
+    }).catch(() => null)
     redirect('/login?error=forbidden')
+  }
+
+  if (requiresTwoFactorSetup(current.user, access)) {
+    redirect('/dashboard/account?required=2fa')
   }
 
   return { ...current, access }

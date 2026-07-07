@@ -19,7 +19,14 @@ import { authConfig, bootstrapToken, normalizeEmail } from './config'
 import { DASHBOARD_PATH } from './constants'
 import { hashPassword, verifyPassword } from './password'
 import { requestMeta, type RequestMeta } from './request'
-import { createSession, getCurrentSession, revokeCurrentSession } from './session'
+import {
+  clearMustSetupTwoFactorCookie,
+  createSession,
+  getCurrentSession,
+  revokeCurrentSession,
+} from './session'
+import { verifyCsrf } from '@/lib/security/csrf'
+import { autoBlockIpIfNeeded, redirectIfIpBlocked } from '@/lib/security/ip-blocks'
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -126,6 +133,10 @@ async function logLoginAttempt(input: {
     reason: input.reason,
     metadata: input.metadata ?? {},
   })
+
+  if (!input.success) {
+    await autoBlockIpIfNeeded(input.meta).catch(() => null)
+  }
 }
 
 async function findUserByEmail(email: string): Promise<User | null> {
@@ -181,6 +192,10 @@ async function lockUserIfNeeded(user: User | null, failuresAfterAttempt: number)
 }
 
 export async function registerInitialAdmin(formData: FormData): Promise<void> {
+  const meta = await requestMeta()
+  await redirectIfIpBlocked(meta, '/register?error=invalid')
+  await verifyCsrf(formData)
+
   const parsed = registerSchema().safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -295,6 +310,10 @@ export async function registerInitialAdmin(formData: FormData): Promise<void> {
 
 export async function login(formData: FormData): Promise<void> {
   const next = safeDashboardPath(formData.get('next'))
+  const meta = await requestMeta()
+  await redirectIfIpBlocked(meta, `/login?error=locked&next=${encodeURIComponent(next)}`)
+  await verifyCsrf(formData)
+
   const parsed = loginSchema().safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -304,7 +323,6 @@ export async function login(formData: FormData): Promise<void> {
     loginRedirect('invalid', next)
   }
 
-  const meta = await requestMeta()
   const config = authConfig()
   const now = new Date()
   const user = await findUserByEmail(parsed.data.email)
@@ -407,6 +425,10 @@ export async function login(formData: FormData): Promise<void> {
 
 export async function verifyTwoFactorLogin(formData: FormData): Promise<void> {
   const next = safeDashboardPath(formData.get('next'))
+  const meta = await requestMeta()
+  await redirectIfIpBlocked(meta, `/login?error=locked&next=${encodeURIComponent(next)}`)
+  await verifyCsrf(formData)
+
   const parsed = twoFactorLoginSchema().safeParse({
     code: formData.get('code'),
   })
@@ -420,7 +442,6 @@ export async function verifyTwoFactorLogin(formData: FormData): Promise<void> {
     redirectWithParams('/login', { error: 'invalid', next })
   }
 
-  const meta = await requestMeta()
   const user = challenge.user
 
   if (!user.twoFactorSecretEncrypted || !user.twoFactorEnabled) {
@@ -484,12 +505,14 @@ export async function verifyTwoFactorLogin(formData: FormData): Promise<void> {
   redirect(next)
 }
 
-export async function logout(): Promise<void> {
+export async function logout(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   await revokeCurrentSession()
   redirect('/login?logged_out=1')
 }
 
 export async function changePassword(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await getCurrentSession()
   if (!current) redirect('/login')
 
@@ -534,7 +557,12 @@ export async function changePassword(formData: FormData): Promise<void> {
 
     await tx
       .update(sessions)
-      .set({ revokedAt: now, updatedAt: now })
+      .set({
+        revokedAt: now,
+        revokedBy: current.user.id,
+        revocationReason: 'password_changed',
+        updatedAt: now,
+      })
       .where(and(eq(sessions.userId, current.user.id), isNull(sessions.revokedAt)))
   })
 
@@ -548,7 +576,8 @@ export async function changePassword(formData: FormData): Promise<void> {
   redirect('/dashboard/account?status=password-updated')
 }
 
-export async function startTotpSetup(): Promise<void> {
+export async function startTotpSetup(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await getCurrentSession()
   if (!current) redirect('/login')
 
@@ -583,6 +612,7 @@ export async function confirmTotpSetup(
   _previousState: TotpSetupState,
   formData: FormData,
 ): Promise<TotpSetupState> {
+  await verifyCsrf(formData)
   const current = await getCurrentSession()
   if (!current) return { ok: false, error: 'session' }
 
@@ -618,6 +648,7 @@ export async function confirmTotpSetup(
       entityType: 'user',
       entityId: current.user.id,
     })
+    await clearMustSetupTwoFactorCookie()
 
     return { ok: true, recoveryCodes }
   } catch (error) {
@@ -627,6 +658,7 @@ export async function confirmTotpSetup(
 }
 
 export async function disableOwnTotp(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await getCurrentSession()
   if (!current) redirect('/login')
 

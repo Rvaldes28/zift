@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/ui'
+import { CsrfField } from '@/components/security/csrf-field'
 import { updateRolePermissions } from '@/lib/users/actions'
 import { requirePermission } from '@/lib/rbac/access'
 import { PERMISSION_LABELS, type PermissionSlug } from '@/lib/rbac/permissions'
@@ -20,13 +22,11 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
 
   return (
     <main className="px-6 py-8 lg:px-10">
-      <section className="max-w-3xl">
-        <p className="font-mono text-xs tracking-[0.18em] text-[var(--muted)] uppercase">RBAC</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Roles y permisos</h1>
-        <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-          Los permisos se aplican server-side en rutas y acciones. El rol admin esta bloqueado.
-        </p>
-      </section>
+      <PageHeader
+        eyebrow="RBAC"
+        title="Roles y permisos"
+        description="Los permisos se aplican server-side en rutas y acciones. El rol admin esta bloqueado."
+      />
 
       {params?.error === 'admin-locked' && (
         <p className="mt-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -50,6 +50,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
               action={updateRolePermissions}
               className="rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm"
             >
+              <CsrfField />
               <input type="hidden" name="roleId" value={role.id} />
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

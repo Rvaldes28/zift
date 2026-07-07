@@ -3,13 +3,13 @@
  * Analítica (FASE 12): carga GA4 y Clarity SOLO tras consentimiento de
  * analítica — modo básico de Consent Mode, criterio AEPD; el default denied
  * inline de BaseLayout queda como segunda red. Sin IDs en web/.env no se
- * inyecta nada (dev limpio). También captura las UTMs de la sesión y delega
- * los clics de CTA ([data-track-cta]) y WhatsApp ([data-track-whatsapp]).
+ * inyecta nada (dev limpio). También captura UTMs, pageviews/eventos propios
+ * consentidos y delega clicks de CTA ([data-track-cta]) y WhatsApp.
  */
 ---
 
 <script>
-  import { track } from '@/lib/analytics'
+  import { reportPerformance, track } from '@/lib/analytics'
   import { CONSENT_EVENT, readConsent, type StoredConsent } from '@/lib/consent'
   import { captureUtm } from '@/lib/utm'
 
@@ -17,6 +17,10 @@
   const CLARITY_ID = (import.meta.env.PUBLIC_CLARITY_ID as string | undefined) || undefined
 
   captureUtm()
+  const startedAt = performance.now()
+  let pageViewTracked = false
+  let engagementTracked = false
+  let performanceCaptureStarted = false
 
   // --- Carga consent-gated: nada de Google/Microsoft sin analytics granted ---
 
@@ -54,16 +58,197 @@
     }
   }
 
-  if (GA4_ID || CLARITY_ID) {
-    if (readConsent()?.analytics) loadVendors()
-    window.addEventListener(CONSENT_EVENT, (event) => {
-      const consent = (event as CustomEvent<StoredConsent>).detail
-      if (consent.analytics) {
+  if (readConsent()?.analytics) {
+    if (GA4_ID || CLARITY_ID) {
+      loadVendors()
+    }
+    trackPageView()
+    startPerformanceCapture()
+  }
+
+  window.addEventListener(CONSENT_EVENT, (event) => {
+    const consent = (event as CustomEvent<StoredConsent>).detail
+    if (consent.analytics) {
+      if (GA4_ID || CLARITY_ID) {
         if (loaded) window.clarity?.('start')
         else loadVendors()
-      } else {
-        window.clarity?.('stop')
       }
+      trackPageView()
+      startPerformanceCapture()
+    } else {
+      window.clarity?.('stop')
+    }
+  })
+
+  function trackPageView(): void {
+    if (pageViewTracked) return
+    pageViewTracked = true
+    track('page_view')
+  }
+
+  function trackEngagement(): void {
+    if (engagementTracked || !pageViewTracked) return
+    engagementTracked = true
+    track('page_engagement', { duration_ms: Math.round(performance.now() - startedAt) })
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') trackEngagement()
+  })
+  window.addEventListener('pagehide', trackEngagement)
+
+  // --- RUM tecnico: Web Vitals, recursos pesados y errores consentidos ---
+
+  type ObservedEntry = PerformanceEntry & {
+    duration?: number
+    hadRecentInput?: boolean
+    initiatorType?: string
+    transferSize?: number
+    value?: number
+  }
+
+  const reportedResources = new Set<string>()
+  let latestLcp = 0
+  let clsValue = 0
+  let maxInp = 0
+  let vitalsReported = false
+  let loadReported = false
+
+  function observePerformance(type: string, callback: (entry: ObservedEntry) => void): void {
+    if (!('PerformanceObserver' in window)) return
+    if (!PerformanceObserver.supportedEntryTypes?.includes(type)) return
+    try {
+      const observer = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => callback(entry as ObservedEntry))
+      })
+      observer.observe({ buffered: true, type } as PerformanceObserverInit)
+    } catch {
+      // El navegador no soporta este entry type con buffered; seguimos con los demas.
+    }
+  }
+
+  function reportLoadTiming(): void {
+    if (loadReported) return
+    loadReported = true
+    const [navigation] = performance.getEntriesByType(
+      'navigation',
+    ) as PerformanceNavigationTiming[]
+    const value = navigation?.loadEventEnd
+      ? navigation.loadEventEnd - navigation.startTime
+      : performance.now() - startedAt
+    reportPerformance('web_vital', {
+      durationMs: Math.round(value),
+      name: 'load',
+      value: Math.round(value),
+    })
+  }
+
+  function reportResource(entry: ObservedEntry): void {
+    const transferSize = Number(entry.transferSize ?? 0)
+    if (transferSize <= 500 * 1024) return
+    if (reportedResources.has(entry.name)) return
+    reportedResources.add(entry.name)
+    reportPerformance('resource_timing', {
+      initiatorType: entry.initiatorType,
+      transferSize,
+      url: entry.name,
+      value: transferSize,
+    })
+  }
+
+  function reportExistingHeavyResources(): void {
+    ;(performance.getEntriesByType('resource') as PerformanceResourceTiming[]).forEach((entry) =>
+      reportResource(entry),
+    )
+  }
+
+  function reportVitals(): void {
+    if (vitalsReported) return
+    vitalsReported = true
+    if (latestLcp > 0) {
+      reportPerformance('web_vital', {
+        durationMs: Math.round(latestLcp),
+        name: 'LCP',
+        value: Math.round(latestLcp),
+      })
+    }
+    if (clsValue > 0) {
+      reportPerformance('web_vital', { name: 'CLS', value: Number(clsValue.toFixed(4)) })
+    }
+    if (maxInp > 0) {
+      reportPerformance('web_vital', {
+        durationMs: Math.round(maxInp),
+        name: 'INP',
+        value: Math.round(maxInp),
+      })
+    }
+    reportLoadTiming()
+    reportExistingHeavyResources()
+  }
+
+  function startPerformanceCapture(): void {
+    if (performanceCaptureStarted) return
+    performanceCaptureStarted = true
+
+    observePerformance('largest-contentful-paint', (entry) => {
+      latestLcp = entry.startTime
+    })
+    observePerformance('layout-shift', (entry) => {
+      if (!entry.hadRecentInput) clsValue += Number(entry.value ?? 0)
+    })
+    observePerformance('event', (entry) => {
+      if (entry.duration && entry.duration > maxInp) maxInp = entry.duration
+    })
+    observePerformance('resource', reportResource)
+
+    if (document.readyState === 'complete') {
+      window.setTimeout(() => {
+        reportLoadTiming()
+        reportExistingHeavyResources()
+      }, 0)
+    } else {
+      window.addEventListener(
+        'load',
+        () => {
+          reportLoadTiming()
+          reportExistingHeavyResources()
+        },
+        { once: true },
+      )
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') reportVitals()
+    })
+    window.addEventListener('pagehide', reportVitals)
+
+    window.addEventListener(
+      'error',
+      (event) => {
+        const target = event.target instanceof HTMLElement ? event.target : null
+        const resourceUrl = target
+          ? target.getAttribute('src') ?? target.getAttribute('href') ?? undefined
+          : undefined
+
+        reportPerformance('client_error', {
+          message: resourceUrl ? 'Resource load error' : event.message,
+          metadata: {
+            column: event.colno,
+            filename: event.filename,
+            line: event.lineno,
+          },
+          name: resourceUrl ? 'resource_error' : 'javascript_error',
+          url: resourceUrl,
+        })
+      },
+      true,
+    )
+
+    window.addEventListener('unhandledrejection', (event) => {
+      reportPerformance('client_error', {
+        message: event.reason instanceof Error ? event.reason.message : 'Unhandled rejection',
+        name: 'unhandled_rejection',
+      })
     })
   }
 

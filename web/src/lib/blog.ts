@@ -1,10 +1,7 @@
-/**
- * Utilidades del blog (FASE 6): tiempo de lectura desde el rich text de
- * Payload (Lexical), formato de fechas y resolución de relaciones del post.
- */
-import type { Category, Post, TeamMember } from '@cms/types'
+import type { Category, Post, TeamMember } from '@ziftlab/types'
 
-import { resolveDocs } from './payload'
+import { resolveDocs } from './api'
+import { richTextPlainText } from './rich-text'
 
 /** Posts por página en el listado del blog (grid de 3 columnas × 2 filas). */
 export const POSTS_PER_PAGE = 6
@@ -14,23 +11,8 @@ export function blogPageHref(page: number): string {
   return page <= 1 ? '/blog' : `/blog/pagina/${page}`
 }
 
-/** Nodo lexical mínimo para recorrer el árbol extrayendo texto. */
-interface LexicalNode {
-  text?: string
-  children?: LexicalNode[]
-}
-
-/** Texto plano de un campo richText (Lexical) de Payload. */
 export function lexicalPlainText(content: unknown): string {
-  const root = (content as { root?: LexicalNode } | null | undefined)?.root
-  if (!root) return ''
-  const parts: string[] = []
-  const walk = (node: LexicalNode): void => {
-    if (typeof node.text === 'string') parts.push(node.text)
-    node.children?.forEach(walk)
-  }
-  walk(root)
-  return parts.join(' ')
+  return richTextPlainText(content)
 }
 
 /** Minutos de lectura (~200 palabras/min en español), mínimo 1. */

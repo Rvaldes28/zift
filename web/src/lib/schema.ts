@@ -1,9 +1,8 @@
 /**
  * Builders de JSON-LD (FASE 8). Cada función devuelve el objeto schema.org
  * listo para serializar con el componente JsonLd.astro. Los datos salen del
- * CMS (site-settings y documentos); aquí no se inventa contenido.
  */
-import type { Faq, SiteSetting } from '@cms/types'
+import type { Faq, SiteSetting } from '@ziftlab/types'
 
 import { lexicalPlainText } from './blog'
 

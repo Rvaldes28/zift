@@ -6,7 +6,7 @@
  */
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import JsonLd from '@/components/JsonLd.astro'
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import BenefitsGrid from '@/components/sections/BenefitsGrid.astro'
 import CTASection from '@/components/sections/CTASection.astro'
 import FaqAccordion from '@/components/sections/FaqAccordion.astro'
@@ -20,10 +20,10 @@ import Heading from '@/components/ui/Heading.astro'
 import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getCollection, resolveDocs } from '@/lib/api'
 import { getMediaUrl } from '@/lib/media'
-import { getCollection, resolveDocs } from '@/lib/payload'
 import { faqPageSchema, serviceSchema } from '@/lib/schema'
-import type { Faq, Project, Service } from '@cms/types'
+import type { Faq, Project, Service } from '@ziftlab/types'
 
 export async function getStaticPaths() {
   const services = await getCollection('services', { sort: 'order', limit: 100, depth: 2 })
@@ -98,7 +98,7 @@ const canonical = new URL(Astro.url.pathname, site).href
           Agenda una asesoría
         </Button>
       </div>
-      <PayloadImage
+      <MediaImage
         media={service.image}
         priority
         class="mt-14 w-full rounded-xl border border-line object-cover"

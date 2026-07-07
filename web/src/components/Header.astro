@@ -1,11 +1,11 @@
 ---
 /**
- * Header del sitio con datos del global `header` de Payload (logo, navegación
- * y CTA). El menú móvil se abre con un script mínimo sin framework.
+ * Header del sitio con datos del global `header` de la API publica.
+ * El menú móvil se abre con un script mínimo sin framework.
  */
-import type { Header as HeaderGlobal } from '@cms/types'
+import type { Header as HeaderGlobal } from '@ziftlab/types'
 
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import Button from '@/components/ui/Button.astro'
 import Container from '@/components/ui/Container.astro'
 import { resolveMedia } from '@/lib/media'
@@ -37,7 +37,7 @@ const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === curren
       <a href="/" class="font-display text-xl" aria-label={`${siteName} — inicio`}>
         {
           logo ? (
-            <PayloadImage media={logo} priority class="h-8 w-auto" />
+            <MediaImage media={logo} priority class="h-8 w-auto" />
           ) : (
             <>
               {siteName}

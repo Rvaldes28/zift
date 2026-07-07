@@ -1,19 +1,23 @@
 ---
-/** Contacto (FASE 4): intro del global + datos de site-settings + LeadForm. */
+/** Contacto: intro del global + datos de site-settings + LeadForm. */
 import JsonLd from '@/components/JsonLd.astro'
+import AdminPageSections from '@/components/sections/AdminPageSections.astro'
 import LeadForm from '@/components/sections/LeadForm.astro'
 import SectionIntro from '@/components/sections/SectionIntro.astro'
 import Container from '@/components/ui/Container.astro'
 import Section from '@/components/ui/Section.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { getCachedGlobal, getCollection, getGlobal } from '@/lib/payload'
+import { adminSeoProps, getAdminPage } from '@/lib/content'
+import { getCachedGlobal, getCollection, getGlobal } from '@/lib/api'
 import { localBusinessSchema } from '@/lib/schema'
+import type { ContactPage } from '@ziftlab/types'
 
-const [page, settings, services] = await Promise.all([
-  getGlobal('contact-page'),
+const [adminContact, settings, services] = await Promise.all([
+  getAdminPage('contacto'),
   getCachedGlobal('site-settings'),
   getCollection('services', { sort: 'order', limit: 100 }),
 ])
+const page: ContactPage = adminContact ? ({} as ContactPage) : await getGlobal('contact-page')
 
 const whatsappHref = settings.whatsapp
   ? `https://wa.me/${settings.whatsapp.replace(/[^\d]/g, '')}`
@@ -21,90 +25,109 @@ const whatsappHref = settings.whatsapp
 
 // Ficha del negocio para SEO local (FASE 8): solo home y /contacto la emiten
 const site = Astro.site ?? new URL(Astro.url.origin)
+const seo = adminSeoProps(adminContact)
 ---
 
-<BaseLayout title={page.title ?? 'Contacto'} description={page.text ?? undefined}>
+<BaseLayout
+  {...seo}
+  title={seo.absoluteTitle ? undefined : (page.title ?? 'Contacto')}
+  description={seo.description ?? page.text ?? undefined}
+>
   <JsonLd slot="head" data={localBusinessSchema(settings, site)} />
-  <Section>
-    <Container>
-      <div class="grid gap-14 lg:grid-cols-[2fr_1fr] lg:gap-20">
-        <div>
-          <SectionIntro
-            eyebrow="Contacto"
-            title={page.title}
-            text={page.text}
-            as="h1"
-            size="display"
-          />
-          <div class="mt-12">
+  {
+    adminContact ? (
+      <>
+        <AdminPageSections page={adminContact} />
+        <Section>
+          <Container>
             <LeadForm formType="contacto" services={services.docs} />
-          </div>
-        </div>
+          </Container>
+        </Section>
+      </>
+    ) : (
+      <>
+        <Section>
+          <Container>
+            <div class="grid gap-14 lg:grid-cols-[2fr_1fr] lg:gap-20">
+              <div>
+                <SectionIntro
+                  eyebrow="Contacto"
+                  title={page.title}
+                  text={page.text}
+                  as="h1"
+                  size="display"
+                />
+                <div class="mt-12">
+                  <LeadForm formType="contacto" services={services.docs} />
+                </div>
+              </div>
 
-        <aside class="h-fit rounded-xl border border-line bg-surface p-6 md:p-8">
-          <h2 class="font-mono text-xs tracking-[0.18em] text-muted uppercase">
-            Datos de contacto
-          </h2>
-          <dl class="mt-6 space-y-5 text-sm">
-            {
-              settings.contactEmail && (
-                <div>
-                  <dt class="font-medium">Email</dt>
-                  <dd class="mt-1">
-                    <a href={`mailto:${settings.contactEmail}`} class="text-zift hover:underline">
-                      {settings.contactEmail}
+              <aside class="h-fit rounded-xl border border-line bg-surface p-6 md:p-8">
+                <h2 class="font-mono text-xs tracking-[0.18em] text-muted uppercase">
+                  Datos de contacto
+                </h2>
+                <dl class="mt-6 space-y-5 text-sm">
+                  {settings.contactEmail && (
+                    <div>
+                      <dt class="font-medium">Email</dt>
+                      <dd class="mt-1">
+                        <a
+                          href={`mailto:${settings.contactEmail}`}
+                          class="text-zift hover:underline"
+                        >
+                          {settings.contactEmail}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {settings.phone && (
+                    <div>
+                      <dt class="font-medium">Teléfono</dt>
+                      <dd class="mt-1 text-muted">{settings.phone}</dd>
+                    </div>
+                  )}
+                  {whatsappHref && (
+                    <div>
+                      <dt class="font-medium">WhatsApp</dt>
+                      <dd class="mt-1">
+                        <a
+                          href={whatsappHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-zift hover:underline"
+                        >
+                          Escríbenos por WhatsApp
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {settings.address && (
+                    <div>
+                      <dt class="font-medium">Dirección</dt>
+                      <dd class="mt-1 text-muted">{settings.address}</dd>
+                    </div>
+                  )}
+                </dl>
+                {/* Rutas directas de conversión (FASE 7) */}
+                <div class="mt-8 space-y-2 border-t border-line pt-6 text-sm">
+                  <p>
+                    ¿Buscas precio?
+                    <a href="/cotizacion" class="text-zift hover:underline">
+                      Pide una cotización
                     </a>
-                  </dd>
-                </div>
-              )
-            }
-            {
-              settings.phone && (
-                <div>
-                  <dt class="font-medium">Teléfono</dt>
-                  <dd class="mt-1 text-muted">{settings.phone}</dd>
-                </div>
-              )
-            }
-            {
-              whatsappHref && (
-                <div>
-                  <dt class="font-medium">WhatsApp</dt>
-                  <dd class="mt-1">
-                    <a
-                      href={whatsappHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-zift hover:underline"
-                    >
-                      Escríbenos por WhatsApp
+                  </p>
+                  <p>
+                    ¿Prefieres hablar?
+                    <a href="/asesoria" class="text-zift hover:underline">
+                      Agenda una asesoría gratuita
                     </a>
-                  </dd>
+                  </p>
                 </div>
-              )
-            }
-            {
-              settings.address && (
-                <div>
-                  <dt class="font-medium">Dirección</dt>
-                  <dd class="mt-1 text-muted">{settings.address}</dd>
-                </div>
-              )
-            }
-          </dl>
-          {/* Rutas directas de conversión (FASE 7) */}
-          <div class="mt-8 space-y-2 border-t border-line pt-6 text-sm">
-            <p>
-              ¿Buscas precio?
-              <a href="/cotizacion" class="text-zift hover:underline">Pide una cotización</a>
-            </p>
-            <p>
-              ¿Prefieres hablar?
-              <a href="/asesoria" class="text-zift hover:underline">Agenda una asesoría gratuita</a>
-            </p>
-          </div>
-        </aside>
-      </div>
-    </Container>
-  </Section>
+              </aside>
+            </div>
+          </Container>
+        </Section>
+      </>
+    )
+  }
 </BaseLayout>

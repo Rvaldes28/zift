@@ -3,13 +3,13 @@
  * Card de artículo del blog (FASE 6). Cierra con la línea de registro
  * mono — fecha · minutos de lectura — la firma editorial del blog.
  */
-import PayloadImage from '@/components/PayloadImage.astro'
+import MediaImage from '@/components/MediaImage.astro'
 import Card from '@/components/ui/Card.astro'
 import Heading from '@/components/ui/Heading.astro'
 import Text from '@/components/ui/Text.astro'
 import { formatDateShort, postCategories, readingTimeMinutes } from '@/lib/blog'
 import { resolveMedia } from '@/lib/media'
-import type { Post } from '@cms/types'
+import type { Post } from '@ziftlab/types'
 
 interface Props {
   post: Post
@@ -27,7 +27,7 @@ const href = post.slug ? `/blog/${post.slug}` : undefined
 <Card {href} padding="none" class:list={['flex h-full flex-col overflow-hidden', className]}>
   {
     cover && (
-      <PayloadImage
+      <MediaImage
         media={cover}
         class="aspect-[3/2] w-full border-b border-line object-cover transition-transform duration-700 ease-zift group-hover:scale-[1.03]"
         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"

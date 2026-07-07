@@ -1,10 +1,10 @@
 ---
 /**
- * Home comercial (FASE 4): todo el contenido sale del global home-page.
- * Cada sección solo se pinta si el CMS tiene contenido para ella.
+ * Home comercial: intenta usar contenido administrado y cae a globals propios.
  * Orden según docs/FASES.MD §FASE 4.
  */
 import BenefitsGrid from '@/components/sections/BenefitsGrid.astro'
+import AdminPageSections from '@/components/sections/AdminPageSections.astro'
 import CTASection from '@/components/sections/CTASection.astro'
 import LogoWall from '@/components/sections/LogoWall.astro'
 import ProcessSteps from '@/components/sections/ProcessSteps.astro'
@@ -20,16 +20,18 @@ import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import JsonLd from '@/components/JsonLd.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { adminSeoProps, getAdminPage } from '@/lib/content'
 import { getMediaUrl } from '@/lib/media'
-import { getCachedGlobal, getCollection, getGlobal, resolveDocs } from '@/lib/payload'
+import { getCachedGlobal, getCollection, getGlobal, resolveDocs } from '@/lib/api'
 import { localBusinessSchema } from '@/lib/schema'
-import type { Client, Project, Service, Testimonial } from '@cms/types'
+import type { Client, HomePage, Project, Service, Testimonial } from '@ziftlab/types'
 
-const [home, clientsResult, settings] = await Promise.all([
-  getGlobal('home-page', { depth: 2 }),
+const [adminHome, clientsResult, settings] = await Promise.all([
+  getAdminPage('home'),
   getCollection('clients', { sort: 'order', limit: 12 }),
   getCachedGlobal('site-settings'),
 ])
+const home: HomePage = adminHome ? ({} as HomePage) : await getGlobal('home-page', { depth: 2 })
 
 // Ficha del negocio para SEO local (FASE 8): solo home y /contacto la emiten
 const site = Astro.site ?? new URL(Astro.url.origin)
@@ -48,257 +50,242 @@ const benefits = home.benefits?.items ?? []
 const steps = home.process?.steps ?? []
 const trustItems = home.trustBlock?.items ?? []
 const stats = home.stats ?? []
+const seo = adminSeoProps(adminHome)
 ---
 
 <BaseLayout
-  absoluteTitle={home.meta?.title ?? undefined}
-  description={home.meta?.description ?? undefined}
-  ogImage={getMediaUrl(home.meta?.image)}
+  {...seo}
+  absoluteTitle={seo.absoluteTitle ?? home.meta?.title ?? undefined}
+  description={seo.description ?? home.meta?.description ?? undefined}
+  ogImage={seo.ogImage ?? getMediaUrl(home.meta?.image)}
 >
   <JsonLd slot="head" data={localBusinessSchema(settings, site)} />
-
-  {/* Hero — umbral del laboratorio: tinta + retícula milimétrica */}
-  <Section tone="ink" class="relative overflow-hidden md:py-32">
-    <div class="hero-glow absolute inset-0" aria-hidden="true"></div>
-    <div class="lab-grid animate-fade-in absolute inset-0" aria-hidden="true"></div>
-    <Container class="relative">
-      {
-        hero?.eyebrow && (
-          <div class="animate-fade-up">
-            <Eyebrow tone="dark">{hero.eyebrow}</Eyebrow>
-          </div>
-        )
-      }
-      <Heading
-        as="h1"
-        size="display"
-        class="animate-fade-up mt-6 max-w-4xl text-white [animation-delay:90ms]"
-      >
-        {hero?.title}
-      </Heading>
-      {
-        hero?.subtitle && (
-          <Text
-            size="lead"
-            class="animate-fade-up mt-6 max-w-2xl text-ink-muted [animation-delay:180ms]"
-          >
-            {hero.subtitle}
-          </Text>
-        )
-      }
-      <div class="animate-fade-up mt-10 flex flex-wrap gap-4 [animation-delay:270ms]">
-        {
-          primaryCta && (
-            <Button
-              href={primaryCta.href!}
-              newTab={primaryCta.newTab ?? false}
-              size="lg"
-              data-track-cta={primaryCta.label!}
-              data-track-location="hero"
+  {
+    adminHome ? (
+      <AdminPageSections page={adminHome} />
+    ) : (
+      <>
+        {/* Hero — umbral del laboratorio: tinta + retícula milimétrica */}
+        <Section tone="ink" class="relative overflow-hidden md:py-32">
+          <div class="hero-glow absolute inset-0" aria-hidden="true" />
+          <div class="lab-grid animate-fade-in absolute inset-0" aria-hidden="true" />
+          <Container class="relative">
+            {hero?.eyebrow && (
+              <div class="animate-fade-up">
+                <Eyebrow tone="dark">{hero.eyebrow}</Eyebrow>
+              </div>
+            )}
+            <Heading
+              as="h1"
+              size="display"
+              class="animate-fade-up mt-6 max-w-4xl text-white [animation-delay:90ms]"
             >
-              {primaryCta.label}
-            </Button>
-          )
-        }
-        {
-          secondaryCta && (
-            <Button
-              href={secondaryCta.href!}
-              newTab={secondaryCta.newTab ?? false}
-              variant="inverse"
-              size="lg"
-              data-track-cta={secondaryCta.label!}
-              data-track-location="hero"
-            >
-              {secondaryCta.label}
-            </Button>
-          )
-        }
-      </div>
-    </Container>
-  </Section>
-
-  {/* Propuesta de valor */}
-  {
-    home.valueProposition?.title && (
-      <Section>
-        <Container size="narrow">
-          <SectionIntro
-            eyebrow="Propuesta de valor"
-            title={home.valueProposition.title}
-            text={home.valueProposition.text}
-            class="max-w-none"
-          />
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Servicios destacados */}
-  {
-    featuredServices.length > 0 && (
-      <Section tone="surface" id="servicios">
-        <Container>
-          <SectionIntro
-            eyebrow="Servicios"
-            title={home.servicesSection?.title}
-            text={home.servicesSection?.subtitle}
-          />
-          <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
-            {featuredServices.map((service, index) => (
-              <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
-                <ServiceCard service={service} />
-              </li>
-            ))}
-          </ul>
-          <div class="mt-10">
-            <Button href="/servicios" variant="secondary">
-              Ver los 14 servicios
-            </Button>
-          </div>
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Beneficios */}
-  {
-    home.benefits?.title && benefits.length > 0 && (
-      <Section>
-        <Container>
-          <SectionIntro eyebrow="Beneficios" title={home.benefits.title} />
-          <div data-reveal>
-            <BenefitsGrid items={benefits} class="mt-12" />
-          </div>
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Proceso de trabajo — vuelta a tinta */}
-  {
-    home.process?.title && steps.length > 0 && (
-      <Section tone="ink">
-        <Container>
-          <SectionIntro
-            eyebrow="Proceso"
-            title={home.process.title}
-            text={home.process.subtitle}
-            tone="dark"
-          />
-          <div data-reveal>
-            <ProcessSteps steps={steps} tone="ink" class="mt-12" />
-          </div>
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Logos de clientes */}
-  {
-    home.clientsSection?.title && clients.length > 0 && (
-      <Section>
-        <Container>
-          <SectionIntro eyebrow="Clientes" title={home.clientsSection.title} />
-          <LogoWall clients={clients} class="mt-12" />
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Casos destacados */}
-  {
-    featuredProjects.length > 0 && (
-      <Section tone="surface">
-        <Container>
-          <SectionIntro
-            eyebrow="Casos"
-            title={home.projectsSection?.title}
-            text={home.projectsSection?.subtitle}
-          />
-          <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
-            {featuredProjects.map((project, index) => (
-              <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
-                <ProjectCard project={project} />
-              </li>
-            ))}
-          </ul>
-          <div class="mt-10">
-            <Button href="/portafolio" variant="secondary">
-              Ver todos los casos
-            </Button>
-          </div>
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Testimonios */}
-  {
-    featuredTestimonials.length > 0 && (
-      <Section>
-        <Container>
-          <SectionIntro eyebrow="Testimonios" title={home.testimonialsSection?.title} />
-          <ul class="mt-12 grid gap-5 sm:grid-cols-2" role="list">
-            {featuredTestimonials.map((testimonial, index) => (
-              <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
-                <TestimonialCard testimonial={testimonial} />
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </Section>
-    )
-  }
-
-  {/* Bloque de confianza + cifras */}
-  {
-    home.trustBlock?.title && (
-      <Section tone="surface">
-        <Container>
-          <div class="grid gap-12 lg:grid-cols-2 lg:gap-16">
-            <div>
-              <SectionIntro
-                eyebrow="Confianza"
-                title={home.trustBlock.title}
-                text={home.trustBlock.text}
-              />
-              {trustItems.length > 0 && (
-                <ul class="mt-8 space-y-3" role="list">
-                  {trustItems.map((item) => (
-                    <li class="flex items-start gap-3">
-                      <span class="mt-2 size-2 shrink-0 bg-zift" aria-hidden="true" />
-                      <Text>{item.text}</Text>
-                    </li>
-                  ))}
-                </ul>
+              {hero?.title}
+            </Heading>
+            {hero?.subtitle && (
+              <Text
+                size="lead"
+                class="animate-fade-up mt-6 max-w-2xl text-ink-muted [animation-delay:180ms]"
+              >
+                {hero.subtitle}
+              </Text>
+            )}
+            <div class="animate-fade-up mt-10 flex flex-wrap gap-4 [animation-delay:270ms]">
+              {primaryCta && (
+                <Button
+                  href={primaryCta.href!}
+                  newTab={primaryCta.newTab ?? false}
+                  size="lg"
+                  data-track-cta={primaryCta.label!}
+                  data-track-location="hero"
+                >
+                  {primaryCta.label}
+                </Button>
+              )}
+              {secondaryCta && (
+                <Button
+                  href={secondaryCta.href!}
+                  newTab={secondaryCta.newTab ?? false}
+                  variant="inverse"
+                  size="lg"
+                  data-track-cta={secondaryCta.label!}
+                  data-track-location="hero"
+                >
+                  {secondaryCta.label}
+                </Button>
               )}
             </div>
-            {stats.length > 0 && (
-              <dl
-                class="grid content-start gap-px border border-line bg-line sm:grid-cols-2"
-                data-reveal
-              >
-                {stats.map((stat) => (
-                  <div class="bg-paper p-6 md:p-8">
-                    <dd class="font-display text-4xl">{stat.value}</dd>
-                    <dt class="mt-2 font-mono text-xs tracking-[0.18em] text-muted uppercase">
-                      {stat.label}
-                    </dt>
-                  </div>
+          </Container>
+        </Section>
+
+        {/* Propuesta de valor */}
+        {home.valueProposition?.title && (
+          <Section>
+            <Container size="narrow">
+              <SectionIntro
+                eyebrow="Propuesta de valor"
+                title={home.valueProposition.title}
+                text={home.valueProposition.text}
+                class="max-w-none"
+              />
+            </Container>
+          </Section>
+        )}
+
+        {/* Servicios destacados */}
+        {featuredServices.length > 0 && (
+          <Section tone="surface" id="servicios">
+            <Container>
+              <SectionIntro
+                eyebrow="Servicios"
+                title={home.servicesSection?.title}
+                text={home.servicesSection?.subtitle}
+              />
+              <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+                {featuredServices.map((service, index) => (
+                  <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
+                    <ServiceCard service={service} />
+                  </li>
                 ))}
-              </dl>
-            )}
-          </div>
-        </Container>
-      </Section>
+              </ul>
+              <div class="mt-10">
+                <Button href="/servicios" variant="secondary">
+                  Ver los 14 servicios
+                </Button>
+              </div>
+            </Container>
+          </Section>
+        )}
+
+        {/* Beneficios */}
+        {home.benefits?.title && benefits.length > 0 && (
+          <Section>
+            <Container>
+              <SectionIntro eyebrow="Beneficios" title={home.benefits.title} />
+              <div data-reveal>
+                <BenefitsGrid items={benefits} class="mt-12" />
+              </div>
+            </Container>
+          </Section>
+        )}
+
+        {/* Proceso de trabajo — vuelta a tinta */}
+        {home.process?.title && steps.length > 0 && (
+          <Section tone="ink">
+            <Container>
+              <SectionIntro
+                eyebrow="Proceso"
+                title={home.process.title}
+                text={home.process.subtitle}
+                tone="dark"
+              />
+              <div data-reveal>
+                <ProcessSteps steps={steps} tone="ink" class="mt-12" />
+              </div>
+            </Container>
+          </Section>
+        )}
+
+        {/* Logos de clientes */}
+        {home.clientsSection?.title && clients.length > 0 && (
+          <Section>
+            <Container>
+              <SectionIntro eyebrow="Clientes" title={home.clientsSection.title} />
+              <LogoWall clients={clients} class="mt-12" />
+            </Container>
+          </Section>
+        )}
+
+        {/* Casos destacados */}
+        {featuredProjects.length > 0 && (
+          <Section tone="surface">
+            <Container>
+              <SectionIntro
+                eyebrow="Casos"
+                title={home.projectsSection?.title}
+                text={home.projectsSection?.subtitle}
+              />
+              <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+                {featuredProjects.map((project, index) => (
+                  <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
+                    <ProjectCard project={project} />
+                  </li>
+                ))}
+              </ul>
+              <div class="mt-10">
+                <Button href="/portafolio" variant="secondary">
+                  Ver todos los casos
+                </Button>
+              </div>
+            </Container>
+          </Section>
+        )}
+
+        {/* Testimonios */}
+        {featuredTestimonials.length > 0 && (
+          <Section>
+            <Container>
+              <SectionIntro eyebrow="Testimonios" title={home.testimonialsSection?.title} />
+              <ul class="mt-12 grid gap-5 sm:grid-cols-2" role="list">
+                {featuredTestimonials.map((testimonial, index) => (
+                  <li data-reveal style={`--reveal-delay: ${Math.min(index, 5) * 70}ms`}>
+                    <TestimonialCard testimonial={testimonial} />
+                  </li>
+                ))}
+              </ul>
+            </Container>
+          </Section>
+        )}
+
+        {/* Bloque de confianza + cifras */}
+        {home.trustBlock?.title && (
+          <Section tone="surface">
+            <Container>
+              <div class="grid gap-12 lg:grid-cols-2 lg:gap-16">
+                <div>
+                  <SectionIntro
+                    eyebrow="Confianza"
+                    title={home.trustBlock.title}
+                    text={home.trustBlock.text}
+                  />
+                  {trustItems.length > 0 && (
+                    <ul class="mt-8 space-y-3" role="list">
+                      {trustItems.map((item) => (
+                        <li class="flex items-start gap-3">
+                          <span class="mt-2 size-2 shrink-0 bg-zift" aria-hidden="true" />
+                          <Text>{item.text}</Text>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {stats.length > 0 && (
+                  <dl
+                    class="grid content-start gap-px border border-line bg-line sm:grid-cols-2"
+                    data-reveal
+                  >
+                    {stats.map((stat) => (
+                      <div class="bg-paper p-6 md:p-8">
+                        <dd class="font-display text-4xl">{stat.value}</dd>
+                        <dt class="mt-2 font-mono text-xs tracking-[0.18em] text-muted uppercase">
+                          {stat.label}
+                        </dt>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            </Container>
+          </Section>
+        )}
+
+        {/* CTA final */}
+        <CTASection
+          title={home.ctaSection?.title}
+          text={home.ctaSection?.text}
+          cta={home.ctaSection?.cta}
+        />
+      </>
     )
   }
-
-  {/* CTA final */}
-  <CTASection
-    title={home.ctaSection?.title}
-    text={home.ctaSection?.text}
-    cta={home.ctaSection?.cta}
-  />
 </BaseLayout>

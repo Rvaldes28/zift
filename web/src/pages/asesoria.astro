@@ -11,7 +11,7 @@ import Heading from '@/components/ui/Heading.astro'
 import Section from '@/components/ui/Section.astro'
 import Text from '@/components/ui/Text.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { getCachedGlobal, getCollection } from '@/lib/payload'
+import { getCachedGlobal, getCollection } from '@/lib/api'
 import { UTM_KEY } from '@/lib/utm'
 
 const [settings, services] = await Promise.all([
@@ -19,7 +19,7 @@ const [settings, services] = await Promise.all([
   getCollection('services', { sort: 'order', limit: 100 }),
 ])
 
-// URL del embed con la marca ZiftLab; si la URL del CMS no es válida, se
+// URL del embed con la marca ZiftLab; si la URL configurada no es válida, se
 // descarta y la página funciona solo con formulario (Regla 7: nada roto)
 let calendlyUrl: string | null = null
 if (settings.calendlyUrl) {

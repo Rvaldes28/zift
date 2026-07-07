@@ -10,6 +10,7 @@ import { normalizeEmail } from '@/lib/auth/config'
 import { hashPassword } from '@/lib/auth/password'
 import { requirePermission } from '@/lib/rbac/access'
 import { recordActivity } from '@/lib/rbac/access'
+import { verifyCsrf } from '@/lib/security/csrf'
 
 const uuidSchema = z.string().uuid()
 
@@ -92,6 +93,7 @@ const updateUserSchema = z.object({
 })
 
 export async function createUser(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await requirePermission('users.manage')
   const parsed = createUserSchema.safeParse({
     name: formData.get('name'),
@@ -134,6 +136,7 @@ export async function createUser(formData: FormData): Promise<void> {
 }
 
 export async function updateUser(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await requirePermission('users.manage')
   const userId = formData.get('userId')
   const parsed = updateUserSchema.safeParse({
@@ -173,6 +176,7 @@ export async function updateUser(formData: FormData): Promise<void> {
 }
 
 export async function setUserStatus(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await requirePermission('users.manage')
   const userId = formData.get('userId')
   const status = formData.get('status')
@@ -190,7 +194,12 @@ export async function setUserStatus(formData: FormData): Promise<void> {
   if (status !== 'active') {
     await db
       .update(sessions)
-      .set({ revokedAt: new Date(), updatedAt: new Date() })
+      .set({
+        revokedAt: new Date(),
+        revokedBy: current.user.id,
+        revocationReason: 'user_deactivated',
+        updatedAt: new Date(),
+      })
       .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)))
   }
 
@@ -205,6 +214,7 @@ export async function setUserStatus(formData: FormData): Promise<void> {
 }
 
 export async function resetUserPassword(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await requirePermission('users.manage')
   const userId = formData.get('userId')
   const password = formData.get('password')
@@ -224,7 +234,12 @@ export async function resetUserPassword(formData: FormData): Promise<void> {
     .where(eq(users.id, userId))
   await db
     .update(sessions)
-    .set({ revokedAt: new Date(), updatedAt: new Date() })
+    .set({
+      revokedAt: new Date(),
+      revokedBy: current.user.id,
+      revocationReason: 'password_reset',
+      updatedAt: new Date(),
+    })
     .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)))
 
   await recordActivity({
@@ -237,6 +252,7 @@ export async function resetUserPassword(formData: FormData): Promise<void> {
 }
 
 export async function resetUserTotp(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await requirePermission('users.manage')
   const userId = formData.get('userId')
   if (typeof userId !== 'string') redirect('/dashboard/users?error=invalid')
@@ -262,6 +278,7 @@ export async function resetUserTotp(formData: FormData): Promise<void> {
 }
 
 export async function updateRolePermissions(formData: FormData): Promise<void> {
+  await verifyCsrf(formData)
   const current = await requirePermission('roles.manage')
   const roleId = formData.get('roleId')
   if (typeof roleId !== 'string') redirect('/dashboard/roles?error=invalid')
