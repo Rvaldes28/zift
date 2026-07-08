@@ -24,8 +24,8 @@ function trimOrigin(value: string | undefined, fallback: string): string {
 }
 
 function targets(): CheckTarget[] {
-  const site = trimOrigin(process.env.PUBLIC_SITE_URL, 'http://localhost:4321')
-  const admin = trimOrigin(process.env.ADMIN_APP_URL, 'http://localhost:3000')
+  const site = trimOrigin(process.env.PUBLIC_SITE_URL, 'http://app:4321')
+  const admin = trimOrigin(process.env.ADMIN_APP_URL, 'http://app:3000')
   const publicPaths = ['/', '/servicios', '/blog', '/contacto', '/cotizacion']
 
   return [
@@ -43,7 +43,7 @@ function targets(): CheckTarget[] {
     },
     {
       body: {
-        email: 'performance-check@ziftlab.local',
+        email: 'performance-check@ziftlab.codespace',
         formType: 'contacto',
         message: 'Performance dry-run check',
         name: 'Performance Check',

@@ -6,13 +6,15 @@
 import type { APIRoute } from 'astro'
 
 const CONTENT_API_URL = (
+  import.meta.env.INTERNAL_CONTENT_API_URL ??
+  import.meta.env.INTERNAL_API_URL ??
   import.meta.env.PUBLIC_CONTENT_API_URL ??
   import.meta.env.PUBLIC_API_URL ??
-  'http://localhost:3000'
+  'http://app:3000'
 ).replace(/\/+$/, '')
 
 export const GET: APIRoute = async ({ site }) => {
-  const publicSite = site ?? new URL('http://localhost:4321')
+  const publicSite = site ?? new URL(import.meta.env.PUBLIC_SITE_URL || 'http://app:4321')
 
   try {
     const response = await fetch(

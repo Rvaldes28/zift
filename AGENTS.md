@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a pnpm monorepo for ZiftLab. The public site lives in `web/` and uses Astro, Tailwind CSS, and TypeScript. The administrative dashboard lives in `admin/` and uses Next.js App Router with the shared PostgreSQL schema from `packages/db`. Shared public/admin types live in `packages/types`. Operational scripts are in `infra/scripts/`; phase and analytics docs are at the repo root.
+This is a pnpm monorepo for ZiftLab. The public site lives in `web/` and uses Astro, Tailwind CSS, and TypeScript. The administrative dashboard lives in `admin/` and uses Next.js App Router with the shared PostgreSQL schema from `packages/db`. Shared public/admin types live in `packages/types`. Codespaces automation lives in `.devcontainer/` and `infra/scripts/`.
 
 Key source paths:
 
@@ -13,17 +13,15 @@ Key source paths:
 - `admin/src/lib/`: server-only domain modules for auth, RBAC, content, media, SEO, leads, metrics, security, backups, settings, integrations, notifications, logs, and public API.
 - `packages/db/src/schema.ts`: Drizzle schema for the dashboard-owned PostgreSQL database.
 
-## Build, Test, and Development Commands
+## Build, Test, And Development Commands
 
-Run from the repo root.
+Run from the repo root inside GitHub Codespaces.
 
-- `pnpm install`: install workspace dependencies.
-- `make install`: macOS setup for Homebrew formulas, env files, PostgreSQL, MinIO, dependencies, migrations, and seed data.
-- `make start`: start PostgreSQL, MinIO, the admin on `:3000`, and Astro on `:4321`.
-- `make admin`: prepare the admin DB, create/reset the local admin user, and start the dashboard.
-- `make stop`: stop local services started by the Makefile.
-- `pnpm dev:web` / `pnpm dev:admin`: run one workspace locally.
-- `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:seed`: manage the own Drizzle schema.
+- `pnpm codespace:setup`: generate env files, run migrations, seed data, and create/reset the Codespaces admin user.
+- `pnpm codespace:env`: regenerate Codespaces env files.
+- `pnpm codespace:dev` or `make start`: run the admin on `:3000` and Astro on `:4321`.
+- `pnpm dev:web` / `pnpm dev:admin`: run one workspace.
+- `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:seed`: manage the Drizzle schema.
 - `pnpm db:import-legacy`: import a final legacy export JSON when `LEGACY_EXPORT_FILE` is set.
 - `pnpm verify:no-payload`: fail if old CMS dependencies, imports, vars, scripts, or folder names return.
 - `pnpm build`: build all workspaces.
@@ -45,4 +43,4 @@ Recent history uses conventional prefixes such as `feat(web): ...`, `feat(admin)
 
 ## Security & Configuration Tips
 
-Do not commit `.env` files or secrets. Use the example env files and `make install` to generate local defaults. Keep admin secrets, database URLs, S3/MinIO keys, GA4, Clarity, Resend, CRM, payment, webhook, and notification credentials in environment-specific configuration.
+Do not commit `.env` files or secrets. Use the generated Codespaces env files for development and Codespaces Secrets for provider credentials. Keep admin secrets, database URLs, S3/MinIO keys, GA4, Clarity, Resend, CRM, payment, webhook, and notification credentials in environment-specific configuration.

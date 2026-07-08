@@ -8,7 +8,7 @@
   "scripts": {
     "build": "next build",
     "dev:user": "node scripts/create-dev-user.mjs",
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0",
     "lint": "eslint .",
     "start": "next start",
     "typecheck": "tsc --noEmit"

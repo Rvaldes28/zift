@@ -20,7 +20,7 @@ export interface IntegrationDeliveryResult {
 }
 
 function adminUrl(path = ''): string {
-  return `${(process.env.ADMIN_APP_URL || 'http://localhost:3000').replace(/\/+$/, '')}${path}`
+  return `${(process.env.ADMIN_APP_URL || 'http://app:3000').replace(/\/+$/, '')}${path}`
 }
 
 function signature(body: string, secret: string | null): string | null {
@@ -34,7 +34,7 @@ function syntheticLeadBody() {
     company: 'ZiftLab',
     createdAt: new Date().toISOString(),
     dashboardUrl: adminUrl('/dashboard/integrations'),
-    email: 'integraciones-test@ziftlab.local',
+    email: 'integraciones-test@ziftlab.codespace',
     formType: 'test',
     id: 'test',
     message: 'Lead de prueba enviado desde el centro de integraciones.',

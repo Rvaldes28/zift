@@ -23,7 +23,7 @@ export interface ChannelDeliveryResult {
 }
 
 function adminUrl(path = ''): string {
-  return `${(process.env.ADMIN_APP_URL || 'http://localhost:3000').replace(/\/+$/, '')}${path}`
+  return `${(process.env.ADMIN_APP_URL || 'http://app:3000').replace(/\/+$/, '')}${path}`
 }
 
 function escapeHtml(value: string): string {

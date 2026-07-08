@@ -1,44 +1,55 @@
 # ZiftLab
 
-Monorepo pnpm con web pública en Astro, dashboard propio en Next.js y base de datos PostgreSQL administrada con Drizzle. La operación diaria usa la API propia del dashboard; no hay runtime de CMS externo en el workspace.
+Monorepo pnpm con web publica en Astro, dashboard propio en Next.js y base de datos PostgreSQL administrada con Drizzle. El entorno de desarrollo principal es GitHub Codespaces.
 
 ## Estructura
 
-- `web/`: sitio público Astro.
-- `admin/`: dashboard Next.js App Router y APIs públicas/privadas.
+- `web/`: sitio publico Astro.
+- `admin/`: dashboard Next.js App Router y APIs publicas/privadas.
 - `packages/db/`: schema Drizzle, cliente PostgreSQL, migraciones y seed.
 - `packages/types/`: contratos compartidos entre web y admin.
-- `infra/scripts/`: helpers locales para MinIO y servicios de desarrollo.
+- `.devcontainer/`: contenedor principal, PostgreSQL, MinIO y configuracion de puertos para Codespaces.
+- `infra/scripts/`: generadores y setup del entorno de Codespaces.
 
-## Arranque Local
+## Arranque En GitHub Codespaces
+
+1. Abre el repo en GitHub.
+2. Usa `Code` -> `Codespaces` -> `Create codespace`.
+3. Espera a que termine el `postCreateCommand`: instala dependencias, genera `.env`, migra, hace seed y crea el admin.
+4. Arranca la app:
 
 ```bash
-pnpm install
-make install
+pnpm codespace:dev
+```
+
+Tambien puedes usar:
+
+```bash
 make start
 ```
 
-URLs principales:
+URLs principales desde el panel `Ports` de Codespaces:
 
-- Web: `http://localhost:4321`
-- Dashboard: `http://localhost:3000/dashboard`
-- Health check: `http://localhost:3000/api/health`
-- MinIO: `http://localhost:9000`
+- Web: puerto `4321`
+- Dashboard: puerto `3000`, ruta `/dashboard`
+- Health check: puerto `3000`, ruta `/api/health`
+- MinIO consola: puerto `9001`
 
-El Makefile crea un usuario local por defecto:
+Usuario de desarrollo:
 
-- Email: `admin@ziftlab.local`
-- Password: `ZiftLabAdmin1234`
+- Email: `admin@ziftlab.codespace`
+- Password: `ZiftLabCodespace1234`
 
-## Variables Principales
+## Variables
 
-- `ADMIN_DATABASE_URL`: DB propia del dashboard, por defecto `postgresql://localhost:5432/ziftlab_admin_dev`.
-- `PUBLIC_API_URL`: API pública del admin para Astro.
-- `PUBLIC_CONTENT_API_URL`: API pública de contenido para Astro.
-- `S3_BUCKET`: bucket neutral de media, por defecto `ziftlab-media`.
-- `S3_PREFIX`: prefijo de media propia, por defecto `admin-media`.
+`pnpm codespace:env` regenera `.env`, `admin/.env`, `web/.env` y `packages/db/.env` con valores de Codespaces. Los servicios internos usan nombres de contenedor:
 
-Revisa `.env.example`, `admin/.env.example` y `packages/db/.env.example` para el set completo.
+- `ADMIN_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ziftlab_admin_dev`
+- `S3_ENDPOINT=http://minio:9000`
+- `INTERNAL_API_URL=http://app:3000`
+- `PUBLIC_API_URL=` para que el navegador use el proxy `/api` del dev server de Astro.
+
+No se deben commitear `.env` reales. Usa Codespaces Secrets para credenciales externas.
 
 ## Base De Datos
 
@@ -48,15 +59,13 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-Para importar el último export JSON legado:
+Para importar el ultimo export JSON legado:
 
 ```bash
-LEGACY_EXPORT_FILE=/ruta/export-final.json pnpm db:import-legacy
+LEGACY_EXPORT_FILE=/workspaces/zift/export-final.json pnpm db:import-legacy
 ```
 
-El importador es idempotente y usa `legacy_source`/`legacy_id` para mantener trazabilidad sin acoplar el schema activo al sistema anterior.
-
-## Verificación
+## Verificacion
 
 ```bash
 pnpm verify:no-payload
@@ -65,5 +74,3 @@ pnpm lint
 pnpm build:admin
 pnpm build:web
 ```
-
-`pnpm verify:no-payload` falla si vuelve a aparecer el directorio viejo, imports/dependencias antiguas, variables públicas antiguas o scripts operativos obsoletos.

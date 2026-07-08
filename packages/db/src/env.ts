@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
 import path from 'node:path'
 
-const DEFAULT_ADMIN_DATABASE_URL = 'postgresql://localhost:5432/ziftlab_admin_dev'
+const DEFAULT_ADMIN_DATABASE_URL = 'postgresql://postgres:postgres@postgres:5432/ziftlab_admin_dev'
 
 for (const envFile of [
   { override: false, path: path.resolve(process.cwd(), '../../.env') },

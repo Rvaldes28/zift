@@ -29,9 +29,9 @@ coverage/
 .vercel/
 .turbo/
 
-# datos locales de MinIO si se apunta dentro del repo
+# runtime data if a service is pointed inside the repo
 minio-data/
 
-# backups locales
+# generated backups
 infra/backups/*
 !infra/backups/.gitkeep

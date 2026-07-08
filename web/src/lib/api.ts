@@ -26,16 +26,19 @@ export class PublicApiError extends Error {
   }
 }
 
-export const API_URL = (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000').replace(
-  /\/+$/,
-  '',
-)
+function cleanOrigin(value: string | undefined): string {
+  return (value ?? '').replace(/\/+$/, '')
+}
 
-export const CONTENT_API_URL = (
-  import.meta.env.PUBLIC_CONTENT_API_URL ??
-  import.meta.env.PUBLIC_API_URL ??
-  'http://localhost:3000'
-).replace(/\/+$/, '')
+export const API_URL = cleanOrigin(import.meta.env.PUBLIC_API_URL)
+
+export const CONTENT_API_URL = cleanOrigin(
+  import.meta.env.INTERNAL_CONTENT_API_URL ??
+    import.meta.env.INTERNAL_API_URL ??
+    import.meta.env.PUBLIC_CONTENT_API_URL ??
+    import.meta.env.PUBLIC_API_URL ??
+    'http://app:3000',
+)
 
 const TIMEOUT_MS = 8_000
 const warnedFallbacks = new Set<string>()
@@ -62,7 +65,7 @@ async function publicFetch<T>(
   if (params) appendParams(search, params, '')
   if (options.previewToken) search.set('token', options.previewToken)
   const query = search.size > 0 ? `?${search.toString()}` : ''
-  const url = `${options.baseUrl ?? API_URL}/api${path}${query}`
+  const url = `${options.baseUrl ?? CONTENT_API_URL}/api${path}${query}`
 
   let response: Response
   try {

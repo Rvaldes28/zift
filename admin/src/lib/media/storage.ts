@@ -25,7 +25,7 @@ export function mediaConfig() {
   return {
     accessKeyId: process.env.S3_ACCESS_KEY_ID?.trim() || 'minioadmin',
     bucket: process.env.S3_BUCKET?.trim() || 'ziftlab-media',
-    endpoint: process.env.S3_ENDPOINT?.trim() || 'http://localhost:9000',
+    endpoint: process.env.S3_ENDPOINT?.trim() || 'http://minio:9000',
     forcePathStyle: boolEnv('S3_FORCE_PATH_STYLE', true),
     prefix: trimSlashes(process.env.S3_PREFIX?.trim() || 'admin-media'),
     publicBaseUrl: trimTrailingSlashes(process.env.S3_PUBLIC_BASE_URL?.trim() || ''),

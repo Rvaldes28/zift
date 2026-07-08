@@ -20,7 +20,7 @@ interface DeliveryResult {
 }
 
 function adminUrl(path = ''): string {
-  return `${(process.env.ADMIN_APP_URL || 'http://localhost:3000').replace(/\/+$/, '')}${path}`
+  return `${(process.env.ADMIN_APP_URL || 'http://app:3000').replace(/\/+$/, '')}${path}`
 }
 
 async function recordLeadActivity(input: {

@@ -5,16 +5,25 @@ import { defineConfig } from 'astro/config'
 import { loadEnv } from 'vite'
 
 // loadEnv porque import.meta.env aún no existe al evaluar la config
-const { PUBLIC_API_URL, PUBLIC_CONTENT_API_URL, PUBLIC_SITE_URL } = loadEnv(
-  process.env.NODE_ENV ?? 'development',
-  process.cwd(),
-  '',
-)
+const {
+  INTERNAL_API_URL,
+  INTERNAL_CONTENT_API_URL,
+  PUBLIC_API_URL,
+  PUBLIC_CONTENT_API_URL,
+  PUBLIC_SITE_URL,
+} = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '')
 
-const contentBase = (PUBLIC_CONTENT_API_URL || PUBLIC_API_URL || 'http://localhost:3000').replace(
+const internalApiBase = (INTERNAL_API_URL || PUBLIC_API_URL || 'http://app:3000').replace(
   /\/+$/,
   '',
 )
+const contentBase = (
+  INTERNAL_CONTENT_API_URL ||
+  INTERNAL_API_URL ||
+  PUBLIC_CONTENT_API_URL ||
+  PUBLIC_API_URL ||
+  'http://app:3000'
+).replace(/\/+$/, '')
 
 /**
  * Redirecciones 301/302 desde la API propia, editables en /admin sin tocar
@@ -75,7 +84,7 @@ const seoExcludedPaths = new Set(
 // https://astro.build/config
 export default defineConfig({
   // Necesario para URLs canónicas y Open Graph absolutas (componente SEO)
-  site: PUBLIC_SITE_URL || 'http://localhost:4321',
+  site: PUBLIC_SITE_URL || 'http://app:4321',
   redirects,
   integrations: [
     // Genera /sitemap-index.xml en build; fuera: /gracias (noindex) y las
@@ -93,5 +102,13 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      proxy: {
+        '/api': {
+          changeOrigin: true,
+          target: internalApiBase,
+        },
+      },
+    },
   },
 })

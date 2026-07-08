@@ -12,9 +12,9 @@ import {
   users,
 } from '@ziftlab/db'
 
-const DEFAULT_EMAIL = 'admin@ziftlab.local'
-const DEFAULT_NAME = 'Admin Local'
-const DEFAULT_PASSWORD = 'ZiftLabAdmin1234'
+const DEFAULT_EMAIL = 'admin@ziftlab.codespace'
+const DEFAULT_NAME = 'Admin Codespace'
+const DEFAULT_PASSWORD = 'ZiftLabCodespace1234'
 
 function readConfig() {
   const email = (process.env.ADMIN_DEV_EMAIL || DEFAULT_EMAIL).trim().toLowerCase()
@@ -133,13 +133,15 @@ try {
   const config = await upsertDevAdmin()
 
   console.info('')
-  console.info('Admin local listo')
-  console.info(`URL:      http://localhost:3000/dashboard`)
+  console.info('Admin de Codespaces listo')
+  console.info(
+    `URL:      ${(process.env.ADMIN_APP_URL || 'http://app:3000').replace(/\/+$/, '')}/dashboard`,
+  )
   console.info(`Email:    ${config.email}`)
   console.info(`Password: ${config.password}`)
   console.info('')
 } catch (error) {
-  console.error('No se pudo crear el admin local:', error)
+  console.error('No se pudo crear el admin de Codespaces:', error)
   process.exitCode = 1
 } finally {
   await closeDb()

@@ -20,7 +20,7 @@ export async function GET(context: APIContext): Promise<Response> {
       settings.defaultSeo?.description ??
       'Guías prácticas sobre desarrollo web, marketing digital, SEO, e-commerce, automatización e IA.',
     // astro.config define site (PUBLIC_SITE_URL); el fallback cubre el tipado
-    site: context.site ?? 'http://localhost:4321',
+    site: context.site ?? 'http://app:4321',
     items: posts.docs
       .filter((post) => Boolean(post.slug))
       .map((post) => ({
@@ -30,6 +30,6 @@ export async function GET(context: APIContext): Promise<Response> {
         pubDate: new Date(post.publishedAt ?? post.createdAt),
         categories: postCategories(post).map((category) => category.title),
       })),
-    customData: `<language>es</language><link>${new URL(blogPageHref(1), context.site ?? 'http://localhost:4321').href}</link>`,
+    customData: `<language>es</language><link>${new URL(blogPageHref(1), context.site ?? 'http://app:4321').href}</link>`,
   })
 }

@@ -1,13 +1,17 @@
 /// <reference types="astro/client" />
 
 interface ImportMetaEnv {
-  /** Origen de la API propia del dashboard, ej. http://localhost:3000 */
+  /** Browser-facing API origin. Empty means same origin through the Astro dev proxy. */
   readonly PUBLIC_API_URL?: string
-  /** Origen especifico para contenido propio; si no existe usa PUBLIC_API_URL */
+  /** Browser-facing content API origin. Empty means PUBLIC_API_URL/same origin. */
   readonly PUBLIC_CONTENT_API_URL?: string
+  /** Container-network API origin used by server-side Astro code. */
+  readonly INTERNAL_API_URL?: string
+  /** Container-network content API origin used by server-side Astro code. */
+  readonly INTERNAL_CONTENT_API_URL?: string
   /** Habilita la captura propia consent-gated hacia el dashboard */
   readonly PUBLIC_ANALYTICS_ENABLED?: string
-  /** URL pública del sitio Astro, ej. http://localhost:4321 */
+  /** Public Astro site URL exposed by Codespaces port forwarding. */
   readonly PUBLIC_SITE_URL?: string
   readonly PUBLIC_GA4_ID?: string
   readonly PUBLIC_GTM_CONTAINER_ID?: string

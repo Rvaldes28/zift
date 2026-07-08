@@ -5,7 +5,8 @@ config({ path: '../../.env' })
 config({ path: '.env' })
 
 const adminDatabaseUrl =
-  process.env.ADMIN_DATABASE_URL ?? 'postgresql://localhost:5432/ziftlab_admin_dev'
+  process.env.ADMIN_DATABASE_URL ??
+  'postgresql://postgres:postgres@postgres:5432/ziftlab_admin_dev'
 
 export default defineConfig({
   dialect: 'postgresql',

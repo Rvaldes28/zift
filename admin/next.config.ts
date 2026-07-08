@@ -7,8 +7,21 @@ const dirname = path.dirname(filename)
 
 function securityHeaders() {
   const s3PublicBaseUrl = process.env.S3_PUBLIC_BASE_URL?.replace(/\/+$/, '')
-  const connectSources = ["'self'", 'http://localhost:*', 'https://localhost:*', 'ws://localhost:*']
-  const imgSources = ["'self'", 'data:', 'blob:', 'http://localhost:*', 'https:']
+  const configuredOrigins = [
+    ...originsFromEnv('ADMIN_APP_URL'),
+    ...originsFromEnv('PUBLIC_SITE_URL'),
+    ...originsFromEnv('PUBLIC_API_URL'),
+    ...originsFromEnv('ADMIN_ALLOWED_ORIGINS'),
+  ]
+  const websocketOrigins = configuredOrigins.map(toWebSocketOrigin)
+  const connectSources = [
+    "'self'",
+    'http://app:*',
+    'ws://app:*',
+    ...configuredOrigins,
+    ...websocketOrigins,
+  ]
+  const imgSources = ["'self'", 'data:', 'blob:', 'http://app:*', 'https:', ...configuredOrigins]
   const scriptSources = [
     "'self'",
     "'unsafe-inline'",
@@ -50,6 +63,26 @@ function securityHeaders() {
         ]
       : []),
   ]
+}
+
+function originsFromEnv(name: string): string[] {
+  return (process.env[name] ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        return new URL(value).origin
+      } catch {
+        return value.replace(/\/+$/, '')
+      }
+    })
+}
+
+function toWebSocketOrigin(origin: string): string {
+  if (origin.startsWith('https://')) return origin.replace(/^https:\/\//, 'wss://')
+  if (origin.startsWith('http://')) return origin.replace(/^http:\/\//, 'ws://')
+  return origin
 }
 
 const nextConfig: NextConfig = {

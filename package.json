@@ -8,6 +8,10 @@
     "node": ">=20.9.0"
   },
   "scripts": {
+    "codespace:dev": "pnpm --filter @ziftlab/db build && pnpm --parallel --stream --filter admin --filter web dev",
+    "codespace:env": "bash infra/scripts/codespace-env.sh",
+    "codespace:setup": "bash infra/scripts/codespace-setup.sh",
+    "dev": "pnpm codespace:dev",
     "dev:admin": "pnpm --filter @ziftlab/db build && pnpm --filter admin dev",
     "dev:web": "pnpm --filter web dev",
     "build": "pnpm -r build",

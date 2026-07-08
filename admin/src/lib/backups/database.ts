@@ -8,7 +8,10 @@ import { spawn } from 'child_process'
 import { backupFilename } from './config'
 
 function adminDatabaseUrl(): string {
-  return process.env.ADMIN_DATABASE_URL?.trim() || 'postgresql://localhost:5432/ziftlab_admin_dev'
+  return (
+    process.env.ADMIN_DATABASE_URL?.trim() ||
+    'postgresql://postgres:postgres@postgres:5432/ziftlab_admin_dev'
+  )
 }
 
 function commandError(command: string, stderr: string): Error {
