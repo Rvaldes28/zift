@@ -12,11 +12,15 @@ export const CSRF_COOKIE = 'ziftlab-admin-csrf'
 export const CSRF_FIELD = 'csrfToken'
 
 function secret(): string {
-  return (
-    process.env.ADMIN_CSRF_SECRET?.trim() ||
-    process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() ||
-    'ziftlab-dev-csrf'
-  )
+  const configured =
+    process.env.ADMIN_CSRF_SECRET?.trim() || process.env.ADMIN_BOOTSTRAP_TOKEN?.trim()
+
+  if (configured) return configured
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_CSRF_SECRET is required in production')
+  }
+
+  return 'ziftlab-dev-csrf'
 }
 
 function sign(value: string): string {
@@ -101,13 +105,18 @@ export async function verifyCsrf(formData: FormData): Promise<void> {
   const cookieToken = cookieStore.get(CSRF_COOKIE)?.value
   const submittedToken = formData.get(CSRF_FIELD)
 
+  if (!cookieToken) {
+    await reject('missing_cookie')
+    throw new Error('CSRF cookie missing')
+  }
+  const verifiedCookieToken = cookieToken
+
   if (typeof submittedToken !== 'string' || !submittedToken) {
     await reject('missing')
   }
 
   const submitted = submittedToken as string
-  const tokenToVerify = cookieToken || submitted
-  const [nonce, signature] = tokenToVerify.split('.')
+  const [nonce, signature] = verifiedCookieToken.split('.')
   if (!nonce || !signature || sign(nonce) !== signature) {
     await reject('signature')
   }
@@ -121,7 +130,9 @@ export async function securityStatus() {
   const config = authConfig()
   return {
     allowedOrigins: [...allowedOrigins()],
-    csrfSecretConfigured: Boolean(process.env.ADMIN_CSRF_SECRET?.trim()),
+    csrfSecretConfigured: Boolean(
+      process.env.ADMIN_CSRF_SECRET?.trim() || process.env.ADMIN_BOOTSTRAP_TOKEN?.trim(),
+    ),
     enforceTwoFactorForSensitive: config.enforceTwoFactorForSensitive,
   }
 }

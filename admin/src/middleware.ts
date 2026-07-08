@@ -10,11 +10,15 @@ import {
 const CSRF_COOKIE = 'ziftlab-admin-csrf'
 
 function csrfSecret() {
-  return (
-    process.env.ADMIN_CSRF_SECRET?.trim() ||
-    process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() ||
-    'ziftlab-dev-csrf'
-  )
+  const configured =
+    process.env.ADMIN_CSRF_SECRET?.trim() || process.env.ADMIN_BOOTSTRAP_TOKEN?.trim()
+
+  if (configured) return configured
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_CSRF_SECRET is required in production')
+  }
+
+  return 'ziftlab-dev-csrf'
 }
 
 function randomNonce() {

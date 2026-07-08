@@ -3,14 +3,20 @@ import path from 'node:path'
 
 const DEFAULT_ADMIN_DATABASE_URL = 'postgresql://localhost:5432/ziftlab_admin_dev'
 
-config({ path: path.resolve(process.cwd(), '../../.env') })
-config({ path: path.resolve(process.cwd(), '.env'), override: true })
+for (const envFile of [
+  { override: false, path: path.resolve(process.cwd(), '../../.env') },
+  { override: false, path: path.resolve(process.cwd(), '../.env') },
+  { override: true, path: path.resolve(process.cwd(), '.env') },
+]) {
+  config(envFile)
+}
 
 export function getAdminDatabaseUrl(): string {
   const url = process.env.ADMIN_DATABASE_URL?.trim()
   if (url) return url
 
-  if (process.env.NODE_ENV === 'production') {
+  const isNextProductionBuild = process.env.NEXT_PHASE === 'phase-production-build'
+  if (process.env.NODE_ENV === 'production' && !isNextProductionBuild) {
     throw new Error('ADMIN_DATABASE_URL is required in production')
   }
 

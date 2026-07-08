@@ -9,6 +9,11 @@ function securityHeaders() {
   const s3PublicBaseUrl = process.env.S3_PUBLIC_BASE_URL?.replace(/\/+$/, '')
   const connectSources = ["'self'", 'http://localhost:*', 'https://localhost:*', 'ws://localhost:*']
   const imgSources = ["'self'", 'data:', 'blob:', 'http://localhost:*', 'https:']
+  const scriptSources = [
+    "'self'",
+    "'unsafe-inline'",
+    ...(process.env.NODE_ENV === 'development' ? ["'unsafe-eval'"] : []),
+  ]
 
   if (s3PublicBaseUrl) {
     connectSources.push(s3PublicBaseUrl)
@@ -25,7 +30,7 @@ function securityHeaders() {
     "frame-src 'self'",
     `img-src ${imgSources.join(' ')}`,
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    `script-src ${scriptSources.join(' ')}`,
     "style-src 'self' 'unsafe-inline'",
     'upgrade-insecure-requests',
   ].join('; ')

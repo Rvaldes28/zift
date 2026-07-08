@@ -19,6 +19,7 @@ import { z } from 'zod'
 import { slugify } from '@/lib/content/types'
 import { requirePermission, recordActivity } from '@/lib/rbac/access'
 import { verifyCsrf } from '@/lib/security/csrf'
+import { sanitizeHtml } from '@/lib/security/sanitize-html'
 import { listAllSeoPaths } from '@/lib/seo/queries'
 import {
   defaultRobotsForNoindex,
@@ -262,7 +263,7 @@ export async function updatePostDetails(formData: FormData): Promise<void> {
   const title = formString(formData, 'title')
   const excerpt = formString(formData, 'excerpt')
   const slug = slugify(formString(formData, 'slug') || title)
-  const contentHtml = formString(formData, 'contentHtml')
+  const contentHtml = sanitizeHtml(formString(formData, 'contentHtml'))
   if (!title || !excerpt || !slug) postRedirect(postId, 'error=invalid')
 
   const duplicate = await findPostBySlug(slug)
