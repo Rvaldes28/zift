@@ -10,7 +10,9 @@ import type {
 } from '@ziftlab/types'
 import {
   categories,
+  clients,
   db,
+  faqs,
   mediaAssets,
   pages,
   postCategories,
@@ -23,6 +25,8 @@ import {
   services,
   siteSettings,
   tags,
+  teamMembers,
+  testimonials,
   users,
 } from '@ziftlab/db'
 import { and, asc, eq, inArray, isNull, lte, or } from 'drizzle-orm'
@@ -34,13 +38,6 @@ import { mediaDoc, paginate, sortDocs, toIso } from './format'
 type CollectionDoc<TSlug extends CollectionSlug> = Config['collections'][TSlug]
 type GlobalDoc<TSlug extends GlobalSlug> = Config['globals'][TSlug]
 type AnyDoc = Record<string, unknown>
-
-const EMPTY_COLLECTIONS = new Set<CollectionSlug>([
-  'clients',
-  'faqs',
-  'testimonials',
-  'team-members',
-])
 
 type SeoRow = Awaited<ReturnType<typeof seoFor>> extends Map<string, infer T> ? T : never
 
@@ -172,7 +169,7 @@ function metaFor(seo: SeoRow | undefined, media: Map<string, Media>) {
 }
 
 async function listServices(includeDrafts: boolean) {
-  const [rows, seo, media] = await Promise.all([
+  const [rows, seo, media, faqDocs] = await Promise.all([
     db
       .select()
       .from(services)
@@ -184,10 +181,13 @@ async function listServices(includeDrafts: boolean) {
       .orderBy(asc(services.order), asc(services.slug)),
     seoFor('service'),
     mediaById(),
+    listFaqs(),
   ])
+  const faqsById = new Map(faqDocs.map((faq) => [faq.id, faq]))
 
   return rows.map((row) => {
     const metadata = record(row.metadata)
+    const faqIds = stringArray(metadata.faqIds ?? metadata.faqs)
     return {
       ...metadata,
       _status: row.status,
@@ -195,7 +195,7 @@ async function listServices(includeDrafts: boolean) {
       content: row.content,
       createdAt: row.createdAt.toISOString(),
       excerpt: row.excerpt,
-      faqs: [],
+      faqs: faqIds.map((id) => faqsById.get(id) ?? id),
       features: row.features,
       id: row.id,
       image: mediaFromMetadata(metadata, media, ['imageId', 'image']),
@@ -211,7 +211,7 @@ async function listServices(includeDrafts: boolean) {
 }
 
 async function listProjects(includeDrafts: boolean) {
-  const [rows, seo, media, serviceDocs] = await Promise.all([
+  const [rows, seo, media, serviceDocs, clientDocs, testimonialDocs] = await Promise.all([
     db
       .select()
       .from(projects)
@@ -224,17 +224,25 @@ async function listProjects(includeDrafts: boolean) {
     seoFor('project'),
     mediaById(),
     listServices(includeDrafts),
+    listClients(),
+    listTestimonials(),
   ])
   const servicesById = new Map(serviceDocs.map((service) => [service.id, service]))
+  const clientsById = new Map(clientDocs.map((client) => [client.id, client]))
+  const testimonialsById = new Map(
+    testimonialDocs.map((testimonial) => [testimonial.id, testimonial]),
+  )
 
   return rows.map((row) => {
     const metadata = record(row.metadata)
     const serviceIds = stringArray(metadata.serviceIds ?? metadata.services)
+    const clientId = typeof metadata.clientId === 'string' ? metadata.clientId : null
+    const testimonialId = typeof metadata.testimonialId === 'string' ? metadata.testimonialId : null
 
     return {
       ...metadata,
       _status: row.status,
-      client: metadata.client ?? null,
+      client: clientId ? (clientsById.get(clientId) ?? clientId) : (metadata.client ?? null),
       completedAt: row.completedAt,
       content: row.content,
       coverImage: mediaFromMetadata(metadata, media, ['coverImageId', 'imageId', 'coverImage']),
@@ -247,7 +255,9 @@ async function listProjects(includeDrafts: boolean) {
       services: serviceIds.map((id) => servicesById.get(id) ?? id),
       slug: row.slug,
       stack: stringArray(metadata.stack),
-      testimonial: metadata.testimonial ?? null,
+      testimonial: testimonialId
+        ? (testimonialsById.get(testimonialId) ?? testimonialId)
+        : (metadata.testimonial ?? null),
       title: row.title,
       updatedAt: row.updatedAt.toISOString(),
     }
@@ -276,6 +286,107 @@ async function listTags() {
     slug: row.slug,
     title: row.title,
     updatedAt: row.updatedAt.toISOString(),
+  }))
+}
+
+async function listClients() {
+  const [rows, media] = await Promise.all([
+    db
+      .select()
+      .from(clients)
+      .where(isNull(clients.deletedAt))
+      .orderBy(asc(clients.order), asc(clients.name)),
+    mediaById(),
+  ])
+
+  return rows.map((row) => {
+    const metadata = record(row.metadata)
+    return {
+      ...metadata,
+      createdAt: row.createdAt.toISOString(),
+      id: row.id,
+      logo:
+        (row.logoId ? (media.get(row.logoId) ?? null) : null) ??
+        mediaFromMetadata(metadata, media, ['logoId', 'logo']),
+      name: row.name,
+      order: row.order,
+      updatedAt: row.updatedAt.toISOString(),
+    }
+  })
+}
+
+async function listTestimonials() {
+  const [rows, media] = await Promise.all([
+    db
+      .select()
+      .from(testimonials)
+      .where(isNull(testimonials.deletedAt))
+      .orderBy(asc(testimonials.order), asc(testimonials.authorName)),
+    mediaById(),
+  ])
+
+  return rows.map((row) => {
+    const metadata = record(row.metadata)
+    return {
+      ...metadata,
+      authorName: row.authorName,
+      authorRole: row.authorRole,
+      avatar:
+        (row.avatarId ? (media.get(row.avatarId) ?? null) : null) ??
+        mediaFromMetadata(metadata, media, ['avatarId', 'avatar']),
+      createdAt: row.createdAt.toISOString(),
+      id: row.id,
+      order: row.order,
+      quote: row.quote,
+      updatedAt: row.updatedAt.toISOString(),
+    }
+  })
+}
+
+async function listTeamMembers() {
+  const [rows, media] = await Promise.all([
+    db
+      .select()
+      .from(teamMembers)
+      .where(isNull(teamMembers.deletedAt))
+      .orderBy(asc(teamMembers.order), asc(teamMembers.name)),
+    mediaById(),
+  ])
+
+  return rows.map((row) => {
+    const metadata = record(row.metadata)
+    return {
+      ...metadata,
+      bio: row.bio,
+      createdAt: row.createdAt.toISOString(),
+      id: row.id,
+      name: row.name,
+      order: row.order,
+      photo:
+        (row.photoId ? (media.get(row.photoId) ?? null) : null) ??
+        mediaFromMetadata(metadata, media, ['photoId', 'photo']),
+      role: row.role,
+      updatedAt: row.updatedAt.toISOString(),
+    }
+  })
+}
+
+async function listFaqs() {
+  const rows = await db
+    .select()
+    .from(faqs)
+    .where(isNull(faqs.deletedAt))
+    .orderBy(asc(faqs.order), asc(faqs.question))
+
+  return rows.map((row) => ({
+    answer: row.answer,
+    category: row.category,
+    createdAt: row.createdAt.toISOString(),
+    id: row.id,
+    order: row.order,
+    question: row.question,
+    updatedAt: row.updatedAt.toISOString(),
+    ...record(row.metadata),
   }))
 }
 
@@ -462,30 +573,36 @@ async function listPosts(includeDrafts: boolean) {
 
 async function listLandings(includeDrafts: boolean, origin?: string) {
   const now = new Date()
-  const pageRows = await db
-    .select()
-    .from(pages)
-    .where(
-      includeDrafts
-        ? and(eq(pages.type, 'landing'), isNull(pages.deletedAt))
-        : and(
-            eq(pages.type, 'landing'),
-            isNull(pages.deletedAt),
-            or(
-              eq(pages.status, 'published'),
-              and(eq(pages.status, 'scheduled'), lte(pages.scheduledAt, now)),
+  const [pageRows, faqDocs] = await Promise.all([
+    db
+      .select()
+      .from(pages)
+      .where(
+        includeDrafts
+          ? and(eq(pages.type, 'landing'), isNull(pages.deletedAt))
+          : and(
+              eq(pages.type, 'landing'),
+              isNull(pages.deletedAt),
+              or(
+                eq(pages.status, 'published'),
+                and(eq(pages.status, 'scheduled'), lte(pages.scheduledAt, now)),
+              ),
             ),
-          ),
-    )
+      ),
+    listFaqs(),
+  ])
+  const faqsById = new Map(faqDocs.map((faq) => [faq.id, faq]))
 
   const docs = []
   for (const page of pageRows) {
     const snapshot = await buildPageSnapshot(page.id, origin)
+    const content = record(page.content)
+    const faqIds = stringArray(content.faqIds ?? content.faqs)
     docs.push({
       _status: page.status,
       content: snapshot,
       excerpt: page.excerpt,
-      faqs: [],
+      faqs: faqIds.map((id) => faqsById.get(id) ?? id),
       id: page.id,
       meta: snapshot.seo,
       order: 0,
@@ -526,13 +643,15 @@ async function listRedirectDocs() {
 }
 
 async function collectionDocs(slug: CollectionSlug, includeDrafts: boolean, origin?: string) {
-  if (EMPTY_COLLECTIONS.has(slug)) return []
-
   if (slug === 'services') return listServices(includeDrafts)
   if (slug === 'projects') return listProjects(includeDrafts)
   if (slug === 'posts') return listPosts(includeDrafts)
   if (slug === 'categories') return listCategories()
   if (slug === 'tags') return listTags()
+  if (slug === 'clients') return listClients()
+  if (slug === 'testimonials') return listTestimonials()
+  if (slug === 'team-members') return listTeamMembers()
+  if (slug === 'faqs') return listFaqs()
   if (slug === 'landings') return listLandings(includeDrafts, origin)
   if (slug === 'media') return listMedia()
   if (slug === 'redirects') return listRedirectDocs()
@@ -555,51 +674,84 @@ export async function getCollectionResponse<TSlug extends CollectionSlug>(
   return paginate(sorted as unknown as CollectionDoc<TSlug>[], { limit, page })
 }
 
-async function setting(key: string): Promise<JsonRecord> {
-  const row = await db.query.siteSettings.findFirst({ where: eq(siteSettings.key, key) })
-  return record(row?.value)
+async function settings(keys: string[]): Promise<Record<string, JsonRecord>> {
+  const rows = await db.select().from(siteSettings).where(inArray(siteSettings.key, keys))
+  const result: Record<string, JsonRecord> = {}
+  for (const key of keys) result[key] = {}
+  for (const row of rows) result[row.key] = record(row.value)
+  return result
 }
 
 export async function getGlobalDoc<TSlug extends GlobalSlug>(
   slug: TSlug,
 ): Promise<GlobalDoc<TSlug>> {
-  const site = await setting('site')
+  const [globals, media] = await Promise.all([
+    settings(['site', 'brand', 'contact', 'social', 'cookies', 'scripts', 'header', 'footer']),
+    mediaById(),
+  ])
+  const site = globals.site
+  const brand = globals.brand
+  const contact = globals.contact
+  const social = globals.social
+  const cookies = globals.cookies
+  const scripts = globals.scripts
 
   if (slug === 'site-settings') {
     const defaultSeo = record(site.defaultSeo)
+    const colors = record(brand.colors)
 
     return {
-      address: (site.address as string | undefined) ?? null,
-      calendlyUrl: (site.calendlyUrl as string | undefined) ?? null,
-      contactEmail: (site.contactEmail as string | undefined) ?? null,
+      address:
+        (contact.address as string | undefined) ?? (site.address as string | undefined) ?? null,
+      calendlyUrl:
+        (contact.calendlyUrl as string | undefined) ??
+        (site.calendlyUrl as string | undefined) ??
+        null,
+      colors,
+      contactEmail:
+        (contact.contactEmail as string | undefined) ??
+        (site.contactEmail as string | undefined) ??
+        null,
+      cookieSettings: cookies,
       defaultSeo: {
         description:
           (defaultSeo.description as string | undefined) ??
           (site.defaultSeoDescription as string | undefined) ??
           (site.tagline as string | undefined) ??
           null,
-        ogImage: null,
+        ogImage: mediaFromMetadata(defaultSeo, media, ['ogImageId', 'ogImage']),
         title:
           (defaultSeo.title as string | undefined) ??
           (site.defaultSeoTitle as string | undefined) ??
           (site.siteName as string | undefined) ??
           'ZiftLab',
       },
-      phone: (site.phone as string | undefined) ?? null,
+      externalScripts: Array.isArray(scripts.providers) ? (scripts.providers as never[]) : [],
+      favicon: mediaFromMetadata(brand, media, ['faviconId', 'favicon']),
+      hours: Array.isArray(contact.hours) ? (contact.hours as never[]) : [],
+      logo: mediaFromMetadata(brand, media, ['logoId', 'logo']),
+      phone: (contact.phone as string | undefined) ?? (site.phone as string | undefined) ?? null,
       siteName: (site.siteName as string | undefined) ?? 'ZiftLab',
-      socialLinks: Array.isArray(site.socialLinks) ? (site.socialLinks as never[]) : [],
+      socialLinks: Array.isArray(social.links)
+        ? (social.links as never[])
+        : Array.isArray(site.socialLinks)
+          ? (site.socialLinks as never[])
+          : [],
       tagline: (site.tagline as string | undefined) ?? 'Tecnologia que vende',
-      whatsapp: (site.whatsapp as string | undefined) ?? null,
+      whatsapp:
+        (contact.whatsapp as string | undefined) ?? (site.whatsapp as string | undefined) ?? null,
     } as GlobalDoc<TSlug>
   }
 
   if (slug === 'header') {
-    const header = await setting('header')
+    const header = globals.header
     return {
       cta: record(header.cta).label
         ? record(header.cta)
         : { href: '/contacto', label: 'Hablemos', newTab: false },
-      logo: null,
+      logo:
+        mediaFromMetadata(header, media, ['logoId', 'logo']) ??
+        mediaFromMetadata(brand, media, ['logoId', 'logo']),
       navItems: Array.isArray(header.navItems)
         ? (header.navItems as never[])
         : [
@@ -613,7 +765,7 @@ export async function getGlobalDoc<TSlug extends GlobalSlug>(
   }
 
   if (slug === 'footer') {
-    const footer = await setting('footer')
+    const footer = globals.footer
     return {
       bottomText:
         (footer.bottomText as string | undefined) ??

@@ -312,14 +312,14 @@ Cada tabla critica debe tener:
 
 Roles minimos:
 
-| Rol | Permisos |
-| --- | --- |
-| Super Admin | Control total |
-| Admin | Gestiona contenido, usuarios y configuracion |
-| Editor | Crea y edita contenido |
-| Marketing | SEO, campanas, analytics y leads |
-| Soporte | Ve mensajes, leads y tickets |
-| Cliente | Acceso limitado si aplica |
+| Rol         | Permisos                                     |
+| ----------- | -------------------------------------------- |
+| Super Admin | Control total                                |
+| Admin       | Gestiona contenido, usuarios y configuracion |
+| Editor      | Crea y edita contenido                       |
+| Marketing   | SEO, campanas, analytics y leads             |
+| Soporte     | Ve mensajes, leads y tickets                 |
+| Cliente     | Acceso limitado si aplica                    |
 
 Permisos recomendados:
 

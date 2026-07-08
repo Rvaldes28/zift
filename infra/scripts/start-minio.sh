@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Arranca MinIO local para desarrollo (storage S3-compatible para media de Payload).
+# Arranca MinIO local para desarrollo (storage S3-compatible para media propia).
 #
 #   API:     http://localhost:9000
 #   Console: http://localhost:9001

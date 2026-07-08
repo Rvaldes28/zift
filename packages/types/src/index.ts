@@ -53,11 +53,46 @@ export interface SiteSetting {
   phone?: string | null
   whatsapp?: string | null
   address?: string | null
+  hours?: {
+    label: string
+    value: string
+  }[]
   calendlyUrl?: string | null
+  colors?: {
+    accent?: string | null
+    ink?: string | null
+    paper?: string | null
+    primary?: string | null
+    primaryDark?: string | null
+    primaryTint?: string | null
+  } | null
+  cookieSettings?: {
+    analyticsDescription?: string | null
+    analyticsLabel?: string | null
+    bannerText?: string | null
+    bannerTitle?: string | null
+    marketingDescription?: string | null
+    marketingLabel?: string | null
+    necessaryDescription?: string | null
+  } | null
   defaultSeo?: {
     description?: string | null
     ogImage?: MediaRef
     title?: string | null
+  } | null
+  externalScripts?: {
+    consentCategory?: 'analytics' | 'marketing'
+    enabled?: boolean
+    id?: string | null
+    label?: string | null
+    provider: 'clarity' | 'ga4' | 'google_ads' | 'gtm' | 'hotjar' | 'meta_pixel'
+  }[]
+  favicon?: MediaRef
+  logo?: MediaRef
+  legal?: {
+    cookiesUpdated?: string | null
+    privacyUpdated?: string | null
+    termsUpdated?: string | null
   } | null
   socialLinks?: {
     platform: string

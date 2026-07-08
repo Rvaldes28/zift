@@ -3,6 +3,8 @@ import 'server-only'
 import { db, performanceAlerts } from '@ziftlab/db'
 import { and, desc, eq } from 'drizzle-orm'
 
+import { createNotification } from '@/lib/notifications/service'
+
 export type PerformanceAlertSeverity = 'critical' | 'info' | 'warning'
 
 export interface PerformanceAlertInput {
@@ -55,6 +57,7 @@ export async function upsertPerformanceAlert(input: PerformanceAlertInput) {
 
   if (existing) {
     await db.update(performanceAlerts).set(values).where(eq(performanceAlerts.id, existing.id))
+    await notifyPerformanceAlert(existing.id, input).catch(() => null)
     return existing.id
   }
 
@@ -67,5 +70,37 @@ export async function upsertPerformanceAlert(input: PerformanceAlertInput) {
     })
     .returning({ id: performanceAlerts.id })
 
+  if (created?.id) {
+    await notifyPerformanceAlert(created.id, input).catch(() => null)
+  }
+
   return created?.id ?? null
+}
+
+function notificationEventType(input: PerformanceAlertInput): string {
+  if (input.metric === 'form_error' || input.metric === 'form_submit') return 'form.error'
+  if (input.metric === 'http_status')
+    return input.url?.includes('/api/') ? 'system.error' : 'site.down'
+  return 'performance.slow'
+}
+
+async function notifyPerformanceAlert(alertId: string, input: PerformanceAlertInput) {
+  const eventType = notificationEventType(input)
+  await createNotification({
+    body: input.message,
+    dedupeKey: `${eventType}:${input.url ?? 'unknown'}:${input.metric ?? input.title}`,
+    entityId: alertId,
+    entityType: 'performance_alert',
+    eventType,
+    metadata: {
+      metric: input.metric,
+      source: input.source,
+      threshold: input.threshold,
+      url: input.url,
+      value: input.value,
+    },
+    severity: input.severity,
+    source: 'performance',
+    title: input.title,
+  })
 }

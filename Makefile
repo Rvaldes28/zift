@@ -1,15 +1,14 @@
 # ZiftLab — automatización del entorno local (macOS + Homebrew)
 #
 # Uso (desde /):
-#   make install   # instala TODO: Homebrew, formulas, .env, DB, MinIO+bucket, deps y seed
-#   make start     # arranca PostgreSQL + MinIO + CMS (:3000) + Web (:4321)
+#   make install   # instala TODO: Homebrew, formulas, .env, DB admin, MinIO+bucket, deps y seed
+#   make start     # arranca PostgreSQL + MinIO + Admin (:3000) + Web (:4321)
 #   make stop      # apaga todo, como apagar la compu
 #   make status    # estado rápido de servicios y puertos
 
 SHELL := /bin/bash
 
 BREW_FORMULAS := node pnpm postgresql@16 minio minio-mc
-DB_NAME       := ziftlab_dev
 ADMIN_DB_NAME := ziftlab_admin_dev
 ADMIN_DATABASE_URL ?= postgresql://localhost:5432/$(ADMIN_DB_NAME)
 ADMIN_DEV_EMAIL ?= admin@ziftlab.local
@@ -18,28 +17,26 @@ ADMIN_DEV_PASSWORD ?= ZiftLabAdmin1234
 ADMIN_BOOTSTRAP_TOKEN ?= ziftlab-local-bootstrap
 ADMIN_TOTP_ENCRYPTION_KEY ?= ziftlab-local-totp-key-change-me
 MINIO_LABEL   := com.ziftlab.minio
-CMS_LOG       := $(HOME)/Library/Logs/ziftlab-cms.log
 WEB_LOG       := $(HOME)/Library/Logs/ziftlab-web.log
 ADMIN_LOG     := $(HOME)/Library/Logs/ziftlab-admin.log
-CMS_PID       := /tmp/ziftlab-cms.pid
 WEB_PID       := /tmp/ziftlab-web.pid
 ADMIN_PID     := /tmp/ziftlab-admin.pid
 
-.PHONY: help install brew formulas env db admin-db admin-setup admin-user admin minio deps seed start stop status
+.PHONY: help install brew formulas env admin-db admin-setup admin-user admin minio deps seed start stop status
 
 help:
 	@echo "ZiftLab — targets disponibles (correr desde la raíz del repo):"
 	@echo "  make install   Instala todo lo necesario (Homebrew → seed)"
-	@echo "  make start     Arranca todos los servicios y deja los puertos listos"
+	@echo "  make start     Arranca admin propio, web y servicios locales"
 	@echo "  make admin     Prepara DB propia, crea admin local y arranca dashboard en :3000"
 	@echo "  make admin-user Crea/resetea el usuario admin local sin arrancar el dashboard"
 	@echo "  make stop      Apaga dev servers, MinIO y PostgreSQL"
 	@echo "  make status    Muestra qué está corriendo"
-	@echo "  make admin-db  Crea la DB propia del dashboard sin tocar Payload"
+	@echo "  make admin-db  Crea la DB propia del dashboard"
 
 # ────────────────────────────── INSTALL ──────────────────────────────
 
-install: brew formulas env db minio deps seed
+install: brew formulas env admin-db minio deps seed
 	@echo ""
 	@echo "✔ Instalación completa. Arranca todo con: make start"
 
@@ -57,28 +54,14 @@ formulas: brew
 		else echo "→ Instalando $$f…"; brew install $$f; fi; \
 	done
 
-# Crea cms/.env y web/.env si no existen (valores locales de .env.example,
-# con PAYLOAD_SECRET generado). Nunca pisa archivos existentes.
+# Crea admin/.env, web/.env y packages/db/.env si no existen. Nunca pisa archivos existentes.
 env:
-	@if [ -f cms/.env ]; then echo "✓ cms/.env"; else \
-		{ \
-			echo "PAYLOAD_SECRET=$$(openssl rand -hex 32)"; \
-			echo "PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3000"; \
-			echo "WEB_URL=http://localhost:4321"; \
-			echo "DATABASE_URL=postgresql://localhost:5432/$(DB_NAME)"; \
-			echo "S3_ENDPOINT=http://localhost:9000"; \
-			echo "S3_REGION=us-east-1"; \
-			echo "S3_BUCKET=payload-media"; \
-			echo "S3_ACCESS_KEY_ID=minioadmin"; \
-			echo "S3_SECRET_ACCESS_KEY=minioadmin"; \
-			echo "S3_FORCE_PATH_STYLE=true"; \
-		} > cms/.env; \
-		echo "→ cms/.env creado (PAYLOAD_SECRET generado)"; \
-	fi
 	@if [ -f web/.env ]; then echo "✓ web/.env"; else \
 		{ \
 			echo "PUBLIC_SITE_URL=http://localhost:4321"; \
-			echo "PUBLIC_PAYLOAD_API_URL=http://localhost:3000"; \
+			echo "PUBLIC_API_URL=http://localhost:3000"; \
+			echo "PUBLIC_CONTENT_API_URL=http://localhost:3000"; \
+			echo "PUBLIC_ANALYTICS_ENABLED=true"; \
 			echo "PUBLIC_GA4_ID="; \
 			echo "PUBLIC_CLARITY_ID="; \
 		} > web/.env; \
@@ -101,6 +84,13 @@ env:
 			echo "ADMIN_TOTP_ISSUER=ZiftLab"; \
 			echo "ADMIN_TOTP_ENCRYPTION_KEY=$$(openssl rand -hex 32)"; \
 			echo "ADMIN_2FA_CHALLENGE_MINUTES=5"; \
+			echo "S3_ENDPOINT=http://localhost:9000"; \
+			echo "S3_REGION=us-east-1"; \
+			echo "S3_BUCKET=ziftlab-media"; \
+			echo "S3_ACCESS_KEY_ID=minioadmin"; \
+			echo "S3_SECRET_ACCESS_KEY=minioadmin"; \
+			echo "S3_FORCE_PATH_STYLE=true"; \
+			echo "S3_PREFIX=admin-media"; \
 		} > admin/.env; \
 		echo "→ admin/.env creado"; \
 	fi
@@ -110,16 +100,6 @@ env:
 		} > packages/db/.env; \
 		echo "→ packages/db/.env creado"; \
 	fi
-
-db: formulas
-	@brew services list | grep postgresql@16 | grep -q started || \
-		{ echo "→ Arrancando PostgreSQL…"; brew services start postgresql@16; }
-	@PGBIN="$$(brew --prefix postgresql@16)/bin"; \
-	for i in $$(seq 1 30); do "$$PGBIN/pg_isready" -q -h localhost && break; sleep 1; done; \
-	"$$PGBIN/pg_isready" -q -h localhost || { echo "✗ PostgreSQL no respondió en :5432"; exit 1; }; \
-	if "$$PGBIN/psql" -h localhost -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname='$(DB_NAME)'" | grep -q 1; \
-	then echo "✓ DB $(DB_NAME)"; \
-	else "$$PGBIN/createdb" -h localhost $(DB_NAME) && echo "→ DB $(DB_NAME) creada"; fi
 
 admin-db: formulas
 	@brew services list | grep postgresql@16 | grep -q started || \
@@ -157,7 +137,7 @@ admin: admin-setup
 		if curl -s http://localhost:3000/api/health | grep -q '"service":"admin"'; then \
 			echo "✓ Admin propio ya corría en :3000"; \
 		else \
-			echo "✗ El puerto :3000 está ocupado (probablemente Payload/CMS)."; \
+			echo "✗ El puerto :3000 está ocupado por otro proceso."; \
 			echo "  Apágalo con: make stop"; \
 			echo "  Luego vuelve a correr: make admin"; \
 			exit 1; \
@@ -189,15 +169,15 @@ minio: formulas
 	@for i in $$(seq 1 30); do curl -sfo /dev/null http://localhost:9000/minio/health/live && break; sleep 1; done; \
 	curl -sfo /dev/null http://localhost:9000/minio/health/live || \
 		{ echo "✗ MinIO no respondió en :9000 (log: ~/Library/Logs/ziftlab-minio.log)"; exit 1; }
-	@./infra/scripts/create-minio-bucket.sh
+	@S3_BUCKET=ziftlab-media ./infra/scripts/create-minio-bucket.sh
 
 deps: formulas
 	@echo "→ pnpm install…"
 	@pnpm install
 
-seed: db
-	@echo "→ Seed (14 servicios + globals, idempotente)…"
-	@pnpm --filter cms seed
+seed: admin-db
+	@echo "→ Seed base del dashboard propio…"
+	@ADMIN_DATABASE_URL="$(ADMIN_DATABASE_URL)" pnpm db:seed
 
 # ────────────────────────────── START ──────────────────────────────
 
@@ -212,14 +192,7 @@ start:
 		launchctl kickstart "gui/$$(id -u)/$(MINIO_LABEL)" 2>/dev/null || true; \
 		for i in $$(seq 1 30); do curl -sfo /dev/null http://localhost:9000/minio/health/live && break; sleep 1; done; \
 	fi
-	@if lsof -ti tcp:3000 >/dev/null 2>&1; then echo "✓ CMS ya corría en :3000"; else \
-		echo "→ CMS (Payload)…"; \
-		nohup pnpm dev:cms > "$(CMS_LOG)" 2>&1 & echo $$! > $(CMS_PID); \
-	fi
-	@echo "  … esperando CMS en :3000 (el primer arranque tarda)"; \
-	for i in $$(seq 1 90); do curl -sfo /dev/null http://localhost:3000/api/globals/header && break; sleep 2; done; \
-	curl -sfo /dev/null http://localhost:3000/api/globals/header || \
-		{ echo "✗ El CMS no respondió; revisa $(CMS_LOG)"; exit 1; }
+	@$(MAKE) admin
 	@if lsof -ti tcp:4321 >/dev/null 2>&1; then echo "✓ Web ya corría en :4321"; else \
 		echo "→ Web (Astro)…"; \
 		nohup pnpm dev:web > "$(WEB_LOG)" 2>&1 & echo $$! > $(WEB_PID); \
@@ -231,14 +204,13 @@ start:
 	@echo "  ✔ ZiftLab arriba — puertos (VS Code los detecta y los hace clic):"
 	@echo "  ─────────────────────────────────────────────"
 	@echo "  Web (Astro)       http://localhost:4321"
-	@echo "  Admin (Payload)   http://localhost:3000/admin"
-	@echo "  API (Payload)     http://localhost:3000/api"
-	@echo "  Dashboard propio  make admin  (usa también :3000, alternativo a Payload)"
+	@echo "  Dashboard propio  http://localhost:3000/dashboard"
+	@echo "  API propia        http://localhost:3000/api"
 	@echo "  MinIO S3          http://localhost:9000"
 	@echo "  MinIO consola     http://localhost:9001"
-	@echo "  PostgreSQL        localhost:5432 · DB $(DB_NAME)"
+	@echo "  PostgreSQL        localhost:5432 · DB $(ADMIN_DB_NAME)"
 	@echo "  ─────────────────────────────────────────────"
-	@echo "  Logs: $(CMS_LOG)"
+	@echo "  Logs: $(ADMIN_LOG)"
 	@echo "        $(WEB_LOG)"
 
 # ────────────────────────────── STOP ──────────────────────────────
@@ -249,8 +221,6 @@ stop:
 	-@lsof -ti tcp:4321 | xargs kill 2>/dev/null; true
 	@echo "→ Apagando Admin propio (:3000)…"
 	-@[ -f $(ADMIN_PID) ] && kill "$$(cat $(ADMIN_PID))" 2>/dev/null; rm -f $(ADMIN_PID)
-	@echo "→ Apagando CMS (:3000)…"
-	-@[ -f $(CMS_PID) ] && kill "$$(cat $(CMS_PID))" 2>/dev/null; rm -f $(CMS_PID)
 	-@lsof -ti tcp:3000 | xargs kill 2>/dev/null; true
 	@echo "→ Apagando MinIO…"
 	-@launchctl bootout "gui/$$(id -u)/$(MINIO_LABEL)" 2>/dev/null; true
@@ -264,6 +234,5 @@ status:
 	@printf "PostgreSQL :5432  "; PGBIN="$$(brew --prefix postgresql@16 2>/dev/null)/bin"; \
 		"$$PGBIN/pg_isready" -q -h localhost 2>/dev/null && echo "✓ arriba" || echo "✗ abajo"
 	@printf "MinIO      :9000  "; curl -sfo /dev/null http://localhost:9000/minio/health/live && echo "✓ arriba" || echo "✗ abajo"
-	@printf "CMS        :3000  "; curl -sfo /dev/null http://localhost:3000/api/globals/header && echo "✓ arriba" || echo "✗ abajo"
 	@printf "Admin      :3000  "; curl -s http://localhost:3000/api/health | grep -q '"service":"admin"' && echo "✓ arriba" || echo "✗ abajo"
 	@printf "Web        :4321  "; curl -sfo /dev/null http://localhost:4321/ && echo "✓ arriba" || echo "✗ abajo"

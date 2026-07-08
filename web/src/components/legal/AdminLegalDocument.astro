@@ -1,0 +1,50 @@
+---
+import type { AdminPublicPage } from '@/lib/content'
+import LegalLayout from '@/layouts/LegalLayout.astro'
+
+interface Props {
+  docNumber: number
+  page: AdminPublicPage
+}
+
+const { docNumber, page } = Astro.props
+const section = page.sections.find((item) => item.enabled && item.kind === 'legal_body')
+const data = (section?.data ?? {}) as Record<string, unknown>
+const html = typeof data.html === 'string' ? data.html : ''
+const sections = Array.isArray(data.sections)
+  ? data.sections.filter(
+      (item): item is { id: string; label: string } =>
+        Boolean(item) &&
+        typeof item === 'object' &&
+        !Array.isArray(item) &&
+        typeof (item as { id?: unknown }).id === 'string' &&
+        typeof (item as { label?: unknown }).label === 'string',
+    )
+  : []
+function formatLegalDate(value: unknown) {
+  const date = typeof value === 'string' ? new Date(value) : new Date()
+  if (Number.isNaN(date.getTime())) return ''
+
+  return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`
+}
+const updated =
+  formatLegalDate(data.updated) ||
+  formatLegalDate(page.page.updatedAt) ||
+  formatLegalDate(new Date().toISOString())
+const intro = typeof data.intro === 'string' ? data.intro : page.page.excerpt
+const description =
+  typeof data.description === 'string'
+    ? data.description
+    : page.seo?.description || page.page.excerpt || page.page.title
+---
+
+<LegalLayout
+  title={page.page.title}
+  {description}
+  {docNumber}
+  updated={updated}
+  intro={intro ?? undefined}
+  sections={sections}
+>
+  <Fragment set:html={html} />
+</LegalLayout>

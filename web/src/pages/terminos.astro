@@ -4,6 +4,8 @@
  * y versionado en git. Los datos del titular son placeholders: complétalos
  * antes de producción (mismos que en privacidad.astro).
  */
+import AdminLegalDocument from '@/components/legal/AdminLegalDocument.astro'
+import { getAdminPage } from '@/lib/content'
 import LegalLayout from '@/layouts/LegalLayout.astro'
 
 // EDITAR antes del deploy (FASE 13): identidad legal real del titular
@@ -25,77 +27,87 @@ const sections = [
   { id: 'privacidad', label: 'Datos personales' },
   { id: 'ley', label: 'Ley aplicable' },
 ]
+
+const adminLegal = await getAdminPage('terminos')
 ---
 
-<LegalLayout
-  title="Términos y condiciones"
-  description="Condiciones de uso del sitio de ZiftLab: titularidad, propiedad intelectual, propuestas comerciales y responsabilidad."
-  docNumber={2}
-  updated="02.07.2026"
-  intro="Las reglas de uso de este sitio, en el mismo lenguaje que usamos para todo: claro y directo."
-  sections={sections}
->
-  <h2 id="titular">Titular del sitio</h2>
-  <p>
-    Este sitio web es titularidad de <strong>{TITULAR.razonSocial}</strong> ({TITULAR.nombre}), con
-    NIF {TITULAR.nif} y domicilio en {TITULAR.domicilio}. Contacto:
-    <a href={`mailto:${TITULAR.email}`}>{TITULAR.email}</a>.
-  </p>
+{
+  adminLegal ? (
+    <AdminLegalDocument page={adminLegal} docNumber={2} />
+  ) : (
+    <LegalLayout
+      title="Términos y condiciones"
+      description="Condiciones de uso del sitio de ZiftLab: titularidad, propiedad intelectual, propuestas comerciales y responsabilidad."
+      docNumber={2}
+      updated="02.07.2026"
+      intro="Las reglas de uso de este sitio, en el mismo lenguaje que usamos para todo: claro y directo."
+      sections={sections}
+    >
+      <h2 id="titular">Titular del sitio</h2>
+      <p>
+        Este sitio web es titularidad de <strong>{TITULAR.razonSocial}</strong> ({TITULAR.nombre}),
+        con NIF {TITULAR.nif} y domicilio en {TITULAR.domicilio}. Contacto:
+        <a href={`mailto:${TITULAR.email}`}>{TITULAR.email}</a>.
+      </p>
 
-  <h2 id="objeto">Objeto y aceptación</h2>
-  <p>
-    Estas condiciones regulan el acceso y el uso del sitio, cuyo fin es presentar los servicios de
-    la agencia —desarrollo web, e-commerce, automatización, inteligencia artificial y marketing
-    digital— y facilitar el contacto comercial. Navegar por el sitio implica aceptar estas
-    condiciones; si no estás de acuerdo con ellas, no lo uses.
-  </p>
+      <h2 id="objeto">Objeto y aceptación</h2>
+      <p>
+        Estas condiciones regulan el acceso y el uso del sitio, cuyo fin es presentar los servicios
+        de la agencia —desarrollo web, e-commerce, automatización, inteligencia artificial y
+        marketing digital— y facilitar el contacto comercial. Navegar por el sitio implica aceptar
+        estas condiciones; si no estás de acuerdo con ellas, no lo uses.
+      </p>
 
-  <h2 id="uso">Uso del sitio</h2>
-  <p>Te comprometes a usar el sitio de forma lícita. En particular, no está permitido:</p>
-  <ul>
-    <li>Usar los formularios para enviar contenido falso, ofensivo o publicidad no solicitada.</li>
-    <li>Intentar vulnerar las medidas de seguridad o el funcionamiento normal del sitio.</li>
-    <li>Extraer o reutilizar de forma masiva el contenido sin autorización.</li>
-  </ul>
+      <h2 id="uso">Uso del sitio</h2>
+      <p>Te comprometes a usar el sitio de forma lícita. En particular, no está permitido:</p>
+      <ul>
+        <li>
+          Usar los formularios para enviar contenido falso, ofensivo o publicidad no solicitada.
+        </li>
+        <li>Intentar vulnerar las medidas de seguridad o el funcionamiento normal del sitio.</li>
+        <li>Extraer o reutilizar de forma masiva el contenido sin autorización.</li>
+      </ul>
 
-  <h2 id="propiedad">Propiedad intelectual</h2>
-  <p>
-    La marca, los textos, el diseño y el código de este sitio pertenecen a {TITULAR.nombre} o se usan
-    con licencia de sus titulares. Puedes citar el contenido del blog enlazando a la fuente; no puedes
-    reproducirlo íntegro ni usarlo con fines comerciales sin permiso escrito.
-  </p>
-  <p>
-    Esto aplica a este sitio, no a lo que construimos para clientes: el trabajo que contratas
-    —código, diseño, contenido y cuentas— queda a tu nombre, como recogen las propuestas.
-  </p>
+      <h2 id="propiedad">Propiedad intelectual</h2>
+      <p>
+        La marca, los textos, el diseño y el código de este sitio pertenecen a {TITULAR.nombre} o se
+        usan con licencia de sus titulares. Puedes citar el contenido del blog enlazando a la
+        fuente; no puedes reproducirlo íntegro ni usarlo con fines comerciales sin permiso escrito.
+      </p>
+      <p>
+        Esto aplica a este sitio, no a lo que construimos para clientes: el trabajo que contratas
+        —código, diseño, contenido y cuentas— queda a tu nombre, como recogen las propuestas.
+      </p>
 
-  <h2 id="propuestas">Propuestas y contratación</h2>
-  <p>
-    La información de servicios publicada en el sitio es orientativa y no constituye una oferta
-    contractual. Cada proyecto se rige por su propuesta cerrada —alcance, plazos y precio— y, en su
-    caso, por el contrato firmado entre las partes, que prevalecen sobre lo publicado aquí. Las
-    asesorías gratuitas no crean ninguna obligación para ninguna de las partes.
-  </p>
+      <h2 id="propuestas">Propuestas y contratación</h2>
+      <p>
+        La información de servicios publicada en el sitio es orientativa y no constituye una oferta
+        contractual. Cada proyecto se rige por su propuesta cerrada —alcance, plazos y precio— y, en
+        su caso, por el contrato firmado entre las partes, que prevalecen sobre lo publicado aquí.
+        Las asesorías gratuitas no crean ninguna obligación para ninguna de las partes.
+      </p>
 
-  <h2 id="responsabilidad">Responsabilidad</h2>
-  <p>
-    Mantenemos el sitio actualizado y disponible con diligencia razonable, pero no podemos
-    garantizar la ausencia total de errores ni la disponibilidad ininterrumpida. Los enlaces a
-    sitios de terceros se ofrecen por utilidad; no respondemos de su contenido ni de sus prácticas
-    de privacidad.
-  </p>
+      <h2 id="responsabilidad">Responsabilidad</h2>
+      <p>
+        Mantenemos el sitio actualizado y disponible con diligencia razonable, pero no podemos
+        garantizar la ausencia total de errores ni la disponibilidad ininterrumpida. Los enlaces a
+        sitios de terceros se ofrecen por utilidad; no respondemos de su contenido ni de sus
+        prácticas de privacidad.
+      </p>
 
-  <h2 id="privacidad">Datos personales</h2>
-  <p>
-    El tratamiento de los datos que nos facilites se rige por la
-    <a href="/privacidad">política de privacidad</a> y el uso de cookies por la
-    <a href="/cookies">política de cookies</a>.
-  </p>
+      <h2 id="privacidad">Datos personales</h2>
+      <p>
+        El tratamiento de los datos que nos facilites se rige por la
+        <a href="/privacidad">política de privacidad</a> y el uso de cookies por la
+        <a href="/cookies">política de cookies</a>.
+      </p>
 
-  <h2 id="ley">Ley aplicable</h2>
-  <p>
-    Estas condiciones se rigen por la legislación española. Cualquier controversia se someterá a los
-    juzgados y tribunales del domicilio del titular, salvo que actúes como consumidor, en cuyo caso
-    el fuero será el que te corresponda legalmente.
-  </p>
-</LegalLayout>
+      <h2 id="ley">Ley aplicable</h2>
+      <p>
+        Estas condiciones se rigen por la legislación española. Cualquier controversia se someterá a
+        los juzgados y tribunales del domicilio del titular, salvo que actúes como consumidor, en
+        cuyo caso el fuero será el que te corresponda legalmente.
+      </p>
+    </LegalLayout>
+  )
+}

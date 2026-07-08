@@ -8,7 +8,7 @@ export default async function ServicesPage() {
     <ModulePlaceholder
       eyebrow="Contenido"
       title="Servicios"
-      description="Modulo reservado para administrar el catalogo publico de servicios sin tocar Payload durante la transicion."
+      description="Modulo reservado para administrar el catalogo publico de servicios desde la DB propia."
       stats={[
         { label: 'Publicacion', value: 'Borrador/Publicado', helper: 'Usara _status compatible.' },
         { label: 'SEO', value: 'Meta compatible', helper: 'title, description e imagen OG.' },
@@ -25,7 +25,7 @@ export default async function ServicesPage() {
         },
         {
           label: 'API publica',
-          description: 'Salida compatible con Astro mientras exista la capa de transicion.',
+          description: 'Salida compatible con Astro desde la API propia.',
         },
       ]}
       emptyMessage="Aun no hay CRUD de servicios conectado. Esta pantalla deja la estructura lista para el modulo real."

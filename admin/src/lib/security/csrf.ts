@@ -12,7 +12,11 @@ export const CSRF_COOKIE = 'ziftlab-admin-csrf'
 export const CSRF_FIELD = 'csrfToken'
 
 function secret(): string {
-  return process.env.ADMIN_CSRF_SECRET?.trim() || process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() || 'ziftlab-dev-csrf'
+  return (
+    process.env.ADMIN_CSRF_SECRET?.trim() ||
+    process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() ||
+    'ziftlab-dev-csrf'
+  )
 }
 
 function sign(value: string): string {
@@ -35,9 +39,14 @@ function cookieOptions() {
 }
 
 function allowedOrigins(): Set<string> {
-  const configured = process.env.ADMIN_ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).filter(Boolean) ?? []
+  const configured =
+    process.env.ADMIN_ALLOWED_ORIGINS?.split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean) ?? []
   const appUrl = process.env.ADMIN_APP_URL?.trim()
-  return new Set([...configured, ...(appUrl ? [appUrl] : [])].map((origin) => origin.replace(/\/+$/, '')))
+  return new Set(
+    [...configured, ...(appUrl ? [appUrl] : [])].map((origin) => origin.replace(/\/+$/, '')),
+  )
 }
 
 async function verifyOrigin(): Promise<boolean> {

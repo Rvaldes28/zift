@@ -2,8 +2,12 @@ import 'server-only'
 
 import { createHmac } from 'node:crypto'
 
-import { activityLogs, db, leads } from '@ziftlab/db'
+import { db, leads } from '@ziftlab/db'
 import { eq } from 'drizzle-orm'
+
+import { recordAuditEvent } from '@/lib/audit/service'
+import { runLeadIntegrationAutomations } from '@/lib/integrations/delivery'
+import { createNotification } from '@/lib/notifications/service'
 
 import { leadFormLabel, leadStatusLabel } from './constants'
 import { getLeadDetail } from './queries'
@@ -25,16 +29,18 @@ async function recordLeadActivity(input: {
   leadId: string
   metadata?: Record<string, unknown>
 }) {
-  await db.insert(activityLogs).values({
+  await recordAuditEvent({
     action: input.action,
     actorId: input.actorId,
     entityId: input.leadId,
     entityType: 'lead',
     metadata: input.metadata ?? {},
+    severity: input.action.includes('failed') ? 'warning' : 'notice',
+    source: 'api',
   })
 }
 
-function leadDeliveryPayload(lead: NonNullable<Awaited<ReturnType<typeof getLeadDetail>>>) {
+function leadDeliveryBody(lead: NonNullable<Awaited<ReturnType<typeof getLeadDetail>>>) {
   return {
     assignedTo: lead.assignedTo,
     budget: lead.budget,
@@ -107,7 +113,7 @@ export async function sendLeadToCrm(input: {
   const lead = await getLeadDetail(input.leadId)
   if (!lead) return { message: 'Lead no encontrado.', status: 'failed' }
 
-  const body = JSON.stringify(leadDeliveryPayload(lead))
+  const body = JSON.stringify(leadDeliveryBody(lead))
   const signature = hmacSignature(body)
 
   try {
@@ -287,7 +293,23 @@ export async function runLeadAutomations(input: {
   actorId: string | null
   leadId: string
 }): Promise<void> {
+  const lead = await getLeadDetail(input.leadId).catch(() => null)
+  if (lead) {
+    await createNotification({
+      body: `${lead.name} envio ${leadFormLabel(lead.formType)}${lead.serviceTitle ? ` sobre ${lead.serviceTitle}` : ''}.`,
+      dedupeKey: input.leadId,
+      entityId: input.leadId,
+      entityType: 'lead',
+      eventType: 'lead.created',
+      metadata: { email: lead.email, formType: lead.formType, source: lead.source },
+      severity: 'info',
+      source: 'leads',
+      title: 'Nuevo lead recibido',
+    }).catch(() => null)
+  }
+
   await sendLeadNotification(input).catch(() => null)
+  await runLeadIntegrationAutomations(input).catch(() => null)
 
   if (process.env.LEADS_CRM_AUTO_SEND === 'true') {
     await sendLeadToCrm(input).catch(() => null)

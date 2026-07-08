@@ -57,13 +57,7 @@ function RowList({
   )
 }
 
-function Panel({
-  children,
-  title,
-}: {
-  children: ReactNode
-  title: string
-}) {
+function Panel({ children, title }: { children: ReactNode; title: string }) {
   return (
     <section className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-sm">
       <h2 className="text-lg font-semibold">{title}</h2>
@@ -184,7 +178,9 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
                 <div className="h-2 overflow-hidden rounded-full bg-[var(--background)]">
                   <div
                     className="h-full rounded-full bg-emerald-500"
-                    style={{ width: `${Math.max(row.leads > 0 ? 2 : 0, (row.leads / maxDaily) * 100)}%` }}
+                    style={{
+                      width: `${Math.max(row.leads > 0 ? 2 : 0, (row.leads / maxDaily) * 100)}%`,
+                    }}
                   />
                 </div>
               </div>

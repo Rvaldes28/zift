@@ -1,6 +1,7 @@
 /**
  * Builders de JSON-LD (FASE 8). Cada función devuelve el objeto schema.org
- * listo para serializar con el componente JsonLd.astro. Los datos salen del
+ * listo para serializar con el componente JsonLd.astro. Los datos salen de
+ * la API publica propia.
  */
 import type { Faq, SiteSetting } from '@ziftlab/types'
 
@@ -98,7 +99,7 @@ export function serviceSchema(
   }
 }
 
-/** Schema FAQPage a partir de las FAQs del CMS (respuestas Lexical → texto plano). */
+/** Schema FAQPage a partir de las FAQs publicadas (rich text → texto plano). */
 export function faqPageSchema(faqs: Faq[]): JsonLdObject {
   return {
     '@context': CONTEXT,

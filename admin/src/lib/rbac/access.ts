@@ -1,13 +1,15 @@
 import 'server-only'
 
-import { activityLogs, db, permissions, rolePermissions, roles, userRoles } from '@ziftlab/db'
+import { db, permissions, rolePermissions, roles, userRoles } from '@ziftlab/db'
 import { eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
 import { getCurrentSession } from '@/lib/auth/session'
+import { recordAuditEvent } from '@/lib/audit/service'
 import { requiresTwoFactorSetup } from '@/lib/security/two-factor-policy'
 
 import type { PermissionSlug } from './permissions'
+import type { AuditSeverity } from '@/lib/audit/constants'
 
 export interface UserAccess {
   roles: string[]
@@ -67,6 +69,8 @@ export async function requirePermission(permission: PermissionSlug) {
       action: 'security.permission_denied',
       entityType: 'permission',
       entityId: permission,
+      severity: 'warning',
+      source: 'security',
     }).catch(() => null)
     redirect('/login?error=forbidden')
   }
@@ -91,6 +95,8 @@ export async function requireAnyPermission(requiredPermissions: PermissionSlug[]
       action: 'security.permission_denied',
       entityType: 'permission',
       metadata: { requiredPermissions },
+      severity: 'warning',
+      source: 'security',
     }).catch(() => null)
     redirect('/login?error=forbidden')
   }
@@ -108,12 +114,16 @@ export async function recordActivity(input: {
   entityType?: string
   entityId?: string
   metadata?: Record<string, unknown>
+  severity?: AuditSeverity
+  source?: string
 }): Promise<void> {
-  await db.insert(activityLogs).values({
+  await recordAuditEvent({
     actorId: input.actorId,
     action: input.action,
     entityType: input.entityType,
     entityId: input.entityId,
     metadata: input.metadata ?? {},
+    severity: input.severity,
+    source: input.source,
   })
 }

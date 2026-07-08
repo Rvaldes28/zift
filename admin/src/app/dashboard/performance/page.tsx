@@ -33,13 +33,7 @@ function clsLabel(value: number): string {
   return value > 0 ? value.toFixed(3) : 'Sin datos'
 }
 
-function Panel({
-  children,
-  title,
-}: {
-  children: ReactNode
-  title: string
-}) {
+function Panel({ children, title }: { children: ReactNode; title: string }) {
   return (
     <section className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-sm">
       <h2 className="text-lg font-semibold">{title}</h2>
@@ -69,7 +63,9 @@ function MetricList({ empty, rows }: { empty: string; rows: PerformanceMetricRow
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{row.label}</p>
             {row.url && <p className="mt-1 truncate text-xs text-[var(--muted)]">{row.url}</p>}
-            {row.helper && <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{row.helper}</p>}
+            {row.helper && (
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{row.helper}</p>
+            )}
           </div>
           <div className="flex items-center gap-2 md:justify-end">
             {row.count !== undefined && (
@@ -91,7 +87,9 @@ function MetricList({ empty, rows }: { empty: string; rows: PerformanceMetricRow
 
 function ChecksTable({ rows }: { rows: PerformanceCheckRow[] }) {
   if (rows.length === 0) {
-    return <p className="text-sm text-[var(--muted)]">Aun no hay checks sinteticos en este rango.</p>
+    return (
+      <p className="text-sm text-[var(--muted)]">Aun no hay checks sinteticos en este rango.</p>
+    )
   }
 
   return (
@@ -146,7 +144,10 @@ function AlertList({ rows }: { rows: PerformanceAlertRow[] }) {
   return (
     <div className="grid gap-3">
       {rows.map((row) => (
-        <article key={`${row.title}-${row.url}`} className="rounded-md border border-[var(--line)] p-4">
+        <article
+          key={`${row.title}-${row.url}`}
+          className="rounded-md border border-[var(--line)] p-4"
+        >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold">{row.title}</p>
@@ -220,7 +221,11 @@ export default async function PerformancePage({ searchParams }: PerformancePageP
           value={`${dashboard.healthScore}/100`}
           helper={dashboard.healthLabel}
         />
-        <StatCard label="LCP p75" value={msLabel(dashboard.lcpP75Ms)} helper="Objetivo: < 2500 ms" />
+        <StatCard
+          label="LCP p75"
+          value={msLabel(dashboard.lcpP75Ms)}
+          helper="Objetivo: < 2500 ms"
+        />
         <StatCard label="CLS p75" value={clsLabel(dashboard.clsP75)} helper="Objetivo: < 0.100" />
         <StatCard label="INP p75" value={msLabel(dashboard.inpP75Ms)} helper="Objetivo: < 200 ms" />
         <StatCard

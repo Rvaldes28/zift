@@ -5,6 +5,8 @@
  * bloqueada hasta consentimiento explícito. El botón reabre el banner
  * (CookieConsent.astro escucha los clics en [data-cookie-settings]).
  */
+import AdminLegalDocument from '@/components/legal/AdminLegalDocument.astro'
+import { getAdminPage } from '@/lib/content'
 import LegalLayout from '@/layouts/LegalLayout.astro'
 
 const sections = [
@@ -27,106 +29,119 @@ const browserHelp = [
     url: 'https://support.microsoft.com/es-es/microsoft-edge/eliminar-las-cookies-en-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09',
   },
 ]
+
+const adminLegal = await getAdminPage('cookies')
 ---
 
-<LegalLayout
-  title="Política de cookies"
-  description="Qué cookies usa el sitio de ZiftLab, para qué sirven y cómo aceptarlas, rechazarlas o cambiar tu decisión."
-  docNumber={3}
-  updated="02.07.2026"
-  intro="Lo que no es necesario queda bloqueado hasta que tú digas lo contrario. Esta página explica qué hay detrás de cada opción."
-  sections={sections}
->
-  <h2 id="que-son">Qué son las cookies</h2>
-  <p>
-    Las cookies son pequeños archivos que un sitio guarda en tu navegador para recordar información
-    entre visitas. Aquí incluimos también tecnologías equivalentes, como el almacenamiento local (<em
-      >localStorage</em
-    >), que usamos para recordar tu decisión sobre cookies.
-  </p>
-
-  <h2 id="cuales">Cuáles usa este sitio</h2>
-  <p>
-    Muy pocas. Las necesarias funcionan siempre; la analítica está preparada pero
-    <strong>solo se carga si la aceptas</strong>. Hoy no usamos cookies de publicidad: si algún día
-    activamos campañas, aparecerán en esta tabla y seguirán bloqueadas hasta que las aceptes.
-  </p>
-  <div class="overflow-x-auto">
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Titular</th>
-          <th>Tipo</th>
-          <th>Para qué sirve</th>
-          <th>Duración</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>ziftlab-consent</code></td>
-          <td>Propia</td>
-          <td>Necesaria</td>
-          <td>Recuerda qué cookies aceptaste o rechazaste.</td>
-          <td>Hasta que la borres</td>
-        </tr>
-        <tr>
-          <td><code>_ga</code>, <code>_ga_*</code></td>
-          <td>Google Analytics 4</td>
-          <td>Analítica</td>
-          <td>Medición agregada de visitas y de qué páginas funcionan.</td>
-          <td>Hasta 24 meses</td>
-        </tr>
-        <tr>
-          <td><code>_clck</code>, <code>_clsk</code></td>
-          <td>Microsoft Clarity</td>
-          <td>Analítica</td>
-          <td>Mapas de calor y grabaciones anónimas de navegación.</td>
-          <td>Hasta 12 meses</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h2 id="decision">Cambiar tu decisión</h2>
-  <p>
-    Puedes aceptar todo, rechazar todo o elegir por categoría cuando quieras. Tu decisión se aplica
-    al momento, sin recargar la página, y podemos volver a preguntarte si algún día cambian las
-    cookies que usamos.
-  </p>
-  {/* Botón nativo: Button.astro no reenvía data-* y el banner localiza este hook */}
-  <p>
-    <button
-      type="button"
-      data-cookie-settings
-      class="inline-flex h-11 cursor-pointer items-center justify-center rounded-md bg-zift px-6 text-sm font-medium whitespace-nowrap text-white no-underline transition-colors hover:bg-zift-deep"
+{
+  adminLegal ? (
+    <AdminLegalDocument page={adminLegal} docNumber={3} />
+  ) : (
+    <LegalLayout
+      title="Política de cookies"
+      description="Qué cookies usa el sitio de ZiftLab, para qué sirven y cómo aceptarlas, rechazarlas o cambiar tu decisión."
+      docNumber={3}
+      updated="02.07.2026"
+      intro="Lo que no es necesario queda bloqueado hasta que tú digas lo contrario. Esta página explica qué hay detrás de cada opción."
+      sections={sections}
     >
-      Configurar cookies
-    </button>
-  </p>
+      <h2 id="que-son">Qué son las cookies</h2>
+      <p>
+        Las cookies son pequeños archivos que un sitio guarda en tu navegador para recordar
+        información entre visitas. Aquí incluimos también tecnologías equivalentes, como el
+        almacenamiento local (<em>localStorage</em>), que usamos para recordar tu decisión sobre
+        cookies.
+      </p>
 
-  <h2 id="navegador">Borrarlas del navegador</h2>
-  <p>
-    Además del panel anterior, puedes borrar o bloquear cookies desde la configuración de tu
-    navegador:
-  </p>
-  <ul>
-    {
-      browserHelp.map((browser) => (
-        <li>
-          <a href={browser.url} target="_blank" rel="noopener noreferrer">
-            Cómo hacerlo en {browser.name}
-          </a>
-        </li>
-      ))
-    }
-  </ul>
+      <h2 id="cuales">Cuáles usa este sitio</h2>
+      <p>
+        Muy pocas. Las necesarias funcionan siempre; la analítica está preparada pero
+        <strong>solo se carga si la aceptas</strong>. Hoy no usamos cookies de publicidad: si algún
+        día activamos campañas, aparecerán en esta tabla y seguirán bloqueadas hasta que las
+        aceptes.
+      </p>
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Titular</th>
+              <th>Tipo</th>
+              <th>Para qué sirve</th>
+              <th>Duración</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <code>ziftlab-consent</code>
+              </td>
+              <td>Propia</td>
+              <td>Necesaria</td>
+              <td>Recuerda qué cookies aceptaste o rechazaste.</td>
+              <td>Hasta que la borres</td>
+            </tr>
+            <tr>
+              <td>
+                <code>_ga</code>, <code>_ga_*</code>
+              </td>
+              <td>Google Analytics 4</td>
+              <td>Analítica</td>
+              <td>Medición agregada de visitas y de qué páginas funcionan.</td>
+              <td>Hasta 24 meses</td>
+            </tr>
+            <tr>
+              <td>
+                <code>_clck</code>, <code>_clsk</code>
+              </td>
+              <td>Microsoft Clarity</td>
+              <td>Analítica</td>
+              <td>Mapas de calor y grabaciones anónimas de navegación.</td>
+              <td>Hasta 12 meses</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-  <h2 id="cambios">Cambios y contacto</h2>
-  <p>
-    Si incorporamos o retiramos cookies, actualizaremos esta página y su fecha de revisión. Para
-    cualquier duda sobre esta política escríbenos a
-    <a href="mailto:hola@ziftlab.com">hola@ziftlab.com</a>. El detalle sobre el tratamiento de tus
-    datos está en la <a href="/privacidad">política de privacidad</a>.
-  </p>
-</LegalLayout>
+      <h2 id="decision">Cambiar tu decisión</h2>
+      <p>
+        Puedes aceptar todo, rechazar todo o elegir por categoría cuando quieras. Tu decisión se
+        aplica al momento, sin recargar la página, y podemos volver a preguntarte si algún día
+        cambian las cookies que usamos.
+      </p>
+      {/* Botón nativo: Button.astro no reenvía data-* y el banner localiza este hook */}
+      <p>
+        <button
+          type="button"
+          data-cookie-settings
+          class="inline-flex h-11 cursor-pointer items-center justify-center rounded-md bg-zift px-6 text-sm font-medium whitespace-nowrap text-white no-underline transition-colors hover:bg-zift-deep"
+        >
+          Configurar cookies
+        </button>
+      </p>
+
+      <h2 id="navegador">Borrarlas del navegador</h2>
+      <p>
+        Además del panel anterior, puedes borrar o bloquear cookies desde la configuración de tu
+        navegador:
+      </p>
+      <ul>
+        {browserHelp.map((browser) => (
+          <li>
+            <a href={browser.url} target="_blank" rel="noopener noreferrer">
+              Cómo hacerlo en {browser.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <h2 id="cambios">Cambios y contacto</h2>
+      <p>
+        Si incorporamos o retiramos cookies, actualizaremos esta página y su fecha de revisión. Para
+        cualquier duda sobre esta política escríbenos a
+        <a href="mailto:hola@ziftlab.com">hola@ziftlab.com</a>. El detalle sobre el tratamiento de
+        tus datos está en la <a href="/privacidad">política de privacidad</a>.
+      </p>
+    </LegalLayout>
+  )
+}

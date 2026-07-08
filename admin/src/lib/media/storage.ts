@@ -24,7 +24,7 @@ function encodeStorageKey(key: string): string {
 export function mediaConfig() {
   return {
     accessKeyId: process.env.S3_ACCESS_KEY_ID?.trim() || 'minioadmin',
-    bucket: process.env.S3_BUCKET?.trim() || 'payload-media',
+    bucket: process.env.S3_BUCKET?.trim() || 'ziftlab-media',
     endpoint: process.env.S3_ENDPOINT?.trim() || 'http://localhost:9000',
     forcePathStyle: boolEnv('S3_FORCE_PATH_STYLE', true),
     prefix: trimSlashes(process.env.S3_PREFIX?.trim() || 'admin-media'),

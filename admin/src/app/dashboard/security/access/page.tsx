@@ -22,7 +22,8 @@ export default async function SecurityAccessPage({ searchParams }: SecurityAcces
     listRecentLoginAttempts(120),
     listActiveIpBlocks(120),
   ])
-  const canManage = access.permissions.includes('users.manage') || access.permissions.includes('settings.manage')
+  const canManage =
+    access.permissions.includes('users.manage') || access.permissions.includes('settings.manage')
 
   return (
     <main className="px-6 py-8 lg:px-10">
@@ -60,13 +61,19 @@ export default async function SecurityAccessPage({ searchParams }: SecurityAcces
               <tbody className="divide-y divide-[var(--line)]">
                 {attempts.map((attempt) => (
                   <tr key={attempt.id}>
-                    <td className="py-3 pr-4 text-[var(--muted)]">{dateLabel(attempt.attemptedAt)}</td>
-                    <td className="px-4 py-3">{attempt.email ?? attempt.userEmail ?? 'Sin email'}</td>
+                    <td className="py-3 pr-4 text-[var(--muted)]">
+                      {dateLabel(attempt.attemptedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {attempt.email ?? attempt.userEmail ?? 'Sin email'}
+                    </td>
                     <td className="px-4 py-3 text-[var(--muted)]">{attempt.ipAddress ?? 'N/A'}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          attempt.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                          attempt.success
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-red-50 text-red-700'
                         }`}
                       >
                         {attempt.success ? 'OK' : 'Fallo'}

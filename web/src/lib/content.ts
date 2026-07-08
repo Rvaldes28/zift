@@ -30,6 +30,7 @@ export interface AdminPublicPage {
     slug: string
     title: string
     type: string
+    updatedAt?: string
   }
   sections: AdminPageSection[]
   seo: {

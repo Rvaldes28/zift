@@ -19,7 +19,7 @@ const { header, siteName } = Astro.props
 
 const navItems = header.navItems ?? []
 const logo = resolveMedia(header.logo)
-// El CTA es opcional en el CMS: solo se pinta si label y href están completos
+// El CTA es opcional: solo se pinta si label y href están completos
 const cta =
   header.cta?.label && header.cta?.href
     ? { label: header.cta.label, href: header.cta.href, newTab: header.cta.newTab ?? false }

@@ -1,8 +1,8 @@
 /**
  * Atribución de campañas (FASE 12): captura first-touch por sesión de los
  * parámetros utm_* y los guarda en sessionStorage con claves limpias
- * (source, medium…) — el shape espeja el grupo `utm` de
- * cms/src/leads/schema.ts. Sin gate de consentimiento, con criterio: es
+ * (source, medium…) — el shape espeja el contrato publico de leads.
+ * Sin gate de consentimiento, con criterio: es
  * first-party, vive solo la sesión y su único fin es atribuir un formulario
  * que el usuario envía voluntariamente (sin tracking cross-sesión).
  */

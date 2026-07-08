@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 
 import { authConfig } from '@/lib/auth/config'
 import type { RequestMeta } from '@/lib/auth/request'
+import { createNotification } from '@/lib/notifications/service'
 import { recordActivity } from '@/lib/rbac/access'
 
 export async function activeIpBlock(ipAddress: string | null | undefined) {
@@ -71,7 +72,23 @@ export async function createIpBlock(input: {
     action: 'security.ip_blocked',
     entityType: 'security_ip_block',
     entityId: block.id,
-    metadata: { blockedUntil: blockedUntil.toISOString(), ipAddress: input.ipAddress, reason: input.reason },
+    metadata: {
+      blockedUntil: blockedUntil.toISOString(),
+      ipAddress: input.ipAddress,
+      reason: input.reason,
+    },
+  }).catch(() => null)
+
+  await createNotification({
+    body: `IP bloqueada por ${input.reason}. Vigente hasta ${blockedUntil.toISOString()}.`,
+    dedupeKey: input.ipAddress,
+    entityId: block.id,
+    entityType: 'security_ip_block',
+    eventType: 'security.suspicious_login',
+    metadata: { ipAddress: input.ipAddress, reason: input.reason },
+    severity: 'critical',
+    source: 'security',
+    title: 'Intento sospechoso de login',
   }).catch(() => null)
 
   return block

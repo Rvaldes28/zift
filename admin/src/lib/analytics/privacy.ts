@@ -32,10 +32,7 @@ export function locationFromHeaders(headers: Headers) {
     headers.get('x-country') ||
     null
   const city =
-    headers.get('x-vercel-ip-city') ||
-    headers.get('cf-ipcity') ||
-    headers.get('x-city') ||
-    null
+    headers.get('x-vercel-ip-city') || headers.get('cf-ipcity') || headers.get('x-city') || null
 
   return {
     city: city ? decodeURIComponent(city).slice(0, 160) : null,

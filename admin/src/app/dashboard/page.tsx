@@ -13,12 +13,16 @@ export default async function DashboardPage() {
       <PageHeader
         eyebrow="Dashboard"
         title="Panel administrativo propio"
-        description="Shell navegable para operar contenido, leads, seguridad y salud tecnica sin depender de Payload."
+        description="Shell navegable para operar contenido, leads, seguridad y salud tecnica desde la plataforma propia."
       />
 
       <section className="mt-10 grid gap-4 md:grid-cols-3">
         <StatCard label="Framework" value="Next.js App Router" helper="Admin independiente." />
-        <StatCard label="Payload" value="No importado" helper="La web publica sigue intacta." />
+        <StatCard
+          label="CMS externo"
+          value="No requerido"
+          helper="La web publica consume la API propia."
+        />
         <StatCard
           label="Modulos visibles"
           value={`${visibleModules.length}/${allModules.length}`}

@@ -10,14 +10,13 @@ export function parseUserAgent(userAgent: string | null | undefined): ParsedUser
   const ua = userAgent ?? ''
   const lower = ua.toLowerCase()
 
-  const deviceType =
-    /bot|crawl|spider|slurp|bingpreview/.test(lower)
-      ? 'bot'
-      : /ipad|tablet/.test(lower)
-        ? 'tablet'
-        : /mobi|iphone|android/.test(lower)
-          ? 'mobile'
-          : 'desktop'
+  const deviceType = /bot|crawl|spider|slurp|bingpreview/.test(lower)
+    ? 'bot'
+    : /ipad|tablet/.test(lower)
+      ? 'tablet'
+      : /mobi|iphone|android/.test(lower)
+        ? 'mobile'
+        : 'desktop'
 
   const browser = lower.includes('edg/')
     ? 'Edge'

@@ -82,7 +82,9 @@ function parseCanonical(value: string): string | null | 'invalid' {
   }
 }
 
-function parseJsonLd(value: string): Record<string, unknown> | Record<string, unknown>[] | null | 'invalid' {
+function parseJsonLd(
+  value: string,
+): Record<string, unknown> | Record<string, unknown>[] | null | 'invalid' {
   if (!value) return null
 
   try {
@@ -115,17 +117,17 @@ async function assertPostPathAvailable(postId: string, slug: string): Promise<bo
   if (owner) return false
 
   const activeRedirect = await db.query.redirects.findFirst({
-    where: and(eq(redirects.fromPath, path), eq(redirects.active, true), isNull(redirects.deletedAt)),
+    where: and(
+      eq(redirects.fromPath, path),
+      eq(redirects.active, true),
+      isNull(redirects.deletedAt),
+    ),
   })
 
   return !activeRedirect
 }
 
-async function upsertRedirect(input: {
-  actorId: string
-  fromPath: string
-  toPath: string
-}) {
+async function upsertRedirect(input: { actorId: string; fromPath: string; toPath: string }) {
   if (input.fromPath === input.toPath) return
 
   const existing = await db.query.redirects.findFirst({
@@ -186,7 +188,9 @@ async function replacePostRelations(input: {
     )
   }
 
-  const relatedPostIds = input.relatedPostIds.filter((relatedPostId) => relatedPostId !== input.postId)
+  const relatedPostIds = input.relatedPostIds.filter(
+    (relatedPostId) => relatedPostId !== input.postId,
+  )
   if (relatedPostIds.length > 0) {
     await db.insert(postRelatedPosts).values(
       relatedPostIds.map((relatedPostId, position) => ({
@@ -266,8 +270,7 @@ export async function updatePostDetails(formData: FormData): Promise<void> {
 
   const oldPath = pathForEntity({ entityType: 'post', slug: existing.slug })
   const nextPath = pathForEntity({ entityType: 'post', slug })
-  const pathAvailable =
-    oldPath === nextPath || (await assertPostPathAvailable(postId, slug))
+  const pathAvailable = oldPath === nextPath || (await assertPostPathAvailable(postId, slug))
   if (!pathAvailable) postRedirect(postId, 'error=duplicate')
 
   const authorId = nullableString(formString(formData, 'authorId'))
@@ -295,7 +298,10 @@ export async function updatePostDetails(formData: FormData): Promise<void> {
     tagIds: formIds(formData, 'tagIds'),
   })
 
-  if ((existing.status === 'published' || existing.status === 'scheduled') && oldPath !== nextPath) {
+  if (
+    (existing.status === 'published' || existing.status === 'scheduled') &&
+    oldPath !== nextPath
+  ) {
     await upsertRedirect({ actorId: current.user.id, fromPath: oldPath, toPath: nextPath })
   }
 
@@ -589,7 +595,8 @@ export async function deleteCategory(formData: FormData): Promise<void> {
   await verifyCsrf(formData)
   const current = await requirePermission('content.manage')
   const categoryId = formString(formData, 'categoryId')
-  if (!uuidSchema.safeParse(categoryId).success) redirect('/dashboard/blog/categories?error=invalid')
+  if (!uuidSchema.safeParse(categoryId).success)
+    redirect('/dashboard/blog/categories?error=invalid')
 
   await db.delete(postCategories).where(eq(postCategories.categoryId, categoryId))
   await db.update(categories).set({ deletedAt: new Date() }).where(eq(categories.id, categoryId))

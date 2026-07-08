@@ -152,7 +152,9 @@ export async function listBlogPosts(input: BlogFilters = {}): Promise<BlogPostLi
   if (input.authorId) filters.push(eq(posts.authorId, input.authorId))
   if (input.q?.trim()) {
     const query = `%${input.q.trim()}%`
-    filters.push(or(ilike(posts.title, query), ilike(posts.slug, query), ilike(posts.excerpt, query))!)
+    filters.push(
+      or(ilike(posts.title, query), ilike(posts.slug, query), ilike(posts.excerpt, query))!,
+    )
   }
 
   const rows = await db
@@ -187,7 +189,9 @@ export async function listBlogPosts(input: BlogFilters = {}): Promise<BlogPostLi
       tags: tagMap.get(row.id) ?? [],
     }))
     .filter((post) =>
-      input.categoryId ? post.categories.some((category) => category.id === input.categoryId) : true,
+      input.categoryId
+        ? post.categories.some((category) => category.id === input.categoryId)
+        : true,
     )
     .filter((post) => (input.tagId ? post.tags.some((tag) => tag.id === input.tagId) : true))
 }
@@ -206,11 +210,7 @@ export async function getBlogStats(input: BlogFilters = {}) {
 
 export async function listBlogCategories() {
   const [rows, relations] = await Promise.all([
-    db
-      .select()
-      .from(categories)
-      .where(isNull(categories.deletedAt))
-      .orderBy(asc(categories.title)),
+    db.select().from(categories).where(isNull(categories.deletedAt)).orderBy(asc(categories.title)),
     db
       .select({ categoryId: postCategories.categoryId })
       .from(postCategories)
@@ -276,20 +276,29 @@ export async function getBlogPostEditor(id: string) {
   })
   if (!post) return null
 
-  const [seo, media, authors, categoryRows, tagRows, postOptions, selectedCategories, selectedTags, related] =
-    await Promise.all([
-      db.query.seoMetadata.findFirst({
-        where: and(eq(seoMetadata.entityType, 'post'), eq(seoMetadata.entityId, post.id)),
-      }),
-      listMediaAssets({ type: 'image' }),
-      listBlogAuthors(),
-      listBlogCategories(),
-      listBlogTags(),
-      listBlogPostOptions(post.id),
-      categoriesByPost([post.id]),
-      tagsByPost([post.id]),
-      relatedIdsByPost([post.id]),
-    ])
+  const [
+    seo,
+    media,
+    authors,
+    categoryRows,
+    tagRows,
+    postOptions,
+    selectedCategories,
+    selectedTags,
+    related,
+  ] = await Promise.all([
+    db.query.seoMetadata.findFirst({
+      where: and(eq(seoMetadata.entityType, 'post'), eq(seoMetadata.entityId, post.id)),
+    }),
+    listMediaAssets({ type: 'image' }),
+    listBlogAuthors(),
+    listBlogCategories(),
+    listBlogTags(),
+    listBlogPostOptions(post.id),
+    categoriesByPost([post.id]),
+    tagsByPost([post.id]),
+    relatedIdsByPost([post.id]),
+  ])
 
   return {
     authors,

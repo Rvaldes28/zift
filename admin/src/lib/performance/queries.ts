@@ -164,7 +164,12 @@ export async function getPerformanceDashboard(
     db
       .select()
       .from(performanceChecks)
-      .where(and(gte(performanceChecks.checkedAt, range.dateFrom), lte(performanceChecks.checkedAt, range.dateTo)))
+      .where(
+        and(
+          gte(performanceChecks.checkedAt, range.dateFrom),
+          lte(performanceChecks.checkedAt, range.dateTo),
+        ),
+      )
       .orderBy(desc(performanceChecks.checkedAt))
       .limit(80),
     db
@@ -254,7 +259,10 @@ export async function getPerformanceDashboard(
         value: formatMs(value),
       } satisfies PerformanceMetricRow
     })
-    .sort((a, b) => Number(b.status === 'warning') - Number(a.status === 'warning') || b.count! - a.count!)
+    .sort(
+      (a, b) =>
+        Number(b.status === 'warning') - Number(a.status === 'warning') || b.count! - a.count!,
+    )
     .slice(0, 8)
 
   const checkRows = checks.slice(0, 20).map((check) => ({
@@ -278,7 +286,10 @@ export async function getPerformanceDashboard(
   const recentErrors = errorRows.length + syntheticFailures
   const healthScore = Math.max(
     0,
-    Math.min(100, 100 - criticalAlerts * 20 - warningAlerts * 8 - syntheticFailures * 10 - slowRoutes * 4),
+    Math.min(
+      100,
+      100 - criticalAlerts * 20 - warningAlerts * 8 - syntheticFailures * 10 - slowRoutes * 4,
+    ),
   )
 
   return {

@@ -17,7 +17,11 @@ const attempts = new Map<string, { count: number; resetAt: number }>()
 const jsonRecordSchema = z.record(z.string(), z.unknown()).default({})
 
 export const performanceRumSchema = z.object({
-  durationMs: z.number().min(0).max(24 * 60 * 60 * 1000).optional(),
+  durationMs: z
+    .number()
+    .min(0)
+    .max(24 * 60 * 60 * 1000)
+    .optional(),
   eventName: z.enum(PERFORMANCE_RUM_EVENTS),
   initiatorType: z.string().trim().max(80).optional(),
   message: z.string().trim().max(1200).optional(),
@@ -31,10 +35,18 @@ export const performanceRumSchema = z.object({
   source: z.string().trim().max(120).optional(),
   status: z.number().int().min(0).max(599).optional(),
   title: z.string().trim().max(300).optional(),
-  transferSize: z.number().min(0).max(250 * 1024 * 1024).optional(),
+  transferSize: z
+    .number()
+    .min(0)
+    .max(250 * 1024 * 1024)
+    .optional(),
   url: z.string().trim().max(1200).optional(),
   utm: jsonRecordSchema.optional(),
-  value: z.number().min(0).max(250 * 1024 * 1024).optional(),
+  value: z
+    .number()
+    .min(0)
+    .max(250 * 1024 * 1024)
+    .optional(),
   visitorId: z.string().trim().max(200).optional(),
 })
 
@@ -57,9 +69,10 @@ function normalizedPath(value: string | undefined): string | null {
   if (!value) return null
 
   try {
-    const url = value.startsWith('http://') || value.startsWith('https://')
-      ? new URL(value)
-      : new URL(value, 'https://zift.local')
+    const url =
+      value.startsWith('http://') || value.startsWith('https://')
+        ? new URL(value)
+        : new URL(value, 'https://zift.local')
     return `${url.pathname}${url.search}`.slice(0, 500)
   } catch {
     return value.startsWith('/') ? value.slice(0, 500) : null
@@ -75,7 +88,8 @@ function durationFromInput(input: PerformanceRumInput): number | null {
   if (input.eventName === 'web_vital' && input.name !== 'CLS' && typeof input.value === 'number') {
     return Math.round(input.value)
   }
-  if (input.eventName === 'api_timing' && typeof input.value === 'number') return Math.round(input.value)
+  if (input.eventName === 'api_timing' && typeof input.value === 'number')
+    return Math.round(input.value)
   return null
 }
 
@@ -134,7 +148,10 @@ async function evaluateRumAlert(input: PerformanceRumInput, path: string | null)
 
   if (input.eventName === 'resource_timing') {
     const transferSize = input.transferSize ?? input.value
-    if (typeof transferSize === 'number' && transferSize > PERFORMANCE_THRESHOLDS.heavyResourceBytes) {
+    if (
+      typeof transferSize === 'number' &&
+      transferSize > PERFORMANCE_THRESHOLDS.heavyResourceBytes
+    ) {
       await upsertPerformanceAlert({
         message: `Recurso pesado de ${Math.round(transferSize / 1024)} KB detectado.`,
         metadata: {
@@ -157,7 +174,8 @@ async function evaluateRumAlert(input: PerformanceRumInput, path: string | null)
   if (input.eventName === 'api_timing') {
     const durationMs = input.durationMs ?? input.value
     const isServerError = typeof input.status === 'number' && input.status >= 500
-    const isSlow = typeof durationMs === 'number' && durationMs > PERFORMANCE_THRESHOLDS.apiResponseMs
+    const isSlow =
+      typeof durationMs === 'number' && durationMs > PERFORMANCE_THRESHOLDS.apiResponseMs
     if (isServerError || isSlow) {
       await upsertPerformanceAlert({
         message: isServerError

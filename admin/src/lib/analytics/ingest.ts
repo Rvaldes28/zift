@@ -14,8 +14,18 @@ const attempts = new Map<string, { count: number; resetAt: number }>()
 const jsonRecordSchema = z.record(z.string(), z.unknown()).default({})
 
 export const analyticsEventSchema = z.object({
-  durationMs: z.number().int().min(0).max(24 * 60 * 60 * 1000).optional(),
-  duration_ms: z.number().int().min(0).max(24 * 60 * 60 * 1000).optional(),
+  durationMs: z
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 60 * 60 * 1000)
+    .optional(),
+  duration_ms: z
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 60 * 60 * 1000)
+    .optional(),
   eventName: analyticsEventNameSchema,
   metadata: jsonRecordSchema.optional(),
   occurredAt: z.string().datetime().optional(),
@@ -47,9 +57,10 @@ function normalizedPath(value: string | undefined): string | null {
   if (!value) return null
 
   try {
-    const url = value.startsWith('http://') || value.startsWith('https://')
-      ? new URL(value)
-      : new URL(value, 'https://zift.local')
+    const url =
+      value.startsWith('http://') || value.startsWith('https://')
+        ? new URL(value)
+        : new URL(value, 'https://zift.local')
     return `${url.pathname}${url.search}`.slice(0, 500)
   } catch {
     return value.startsWith('/') ? value.slice(0, 500) : null

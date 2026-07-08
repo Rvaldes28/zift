@@ -6,15 +6,66 @@
  * inyecta nada (dev limpio). También captura UTMs, pageviews/eventos propios
  * consentidos y delega clicks de CTA ([data-track-cta]) y WhatsApp.
  */
+import type { SiteSetting } from '@ziftlab/types'
+
+interface Props {
+  externalScripts?: SiteSetting['externalScripts']
+}
+
+const { externalScripts = [] } = Astro.props
+
+function configuredProvider(provider: string, envValue: string | undefined): string | undefined {
+  const configured = externalScripts.find(
+    (script) => script.provider === provider && script.enabled && script.id,
+  )
+  return configured?.id || envValue || undefined
+}
+
+const configuredGa4Id = configuredProvider('ga4', import.meta.env.PUBLIC_GA4_ID)
+const configuredGtmContainerId = configuredProvider('gtm', import.meta.env.PUBLIC_GTM_CONTAINER_ID)
+const configuredClarityId = configuredProvider('clarity', import.meta.env.PUBLIC_CLARITY_ID)
+const configuredMetaPixelId = configuredProvider('meta_pixel', import.meta.env.PUBLIC_META_PIXEL_ID)
+const configuredHotjarId = configuredProvider('hotjar', import.meta.env.PUBLIC_HOTJAR_ID)
+const configuredGoogleAdsId = configuredProvider('google_ads', import.meta.env.PUBLIC_GOOGLE_ADS_ID)
+const scriptConfigJson = JSON.stringify({
+  clarityId: configuredClarityId,
+  ga4Id: configuredGa4Id,
+  googleAdsId: configuredGoogleAdsId,
+  gtmContainerId: configuredGtmContainerId,
+  hotjarId: configuredHotjarId,
+  metaPixelId: configuredMetaPixelId,
+}).replace(/</g, '\\u003c')
 ---
+
+<script
+  is:inline
+  type="application/json"
+  id="ziftlab-external-scripts"
+  set:html={scriptConfigJson}
+/>
 
 <script>
   import { reportPerformance, track } from '@/lib/analytics'
   import { CONSENT_EVENT, readConsent, type StoredConsent } from '@/lib/consent'
   import { captureUtm } from '@/lib/utm'
 
-  const GA4_ID = (import.meta.env.PUBLIC_GA4_ID as string | undefined) || undefined
-  const CLARITY_ID = (import.meta.env.PUBLIC_CLARITY_ID as string | undefined) || undefined
+  const scriptConfig = JSON.parse(
+    document.getElementById('ziftlab-external-scripts')?.textContent || '{}',
+  ) as {
+    clarityId?: string
+    ga4Id?: string
+    googleAdsId?: string
+    gtmContainerId?: string
+    hotjarId?: string
+    metaPixelId?: string
+  }
+
+  const GA4_ID = scriptConfig.ga4Id || undefined
+  const GTM_CONTAINER_ID = scriptConfig.gtmContainerId || undefined
+  const CLARITY_ID = scriptConfig.clarityId || undefined
+  const META_PIXEL_ID = scriptConfig.metaPixelId || undefined
+  const HOTJAR_ID = scriptConfig.hotjarId || undefined
+  const GOOGLE_ADS_ID = scriptConfig.googleAdsId || undefined
 
   captureUtm()
   const startedAt = performance.now()
@@ -25,6 +76,7 @@
   // --- Carga consent-gated: nada de Google/Microsoft sin analytics granted ---
 
   let loaded = false
+  let marketingLoaded = false
 
   const inject = (src: string): void => {
     const script = document.createElement('script')
@@ -46,6 +98,14 @@
       gtag('config', GA4_ID)
       inject(`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`)
     }
+    if (GTM_CONTAINER_ID) {
+      window.dataLayer ??= []
+      window.dataLayer.push({
+        event: 'gtm.js',
+        'gtm.start': Date.now(),
+      })
+      inject(`https://www.googletagmanager.com/gtm.js?id=${GTM_CONTAINER_ID}`)
+    }
     if (CLARITY_ID) {
       // Equivalente tipado del snippet oficial: stub con cola + tag del proyecto
       window.clarity ??= Object.assign(
@@ -58,18 +118,64 @@
     }
   }
 
+  const loadMarketingVendors = (): void => {
+    if (marketingLoaded) return
+    marketingLoaded = true
+
+    if (HOTJAR_ID) inject(`https://static.hotjar.com/c/hotjar-${HOTJAR_ID}.js?sv=6`)
+
+    if (GOOGLE_ADS_ID) {
+      window.dataLayer ??= []
+      function gtagAds(..._args: unknown[]) {
+        window.dataLayer!.push(arguments as unknown as Record<string, unknown>)
+      }
+      gtagAds('js', new Date())
+      gtagAds('config', GOOGLE_ADS_ID)
+      inject(`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`)
+    }
+
+    if (META_PIXEL_ID) {
+      type Fbq = ((...args: unknown[]) => void) & {
+        loaded?: boolean
+        queue?: unknown[]
+        version?: string
+      }
+      const win = window as typeof window & {
+        _fbq?: unknown
+        fbq?: Fbq
+      }
+      if (!win.fbq) {
+        const fbq = ((...args: unknown[]) => {
+          ;(fbq.queue ??= []).push(args)
+        }) as Fbq
+        fbq.loaded = true
+        fbq.version = '2.0'
+        fbq.queue = []
+        win.fbq = fbq
+        win._fbq = fbq
+      }
+      win.fbq?.('init', META_PIXEL_ID)
+      win.fbq?.('track', 'PageView')
+      inject('https://connect.facebook.net/en_US/fbevents.js')
+    }
+  }
+
   if (readConsent()?.analytics) {
-    if (GA4_ID || CLARITY_ID) {
+    if (GA4_ID || CLARITY_ID || GTM_CONTAINER_ID) {
       loadVendors()
     }
     trackPageView()
     startPerformanceCapture()
   }
 
+  if (readConsent()?.marketing && (META_PIXEL_ID || HOTJAR_ID || GOOGLE_ADS_ID)) {
+    loadMarketingVendors()
+  }
+
   window.addEventListener(CONSENT_EVENT, (event) => {
     const consent = (event as CustomEvent<StoredConsent>).detail
     if (consent.analytics) {
-      if (GA4_ID || CLARITY_ID) {
+      if (GA4_ID || CLARITY_ID || GTM_CONTAINER_ID) {
         if (loaded) window.clarity?.('start')
         else loadVendors()
       }
@@ -77,6 +183,9 @@
       startPerformanceCapture()
     } else {
       window.clarity?.('stop')
+    }
+    if (consent.marketing && (META_PIXEL_ID || HOTJAR_ID || GOOGLE_ADS_ID)) {
+      loadMarketingVendors()
     }
   })
 
@@ -130,9 +239,7 @@
   function reportLoadTiming(): void {
     if (loadReported) return
     loadReported = true
-    const [navigation] = performance.getEntriesByType(
-      'navigation',
-    ) as PerformanceNavigationTiming[]
+    const [navigation] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
     const value = navigation?.loadEventEnd
       ? navigation.loadEventEnd - navigation.startTime
       : performance.now() - startedAt
@@ -227,7 +334,7 @@
       (event) => {
         const target = event.target instanceof HTMLElement ? event.target : null
         const resourceUrl = target
-          ? target.getAttribute('src') ?? target.getAttribute('href') ?? undefined
+          ? (target.getAttribute('src') ?? target.getAttribute('href') ?? undefined)
           : undefined
 
         reportPerformance('client_error', {

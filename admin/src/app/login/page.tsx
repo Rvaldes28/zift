@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="font-mono text-xs tracking-[0.18em] text-[var(--muted)] uppercase">Admin</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">Entrar al dashboard</h1>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-          Usa tu usuario del dashboard propio. Esta autenticacion no depende de Payload.
+          Usa tu usuario del dashboard propio. La autenticacion usa la DB propia del admin.
         </p>
 
         <form action={login} className="mt-8 grid gap-4">

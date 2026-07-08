@@ -8,8 +8,8 @@ import { z } from 'zod'
 
 import { normalizeEmail } from '@/lib/auth/config'
 import { hashPassword } from '@/lib/auth/password'
-import { requirePermission } from '@/lib/rbac/access'
-import { recordActivity } from '@/lib/rbac/access'
+import { recordAuditEvent } from '@/lib/audit/service'
+import { recordActivity, requirePermission } from '@/lib/rbac/access'
 import { verifyCsrf } from '@/lib/security/csrf'
 
 const uuidSchema = z.string().uuid()
@@ -41,6 +41,14 @@ async function roleIdsForSlugs(slugs: string[]): Promise<Map<string, string>> {
   }
 
   return result
+}
+
+async function assignedRoleIds(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ roleId: userRoles.roleId })
+    .from(userRoles)
+    .where(eq(userRoles.userId, userId))
+  return rows.map((row) => row.roleId).sort()
 }
 
 async function ensureNotRemovingLastAdmin(input: {
@@ -130,6 +138,23 @@ export async function createUser(formData: FormData): Promise<void> {
     entityId: user.id,
     metadata: { email: parsed.data.email, roleIds },
   })
+  await recordAuditEvent({
+    action: 'user.created',
+    actorId: current.user.id,
+    after: {
+      email: parsed.data.email,
+      mustChangePassword: true,
+      name: parsed.data.name,
+      roleIds,
+      status: 'active',
+    },
+    entityId: user.id,
+    entityType: 'user',
+    metadata: { roleIds },
+    severity: 'notice',
+    source: 'security',
+    timeline: false,
+  })
 
   revalidatePath('/dashboard/users')
   redirect(`/dashboard/users/${user.id}?status=created`)
@@ -153,6 +178,9 @@ export async function updateUser(formData: FormData): Promise<void> {
     redirect(`/dashboard/users/${userId}?error=last-admin`)
   }
 
+  const [existing] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+  const beforeRoleIds = await assignedRoleIds(userId)
+
   await db
     .update(users)
     .set({
@@ -169,6 +197,30 @@ export async function updateUser(formData: FormData): Promise<void> {
     entityType: 'user',
     entityId: userId,
     metadata: { email: parsed.data.email, roleIds },
+  })
+  await recordAuditEvent({
+    action: 'user.updated',
+    actorId: current.user.id,
+    after: {
+      email: parsed.data.email,
+      name: parsed.data.name,
+      roleIds,
+      status: existing?.status ?? null,
+    },
+    before: existing
+      ? {
+          email: existing.email,
+          name: existing.name,
+          roleIds: beforeRoleIds,
+          status: existing.status,
+        }
+      : null,
+    entityId: userId,
+    entityType: 'user',
+    metadata: { roleIds },
+    severity: 'notice',
+    source: 'security',
+    timeline: false,
   })
 
   revalidatePath('/dashboard/users')
@@ -189,6 +241,11 @@ export async function setUserStatus(formData: FormData): Promise<void> {
     redirect(`/dashboard/users/${userId}?error=last-admin`)
   }
 
+  const [existing] = await db
+    .select({ status: users.status })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
   await db.update(users).set({ status, updatedAt: new Date() }).where(eq(users.id, userId))
 
   if (status !== 'active') {
@@ -208,6 +265,17 @@ export async function setUserStatus(formData: FormData): Promise<void> {
     action: status === 'active' ? 'user.activated' : 'user.deactivated',
     entityType: 'user',
     entityId: userId,
+  })
+  await recordAuditEvent({
+    action: status === 'active' ? 'user.activated' : 'user.deactivated',
+    actorId: current.user.id,
+    after: { status },
+    before: { status: existing?.status ?? null },
+    entityId: userId,
+    entityType: 'user',
+    severity: status === 'active' ? 'notice' : 'warning',
+    source: 'security',
+    timeline: false,
   })
   revalidatePath('/dashboard/users')
   redirect(`/dashboard/users/${userId}?status=${status}`)
@@ -292,6 +360,12 @@ export async function updateRolePermissions(formData: FormData): Promise<void> {
     .filter((value): value is string => typeof value === 'string')
     .filter((value) => uuidSchema.safeParse(value).success)
 
+  const previousPermissionRows = await db
+    .select({ permissionId: rolePermissions.permissionId })
+    .from(rolePermissions)
+    .where(eq(rolePermissions.roleId, roleId))
+  const previousPermissionIds = previousPermissionRows.map((row) => row.permissionId).sort()
+
   await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId))
   for (const permissionId of permissionIds) {
     await db
@@ -310,6 +384,18 @@ export async function updateRolePermissions(formData: FormData): Promise<void> {
     entityType: 'role',
     entityId: roleId,
     metadata: { role: role.slug, permissionIds },
+  })
+  await recordAuditEvent({
+    action: 'role.permissions_updated',
+    actorId: current.user.id,
+    after: { permissionIds: [...permissionIds].sort(), role: role.slug },
+    before: { permissionIds: previousPermissionIds, role: role.slug },
+    entityId: roleId,
+    entityType: 'role',
+    metadata: { role: role.slug },
+    severity: 'warning',
+    source: 'security',
+    timeline: false,
   })
   revalidatePath('/dashboard/roles')
   redirect('/dashboard/roles?status=updated')

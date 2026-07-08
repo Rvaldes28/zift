@@ -6,7 +6,7 @@ export function GET() {
   return Response.json({
     ok: true,
     service: 'admin',
-    payload: false,
+    externalCms: false,
     timestamp: new Date().toISOString(),
     uptime: Math.round((Date.now() - startedAt) / 1000),
   })

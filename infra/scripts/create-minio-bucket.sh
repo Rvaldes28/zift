@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crea (idempotente) el bucket local de MinIO para la media de Payload.
+# Crea (idempotente) el bucket local de MinIO para la media del dashboard propio.
 #
 # Requiere MinIO corriendo:   ./infra/scripts/start-minio.sh
 # Requiere el cliente mc:     brew install minio-mc
@@ -13,7 +13,7 @@ MINIO_ALIAS="ziftlocal"
 MINIO_URL="${S3_ENDPOINT:-http://localhost:9000}"
 MINIO_USER="${MINIO_ROOT_USER:-minioadmin}"
 MINIO_PASSWORD="${MINIO_ROOT_PASSWORD:-minioadmin}"
-BUCKET="${S3_BUCKET:-payload-media}"
+BUCKET="${S3_BUCKET:-ziftlab-media}"
 
 if ! command -v mc >/dev/null 2>&1; then
   echo "Error: 'mc' no está instalado. Instalar con: brew install minio-mc" >&2

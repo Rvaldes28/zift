@@ -1,9 +1,10 @@
-import { activityLogs, db, leads, services } from '@ziftlab/db'
+import { db, leads, services } from '@ziftlab/db'
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { hashAnalyticsId } from '@/lib/analytics/privacy'
+import { recordAuditEvent } from '@/lib/audit/service'
 import { runLeadAutomations } from '@/lib/leads/delivery'
 
 export const runtime = 'nodejs'
@@ -122,12 +123,16 @@ export async function POST(request: Request) {
     })
     .returning({ id: leads.id })
 
-  await db.insert(activityLogs).values({
+  await recordAuditEvent({
     action: 'lead.created',
     actorId: null,
     entityId: created.id,
     entityType: 'lead',
+    ipAddress: clientIp(request),
     metadata: { formType: parsed.data.formType, source: parsed.data.source ?? null },
+    severity: 'notice',
+    source: 'public',
+    userAgent: request.headers.get('user-agent'),
   })
 
   await runLeadAutomations({ actorId: null, leadId: created.id }).catch(() => null)

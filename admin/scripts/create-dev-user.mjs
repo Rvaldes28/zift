@@ -114,10 +114,7 @@ async function upsertDevAdmin() {
     userId = createdUser.id
   }
 
-  await db
-    .insert(userRoles)
-    .values({ roleId: adminRole.id, userId })
-    .onConflictDoNothing()
+  await db.insert(userRoles).values({ roleId: adminRole.id, userId }).onConflictDoNothing()
 
   await db.insert(activityLogs).values({
     action: 'dev.admin_user_upserted',

@@ -300,7 +300,7 @@ export default async function LeadDetailPage({ params, searchParams }: LeadDetai
                 </dd>
               </div>
               <div>
-                <dt className="font-semibold">Payload</dt>
+                <dt className="font-semibold">Datos técnicos</dt>
                 <dd>
                   <pre className="mt-2 max-h-80 overflow-auto rounded-md bg-[var(--background)] p-3 text-xs">
                     {jsonBlock(lead.payload)}

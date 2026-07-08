@@ -4,6 +4,8 @@
  * versionado en git: lo legal se revisa en código, no se edita desde /admin.
  * Los datos del responsable son placeholders: complétalos antes de producción.
  */
+import AdminLegalDocument from '@/components/legal/AdminLegalDocument.astro'
+import { getAdminPage } from '@/lib/content'
 import LegalLayout from '@/layouts/LegalLayout.astro'
 
 // EDITAR antes del deploy (FASE 13): identidad legal real del responsable
@@ -25,125 +27,138 @@ const sections = [
   { id: 'seguridad', label: 'Cómo los protegemos' },
   { id: 'cambios', label: 'Cambios en esta política' },
 ]
+
+const adminLegal = await getAdminPage('privacidad')
 ---
 
-<LegalLayout
-  title="Política de privacidad"
-  description="Qué datos personales trata ZiftLab, para qué, con qué base legal y cómo ejercer tus derechos."
-  docNumber={1}
-  updated="02.07.2026"
-  intro="Tratamos pocos datos, con un fin claro: responderte y trabajar contigo. Aquí está todo, sin letra pequeña."
-  sections={sections}
->
-  <h2 id="responsable">Quién es el responsable</h2>
-  <p>
-    El responsable del tratamiento de tus datos es <strong>{RESPONSABLE.razonSocial}</strong> ({
-      RESPONSABLE.nombre
-    }), con NIF {RESPONSABLE.nif} y domicilio en {RESPONSABLE.domicilio}. Para cualquier tema de
-    privacidad puedes escribirnos a
-    <a href={`mailto:${RESPONSABLE.email}`}>{RESPONSABLE.email}</a>.
-  </p>
+{
+  adminLegal ? (
+    <AdminLegalDocument page={adminLegal} docNumber={1} />
+  ) : (
+    <LegalLayout
+      title="Política de privacidad"
+      description="Qué datos personales trata ZiftLab, para qué, con qué base legal y cómo ejercer tus derechos."
+      docNumber={1}
+      updated="02.07.2026"
+      intro="Tratamos pocos datos, con un fin claro: responderte y trabajar contigo. Aquí está todo, sin letra pequeña."
+      sections={sections}
+    >
+      <h2 id="responsable">Quién es el responsable</h2>
+      <p>
+        El responsable del tratamiento de tus datos es <strong>{RESPONSABLE.razonSocial}</strong> (
+        {RESPONSABLE.nombre}), con NIF {RESPONSABLE.nif} y domicilio en {RESPONSABLE.domicilio}.
+        Para cualquier tema de privacidad puedes escribirnos a
+        <a href={`mailto:${RESPONSABLE.email}`}>{RESPONSABLE.email}</a>.
+      </p>
 
-  <h2 id="datos">Qué datos tratamos</h2>
-  <p>Solo los que tú nos das o los que genera tu navegación, si la aceptas:</p>
-  <ul>
-    <li>
-      <strong>Formularios de contacto, asesoría y cotización:</strong> nombre, email y, si los indicas,
-      teléfono, empresa, servicio de interés, presupuesto y mensaje.
-    </li>
-    <li>
-      <strong>Correo y WhatsApp:</strong> los datos de contacto y el contenido de las conversaciones que
-      mantengas con nosotros.
-    </li>
-    <li>
-      <strong>Navegación (solo con tu consentimiento):</strong> datos de uso agregados que recogen las
-      cookies de analítica descritas en la
-      <a href="/cookies">política de cookies</a>. Sin tu permiso, no se activan.
-    </li>
-  </ul>
-  <p>No tratamos categorías especiales de datos ni hacemos perfilados automatizados.</p>
+      <h2 id="datos">Qué datos tratamos</h2>
+      <p>Solo los que tú nos das o los que genera tu navegación, si la aceptas:</p>
+      <ul>
+        <li>
+          <strong>Formularios de contacto, asesoría y cotización:</strong> nombre, email y, si los
+          indicas, teléfono, empresa, servicio de interés, presupuesto y mensaje.
+        </li>
+        <li>
+          <strong>Correo y WhatsApp:</strong> los datos de contacto y el contenido de las
+          conversaciones que mantengas con nosotros.
+        </li>
+        <li>
+          <strong>Navegación (solo con tu consentimiento):</strong> datos de uso agregados que
+          recogen las cookies de analítica descritas en la
+          <a href="/cookies">política de cookies</a>. Sin tu permiso, no se activan.
+        </li>
+      </ul>
+      <p>No tratamos categorías especiales de datos ni hacemos perfilados automatizados.</p>
 
-  <h2 id="finalidad">Para qué y con qué base</h2>
-  <ul>
-    <li>
-      <strong>Responder a tu solicitud y preparar propuestas</strong> — base legal: aplicación de medidas
-      precontractuales a petición tuya (art. 6.1.b RGPD).
-    </li>
-    <li>
-      <strong>Prestar y facturar los servicios contratados</strong> — base legal: ejecución del contrato
-      (art. 6.1.b) y obligaciones legales, fiscales y contables (art. 6.1.c).
-    </li>
-    <li>
-      <strong>Medir el uso de la web para mejorarla</strong> — base legal: tu consentimiento (art. 6.1.a),
-      que puedes retirar en cualquier momento desde
-      <a href="/cookies">Configurar cookies</a>.
-    </li>
-  </ul>
-  <p>No usamos tus datos para enviarte publicidad no solicitada ni los vendemos a nadie.</p>
+      <h2 id="finalidad">Para qué y con qué base</h2>
+      <ul>
+        <li>
+          <strong>Responder a tu solicitud y preparar propuestas</strong> — base legal: aplicación
+          de medidas precontractuales a petición tuya (art. 6.1.b RGPD).
+        </li>
+        <li>
+          <strong>Prestar y facturar los servicios contratados</strong> — base legal: ejecución del
+          contrato (art. 6.1.b) y obligaciones legales, fiscales y contables (art. 6.1.c).
+        </li>
+        <li>
+          <strong>Medir el uso de la web para mejorarla</strong> — base legal: tu consentimiento
+          (art. 6.1.a), que puedes retirar en cualquier momento desde
+          <a href="/cookies">Configurar cookies</a>.
+        </li>
+      </ul>
+      <p>No usamos tus datos para enviarte publicidad no solicitada ni los vendemos a nadie.</p>
 
-  <h2 id="destinatarios">Con quién los compartimos</h2>
-  <p>
-    Con nadie que no necesitemos para operar. Trabajamos con proveedores que actúan como encargados
-    del tratamiento, con contrato conforme al art. 28 RGPD:
-  </p>
-  <ul>
-    <li><strong>Hosting e infraestructura</strong> del sitio y del panel de gestión.</li>
-    <li><strong>Resend</strong>, para los correos transaccionales de confirmación y aviso.</li>
-    <li>
-      <strong>Calendly</strong>, si reservas una asesoría a través de su calendario.
-    </li>
-    <li>
-      <strong>Google (Analytics 4) y Microsoft (Clarity)</strong>, solo si aceptas las cookies de
-      analítica.
-    </li>
-  </ul>
-  <p>
-    Si alguno de estos proveedores trata datos fuera del Espacio Económico Europeo, lo hace bajo
-    cláusulas contractuales tipo de la Comisión Europea o el marco de privacidad de datos UE–EE. UU.
-    (Data Privacy Framework).
-  </p>
+      <h2 id="destinatarios">Con quién los compartimos</h2>
+      <p>
+        Con nadie que no necesitemos para operar. Trabajamos con proveedores que actúan como
+        encargados del tratamiento, con contrato conforme al art. 28 RGPD:
+      </p>
+      <ul>
+        <li>
+          <strong>Hosting e infraestructura</strong> del sitio y del panel de gestión.
+        </li>
+        <li>
+          <strong>Resend</strong>, para los correos transaccionales de confirmación y aviso.
+        </li>
+        <li>
+          <strong>Calendly</strong>, si reservas una asesoría a través de su calendario.
+        </li>
+        <li>
+          <strong>Google (Analytics 4) y Microsoft (Clarity)</strong>, solo si aceptas las cookies
+          de analítica.
+        </li>
+      </ul>
+      <p>
+        Si alguno de estos proveedores trata datos fuera del Espacio Económico Europeo, lo hace bajo
+        cláusulas contractuales tipo de la Comisión Europea o el marco de privacidad de datos UE–EE.
+        UU. (Data Privacy Framework).
+      </p>
 
-  <h2 id="conservacion">Cuánto tiempo los guardamos</h2>
-  <ul>
-    <li>
-      <strong>Solicitudes que no llegan a proyecto:</strong> hasta 24 meses desde el último contacto;
-      después se eliminan.
-    </li>
-    <li>
-      <strong>Datos de clientes:</strong> mientras dure la relación y, cerrada esta, los plazos que exige
-      la normativa fiscal y mercantil.
-    </li>
-    <li>
-      <strong>Datos de analítica:</strong> los plazos indicados en la
-      <a href="/cookies">política de cookies</a>.
-    </li>
-  </ul>
+      <h2 id="conservacion">Cuánto tiempo los guardamos</h2>
+      <ul>
+        <li>
+          <strong>Solicitudes que no llegan a proyecto:</strong> hasta 24 meses desde el último
+          contacto; después se eliminan.
+        </li>
+        <li>
+          <strong>Datos de clientes:</strong> mientras dure la relación y, cerrada esta, los plazos
+          que exige la normativa fiscal y mercantil.
+        </li>
+        <li>
+          <strong>Datos de analítica:</strong> los plazos indicados en la
+          <a href="/cookies">política de cookies</a>.
+        </li>
+      </ul>
 
-  <h2 id="derechos">Tus derechos</h2>
-  <p>
-    Puedes ejercer en cualquier momento tus derechos de acceso, rectificación, supresión, oposición,
-    limitación del tratamiento y portabilidad, y retirar el consentimiento que nos hayas dado,
-    escribiendo a
-    <a href={`mailto:${RESPONSABLE.email}`}>{RESPONSABLE.email}</a> con el asunto «Protección de datos».
-    Te respondemos en el plazo máximo de un mes.
-  </p>
-  <p>
-    Si crees que no hemos tratado bien tus datos, puedes reclamar ante la Agencia Española de
-    Protección de Datos (<a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer"
-      >aepd.es</a
-    >).
-  </p>
+      <h2 id="derechos">Tus derechos</h2>
+      <p>
+        Puedes ejercer en cualquier momento tus derechos de acceso, rectificación, supresión,
+        oposición, limitación del tratamiento y portabilidad, y retirar el consentimiento que nos
+        hayas dado, escribiendo a<a href={`mailto:${RESPONSABLE.email}`}>{RESPONSABLE.email}</a> con
+        el asunto «Protección de datos». Te respondemos en el plazo máximo de un mes.
+      </p>
+      <p>
+        Si crees que no hemos tratado bien tus datos, puedes reclamar ante la Agencia Española de
+        Protección de Datos (
+        <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">
+          aepd.es
+        </a>
+        ).
+      </p>
 
-  <h2 id="seguridad">Cómo los protegemos</h2>
-  <p>
-    Toda la comunicación con el sitio va cifrada (TLS). El acceso a los datos está restringido al
-    equipo que los necesita, protegido con autenticación, y nuestros proveedores cumplen el RGPD.
-    Los formularios públicos incluyen medidas contra abuso y envíos automatizados.
-  </p>
+      <h2 id="seguridad">Cómo los protegemos</h2>
+      <p>
+        Toda la comunicación con el sitio va cifrada (TLS). El acceso a los datos está restringido
+        al equipo que los necesita, protegido con autenticación, y nuestros proveedores cumplen el
+        RGPD. Los formularios públicos incluyen medidas contra abuso y envíos automatizados.
+      </p>
 
-  <h2 id="cambios">Cambios en esta política</h2>
-  <p>
-    Si cambiamos esta política —por ejemplo, al incorporar un proveedor nuevo— actualizaremos esta
-    página y su fecha de revisión. La fecha vigente aparece siempre en la cabecera del documento.
-  </p>
-</LegalLayout>
+      <h2 id="cambios">Cambios en esta política</h2>
+      <p>
+        Si cambiamos esta política —por ejemplo, al incorporar un proveedor nuevo— actualizaremos
+        esta página y su fecha de revisión. La fecha vigente aparece siempre en la cabecera del
+        documento.
+      </p>
+    </LegalLayout>
+  )
+}

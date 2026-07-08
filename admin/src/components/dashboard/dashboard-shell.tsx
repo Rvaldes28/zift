@@ -16,11 +16,16 @@ export function DashboardShell({
   children,
   csrfToken,
   navGroups,
+  notificationBadge,
   user,
 }: {
   children: ReactNode
   csrfToken: string
   navGroups: DashboardNavGroup[]
+  notificationBadge?: {
+    critical: number
+    unread: number
+  }
   user: {
     email: string
     mustChangePassword: boolean
@@ -60,6 +65,7 @@ export function DashboardShell({
       <div className="min-w-0">
         <DashboardHeader
           csrfToken={csrfToken}
+          notificationBadge={notificationBadge}
           user={user}
           onMenuClick={() => setMobileOpen(true)}
           pathname={pathname}
@@ -133,11 +139,16 @@ export function Sidebar({
 
 export function DashboardHeader({
   csrfToken,
+  notificationBadge,
   onMenuClick,
   pathname,
   user,
 }: {
   csrfToken: string
+  notificationBadge?: {
+    critical: number
+    unread: number
+  }
   onMenuClick: () => void
   pathname: string
   user: {
@@ -165,6 +176,16 @@ export function DashboardHeader({
 
         <div className="flex items-center gap-2">
           <SearchPlaceholder />
+          <Link
+            href="/dashboard/notifications"
+            className={`hidden rounded-md border px-3 py-2 text-sm font-semibold transition hover:border-[var(--ink)] sm:inline-flex ${
+              notificationBadge?.critical
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)]'
+            }`}
+          >
+            Avisos {notificationBadge?.unread ? `(${notificationBadge.unread})` : ''}
+          </Link>
           <Link
             href="/dashboard/account"
             className="hidden rounded-md border border-[var(--line)] px-3 py-2 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--ink)] hover:text-[var(--ink)] sm:inline-flex"

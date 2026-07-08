@@ -10,9 +10,11 @@ interface ImportMetaEnv {
   /** URL pública del sitio Astro, ej. http://localhost:4321 */
   readonly PUBLIC_SITE_URL?: string
   readonly PUBLIC_GA4_ID?: string
+  readonly PUBLIC_GTM_CONTAINER_ID?: string
   readonly PUBLIC_CLARITY_ID?: string
   readonly PUBLIC_META_PIXEL_ID?: string
   readonly PUBLIC_HOTJAR_ID?: string
+  readonly PUBLIC_GOOGLE_ADS_ID?: string
 }
 
 interface ImportMeta {

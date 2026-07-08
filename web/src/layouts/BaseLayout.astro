@@ -18,7 +18,7 @@ import { getCachedGlobal } from '@/lib/api'
 import { organizationSchema } from '@/lib/schema'
 
 interface Props {
-  /** Título de la página; se compone como "Título | SiteName". Si falta, se usa el SEO por defecto del CMS. */
+  /** Título de la página; se compone como "Título | SiteName". Si falta, se usa el SEO por defecto del sitio. */
   title?: string
   /** Título ya compuesto (p. ej. meta.title del plugin SEO) — se usa tal cual, sin añadir "| SiteName" */
   absoluteTitle?: string
@@ -62,6 +62,23 @@ const defaultTitle =
 const seoTitle = absoluteTitle ?? (title ? `${title} | ${siteName}` : defaultTitle)
 const seoDescription = description ?? settings.defaultSeo?.description ?? undefined
 const seoImage = ogImage ?? getMediaUrl(settings.defaultSeo?.ogImage)
+const favicon = getMediaUrl(settings.favicon)
+
+const hex = (value: unknown) =>
+  typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value) ? value : null
+
+const colors = settings.colors ?? {}
+const colorCss = [
+  ['--color-zift', hex(colors.primary)],
+  ['--color-zift-deep', hex(colors.primaryDark)],
+  ['--color-zift-tint', hex(colors.primaryTint)],
+  ['--color-zift-glow', hex(colors.accent)],
+  ['--color-ink', hex(colors.ink)],
+  ['--color-paper', hex(colors.paper)],
+]
+  .filter((entry): entry is [string, string] => Boolean(entry[1]))
+  .map(([name, value]) => `${name}:${value};`)
+  .join('')
 
 // Schema Organization en todas las páginas (FASE 8); LocalBusiness solo lo
 // añaden el home y /contacto vía slot="head"
@@ -95,6 +112,8 @@ try{
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
+    {favicon && <link rel="icon" href={favicon} />}
+    {colorCss && <style is:inline set:html={`:root{${colorCss}}`} />}
     <script is:inline set:html={consentInit} />
     <script is:inline>
       // Activa el scroll-reveal solo si va a poder ejecutarse; así el contenido
@@ -145,8 +164,8 @@ try{
     </main>
     <Footer footer={footer} settings={settings} />
     {settings.whatsapp && <WhatsAppButton phone={settings.whatsapp} />}
-    <CookieConsent />
-    <Analytics />
+    <CookieConsent settings={settings.cookieSettings} />
+    <Analytics externalScripts={settings.externalScripts} />
     <script>
       if (document.documentElement.classList.contains('js-reveal')) {
         const observer = new IntersectionObserver(

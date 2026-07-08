@@ -35,7 +35,7 @@ export function formatDateShort(date: string): string {
     .replace(/\./g, '')
 }
 
-/** Categorías pobladas del post, en el orden guardado en el CMS. */
+/** Categorías pobladas del post, en el orden guardado por la API. */
 export function postCategories(post: Post): Category[] {
   return resolveDocs<Category>(post.categories)
 }

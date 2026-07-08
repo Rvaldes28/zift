@@ -18,7 +18,7 @@ const ALLOWED_TAGS = new Set([
   'ul',
 ])
 
-const ALLOWED_ATTRIBUTES = new Set(['href', 'target', 'rel'])
+const ALLOWED_ATTRIBUTES = new Set(['href', 'id', 'target', 'rel'])
 
 function sanitizeAttributes(rawAttributes: string): string {
   const attributes: string[] = []

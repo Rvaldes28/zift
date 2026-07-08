@@ -436,7 +436,9 @@ export default async function PostDetail({ params, searchParams }: PostDetailPro
               Open Graph image
               <select
                 name="ogImageId"
-                defaultValue={data.seo?.ogImageId ?? data.seo?.imageId ?? data.post.coverImageId ?? ''}
+                defaultValue={
+                  data.seo?.ogImageId ?? data.seo?.imageId ?? data.post.coverImageId ?? ''
+                }
                 disabled={!canManageSeo}
                 className={inputClass()}
               >

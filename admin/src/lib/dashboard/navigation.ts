@@ -111,6 +111,13 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
         permissions: ['settings.read'],
       },
       {
+        id: 'notifications',
+        label: 'Notificaciones',
+        href: '/dashboard/notifications',
+        description: 'Inbox de eventos criticos y canales de aviso.',
+        permissions: ['settings.read'],
+      },
+      {
         id: 'backups',
         label: 'Backups',
         href: '/dashboard/backups',
@@ -159,6 +166,11 @@ const utilityBreadcrumbs: Record<string, DashboardBreadcrumb[]> = {
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Logs', href: '/dashboard/logs' },
     { label: 'Actividad' },
+  ],
+  '/dashboard/notifications/settings': [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Notificaciones', href: '/dashboard/notifications' },
+    { label: 'Reglas' },
   ],
 }
 
@@ -221,6 +233,14 @@ export function getDashboardBreadcrumbs(pathname: string): DashboardBreadcrumb[]
     return [
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Media', href: '/dashboard/media' },
+      { label: 'Detalle' },
+    ]
+  }
+
+  if (pathname.startsWith('/dashboard/logs/')) {
+    return [
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Logs', href: '/dashboard/logs' },
       { label: 'Detalle' },
     ]
   }

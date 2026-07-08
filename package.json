@@ -2,24 +2,24 @@
   "name": "ziftlab",
   "version": "0.1.0",
   "private": true,
-  "description": "Sitio oficial de ZiftLab — monorepo con Payload CMS (cms/) y Astro (web/)",
+  "description": "Sitio oficial de ZiftLab — monorepo con dashboard propio y Astro",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=20.9.0"
   },
   "scripts": {
     "dev:admin": "pnpm --filter @ziftlab/db build && pnpm --filter admin dev",
-    "dev:cms": "pnpm --filter cms dev",
     "dev:web": "pnpm --filter web dev",
     "build": "pnpm -r build",
     "build:admin": "pnpm --filter @ziftlab/db build && pnpm --filter admin build",
-    "build:cms": "pnpm --filter cms build",
     "build:web": "pnpm --filter web build",
     "db:generate": "pnpm --filter @ziftlab/db db:generate",
+    "db:import-legacy": "pnpm --filter @ziftlab/db db:import-legacy",
     "db:migrate": "pnpm --filter @ziftlab/db db:migrate",
     "db:seed": "pnpm --filter @ziftlab/db db:seed",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
+    "verify:no-payload": "node scripts/verify-no-payload.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

@@ -10,6 +10,25 @@
  * Se reabre desde cualquier elemento con [data-cookie-settings]
  * (footer y política de cookies).
  */
+import type { SiteSetting } from '@ziftlab/types'
+
+interface Props {
+  settings?: SiteSetting['cookieSettings']
+}
+
+const { settings } = Astro.props
+const bannerTitle = settings?.bannerTitle || 'Cookies'
+const bannerText =
+  settings?.bannerText ||
+  'Usamos cookies propias y de terceros para medir cómo se usa la web y, solo si algún día activas marketing, para publicidad.'
+const necessaryDescription =
+  settings?.necessaryDescription || 'Seguridad del sitio y recordar esta elección.'
+const analyticsLabel = settings?.analyticsLabel || 'Analítica'
+const analyticsDescription =
+  settings?.analyticsDescription || 'Nos dice qué páginas funcionan (Google Analytics, Clarity).'
+const marketingLabel = settings?.marketingLabel || 'Marketing'
+const marketingDescription =
+  settings?.marketingDescription || 'Publicidad y remarketing. Hoy no usamos ninguna.'
 ---
 
 <div
@@ -27,12 +46,11 @@
         class="flex items-center gap-2.5 font-mono text-xs tracking-[0.18em] text-ink-muted uppercase"
       >
         <span class="size-2 shrink-0 bg-zift-glow" aria-hidden="true"></span>
-        Cookies
+        {bannerTitle}
       </p>
 
       <p class="mt-3 text-sm leading-relaxed text-ink-muted">
-        Usamos cookies propias y de terceros para medir cómo se usa la web y, solo si algún día
-        activas marketing, para publicidad. Las que no son necesarias quedan
+        {bannerText} Las que no son necesarias quedan
         <strong class="font-medium text-white">bloqueadas hasta que decidas</strong>. Los detalles,
         en la <a href="/cookies" class="consent-link">política de cookies</a> y la
         <a href="/privacidad" class="consent-link">política de privacidad</a>.
@@ -45,7 +63,7 @@
           <div>
             <p class="text-sm font-medium">Necesarias</p>
             <p class="mt-0.5 text-xs leading-relaxed text-ink-muted">
-              Seguridad del sitio y recordar esta elección.
+              {necessaryDescription}
             </p>
           </div>
           <span class="font-mono text-[10px] tracking-[0.14em] text-zift-glow uppercase">
@@ -57,9 +75,9 @@
           class="flex cursor-pointer items-center justify-between gap-4 border-b border-ink-line py-3.5"
         >
           <span>
-            <span class="block text-sm font-medium">Analítica</span>
+            <span class="block text-sm font-medium">{analyticsLabel}</span>
             <span class="mt-0.5 block text-xs leading-relaxed text-ink-muted">
-              Nos dice qué páginas funcionan (Google Analytics, Clarity).
+              {analyticsDescription}
             </span>
           </span>
           <input type="checkbox" name="analytics" class="consent-switch" />
@@ -67,9 +85,9 @@
 
         <label class="flex cursor-pointer items-center justify-between gap-4 py-3.5">
           <span>
-            <span class="block text-sm font-medium">Marketing</span>
+            <span class="block text-sm font-medium">{marketingLabel}</span>
             <span class="mt-0.5 block text-xs leading-relaxed text-ink-muted">
-              Publicidad y remarketing. Hoy no usamos ninguna.
+              {marketingDescription}
             </span>
           </span>
           <input type="checkbox" name="marketing" class="consent-switch" />

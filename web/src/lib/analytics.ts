@@ -3,11 +3,7 @@ import { readUtm } from './utm'
 
 export type TrackParams = Record<string, boolean | null | number | string | undefined>
 export type PerformanceEventName =
-  | 'api_timing'
-  | 'client_error'
-  | 'form_error'
-  | 'resource_timing'
-  | 'web_vital'
+  'api_timing' | 'client_error' | 'form_error' | 'resource_timing' | 'web_vital'
 
 export interface PerformanceParams {
   durationMs?: number
@@ -140,7 +136,10 @@ export function track(event: string, params: TrackParams = {}): void {
   sendOwnEvent(event, params)
 }
 
-export function reportPerformance(eventName: PerformanceEventName, params: PerformanceParams): void {
+export function reportPerformance(
+  eventName: PerformanceEventName,
+  params: PerformanceParams,
+): void {
   if (!canTrack()) return
 
   const body = JSON.stringify({

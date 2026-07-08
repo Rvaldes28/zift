@@ -70,9 +70,10 @@ function parseDate(value: string | undefined, end = false): Date | null {
 }
 
 export function parseAnalyticsFilters(input: AnalyticsFilters | undefined) {
-  const range = input?.range === '90d' || input?.range === '7d' || input?.range === 'custom'
-    ? input.range
-    : '30d'
+  const range =
+    input?.range === '90d' || input?.range === '7d' || input?.range === 'custom'
+      ? input.range
+      : '30d'
   const now = new Date()
 
   if (range === 'custom') {
@@ -165,7 +166,10 @@ export async function getAnalyticsDashboard(
       .select()
       .from(analyticsEvents)
       .where(
-        and(gte(analyticsEvents.occurredAt, range.dateFrom), lte(analyticsEvents.occurredAt, range.dateTo)),
+        and(
+          gte(analyticsEvents.occurredAt, range.dateFrom),
+          lte(analyticsEvents.occurredAt, range.dateTo),
+        ),
       )
       .orderBy(analyticsEvents.occurredAt),
     db
@@ -179,7 +183,13 @@ export async function getAnalyticsDashboard(
         utm: leads.utm,
       })
       .from(leads)
-      .where(and(isNull(leads.deletedAt), gte(leads.createdAt, range.dateFrom), lte(leads.createdAt, range.dateTo))),
+      .where(
+        and(
+          isNull(leads.deletedAt),
+          gte(leads.createdAt, range.dateFrom),
+          lte(leads.createdAt, range.dateTo),
+        ),
+      ),
   ])
 
   const days = new Map<string, DailyMetricRow>()
@@ -217,7 +227,10 @@ export async function getAnalyticsDashboard(
       increment(browserMap, event.browser)
       increment(osMap, event.os)
       if (event.sessionIdHash) {
-        sessionPageViews.set(event.sessionIdHash, (sessionPageViews.get(event.sessionIdHash) ?? 0) + 1)
+        sessionPageViews.set(
+          event.sessionIdHash,
+          (sessionPageViews.get(event.sessionIdHash) ?? 0) + 1,
+        )
       }
     }
 

@@ -10,7 +10,11 @@ import {
 const CSRF_COOKIE = 'ziftlab-admin-csrf'
 
 function csrfSecret() {
-  return process.env.ADMIN_CSRF_SECRET?.trim() || process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() || 'ziftlab-dev-csrf'
+  return (
+    process.env.ADMIN_CSRF_SECRET?.trim() ||
+    process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() ||
+    'ziftlab-dev-csrf'
+  )
 }
 
 function randomNonce() {

@@ -41,6 +41,7 @@ import {
   verifyTotpCode,
   createTotpSecret,
 } from '@/lib/totp/totp'
+import { recordAuditEvent } from '@/lib/audit/service'
 import { getUserPermissions, recordActivity } from '@/lib/rbac/access'
 
 class AuthActionError extends Error {
@@ -133,6 +134,22 @@ async function logLoginAttempt(input: {
     reason: input.reason,
     metadata: input.metadata ?? {},
   })
+
+  await recordAuditEvent({
+    action: input.success ? 'auth.login_success' : 'auth.login_failed',
+    actorId: input.userId ?? null,
+    entityId: input.userId ?? input.email,
+    entityType: input.userId ? 'user' : 'login_identity',
+    ipAddress: input.meta.ipAddress,
+    metadata: {
+      email: input.email,
+      reason: input.reason,
+      ...input.metadata,
+    },
+    severity: input.success ? 'notice' : 'warning',
+    source: 'auth',
+    userAgent: input.meta.userAgent,
+  }).catch(() => null)
 
   if (!input.success) {
     await autoBlockIpIfNeeded(input.meta).catch(() => null)

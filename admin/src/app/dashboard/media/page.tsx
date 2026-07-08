@@ -43,7 +43,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
       <PageHeader
         eyebrow="Biblioteca"
         title="Media"
-        description="Gestiona imagenes y archivos desde MinIO/S3 con metadata en PostgreSQL, sin depender de Payload."
+        description="Gestiona imagenes y archivos desde MinIO/S3 con metadata en PostgreSQL."
         actions={
           canManage && (
             <Link

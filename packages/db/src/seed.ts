@@ -1,7 +1,16 @@
 import { eq } from 'drizzle-orm'
 
 import { closeDb, db } from './client.js'
-import { pageSections, pages, permissions, rolePermissions, roles, siteSettings } from './schema.js'
+import {
+  integrations,
+  notificationRules,
+  pageSections,
+  pages,
+  permissions,
+  rolePermissions,
+  roles,
+  siteSettings,
+} from './schema.js'
 
 const roleSeeds = [
   {
@@ -69,6 +78,164 @@ const rolePermissionSeeds: Record<string, string[]> = {
   ],
   support: ['dashboard.access', 'leads.read'],
 }
+
+const integrationSeeds = [
+  {
+    category: 'analytics',
+    docsUrl: 'https://developers.google.com/analytics/devguides/reporting/data/v1',
+    key: 'google_analytics',
+    name: 'Google Analytics 4',
+    provider: 'google',
+  },
+  {
+    category: 'seo',
+    docsUrl: 'https://developers.google.com/webmaster-tools/v1/how-tos/search_analytics',
+    key: 'google_search_console',
+    name: 'Google Search Console',
+    provider: 'google',
+  },
+  {
+    category: 'marketing',
+    docsUrl: 'https://developers.google.com/tag-platform/tag-manager/api/v2',
+    key: 'google_tag_manager',
+    name: 'Google Tag Manager',
+    provider: 'google',
+  },
+  {
+    category: 'ads',
+    docsUrl: 'https://developers.google.com/google-ads/api/docs/get-started/introduction',
+    key: 'google_ads',
+    name: 'Google Ads',
+    provider: 'google',
+  },
+  {
+    category: 'marketing',
+    docsUrl: 'https://developers.facebook.com/docs/meta-pixel/implementation',
+    key: 'meta_pixel',
+    name: 'Meta Pixel',
+    provider: 'meta',
+  },
+  {
+    category: 'messaging',
+    docsUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks',
+    key: 'whatsapp_business',
+    name: 'WhatsApp Business',
+    provider: 'meta',
+  },
+  {
+    category: 'marketing',
+    docsUrl: 'https://mailchimp.com/developer/marketing/api/',
+    key: 'mailchimp',
+    name: 'Mailchimp',
+    provider: 'mailchimp',
+  },
+  {
+    category: 'crm',
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/overview',
+    key: 'hubspot',
+    name: 'HubSpot',
+    provider: 'hubspot',
+  },
+  {
+    category: 'payments',
+    docsUrl: 'https://docs.stripe.com/api',
+    key: 'stripe',
+    name: 'Stripe',
+    provider: 'stripe',
+  },
+  {
+    category: 'payments',
+    docsUrl: 'https://developer.paypal.com/api/rest/',
+    key: 'paypal',
+    name: 'PayPal',
+    provider: 'paypal',
+  },
+  {
+    category: 'automation',
+    docsUrl: 'https://docs.zapier.com/integrations/build/action',
+    key: 'zapier',
+    name: 'Zapier',
+    provider: 'zapier',
+  },
+  {
+    category: 'automation',
+    docsUrl: 'https://developers.make.com/',
+    key: 'make',
+    name: 'Make',
+    provider: 'make',
+  },
+  {
+    category: 'crm',
+    docsUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP',
+    key: 'custom_crm',
+    name: 'CRM personalizado',
+    provider: 'custom',
+  },
+  {
+    category: 'external',
+    docsUrl: 'https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API',
+    key: 'external_api',
+    name: 'APIs externas',
+    provider: 'custom',
+  },
+]
+
+const notificationRuleSeeds = [
+  {
+    channels: ['dashboard', 'email'],
+    eventType: 'lead.created',
+    label: 'Nuevo lead recibido',
+    severity: 'info',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack', 'telegram'],
+    eventType: 'order.created',
+    label: 'Nuevo pedido',
+    severity: 'warning',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack', 'telegram'],
+    eventType: 'payment.received',
+    label: 'Pago recibido',
+    severity: 'info',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack', 'telegram'],
+    eventType: 'system.error',
+    label: 'Error del sistema',
+    severity: 'critical',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack', 'telegram'],
+    eventType: 'site.down',
+    label: 'Pagina caida',
+    severity: 'critical',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack'],
+    eventType: 'backup.failed',
+    label: 'Backup fallido',
+    severity: 'critical',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack', 'telegram'],
+    eventType: 'security.suspicious_login',
+    label: 'Intento sospechoso de login',
+    severity: 'critical',
+  },
+  {
+    channels: ['dashboard', 'email', 'slack'],
+    eventType: 'form.error',
+    label: 'Formulario con error',
+    severity: 'critical',
+  },
+  {
+    channels: ['dashboard', 'email'],
+    eventType: 'performance.slow',
+    label: 'Baja velocidad del sitio',
+    severity: 'warning',
+  },
+]
 
 async function seedRoles() {
   for (const role of roleSeeds) {
@@ -143,6 +310,54 @@ async function seedSiteSettings() {
   })
 }
 
+async function seedIntegrations() {
+  for (const integration of integrationSeeds) {
+    await db
+      .insert(integrations)
+      .values({
+        ...integration,
+        config: {},
+        enabled: false,
+        environment:
+          integration.key === 'paypal' || integration.key === 'stripe' ? 'sandbox' : 'live',
+        metadata: {},
+        status: 'not_configured',
+      })
+      .onConflictDoUpdate({
+        target: integrations.key,
+        set: {
+          category: integration.category,
+          docsUrl: integration.docsUrl,
+          name: integration.name,
+          provider: integration.provider,
+          updatedAt: new Date(),
+        },
+      })
+  }
+}
+
+async function seedNotificationRules() {
+  for (const rule of notificationRuleSeeds) {
+    await db
+      .insert(notificationRules)
+      .values({
+        ...rule,
+        dedupeMinutes: 15,
+        enabled: true,
+        metadata: {},
+      })
+      .onConflictDoUpdate({
+        target: notificationRules.eventType,
+        set: {
+          channels: rule.channels,
+          label: rule.label,
+          severity: rule.severity,
+          updatedAt: new Date(),
+        },
+      })
+  }
+}
+
 async function seedPages() {
   const pageSeeds = [
     {
@@ -211,6 +426,8 @@ async function seed() {
   await seedPermissions()
   await seedRolePermissions()
   await seedSiteSettings()
+  await seedIntegrations()
+  await seedNotificationRules()
   await seedPages()
 }
 

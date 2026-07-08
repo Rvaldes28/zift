@@ -2,15 +2,26 @@ import { NextResponse } from 'next/server'
 
 import { leadsToCsv } from '@/lib/leads/csv'
 import { listLeadsForExport, parseLeadFilters } from '@/lib/leads/queries'
-import { requirePermission } from '@/lib/rbac/access'
+import { requirePermission, recordActivity } from '@/lib/rbac/access'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
-  await requirePermission('leads.read')
+  const current = await requirePermission('leads.read')
 
   const url = new URL(request.url)
-  const csv = leadsToCsv(await listLeadsForExport(parseLeadFilters(url.searchParams)))
+  const filters = parseLeadFilters(url.searchParams)
+  const rows = await listLeadsForExport(filters)
+  const csv = leadsToCsv(rows)
+
+  await recordActivity({
+    action: 'lead.exported',
+    actorId: current.user.id,
+    entityType: 'lead',
+    metadata: { count: rows.length, filters },
+    severity: 'notice',
+    source: 'admin',
+  })
 
   return new NextResponse(csv, {
     headers: {

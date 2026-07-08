@@ -22,7 +22,7 @@ const bottomText =
   footer.bottomText ??
   `© ${new Date().getFullYear()} ${settings.siteName}. Todos los derechos reservados.`
 
-// Fijos en código, no en el CMS: los enlaces legales no pueden desaparecer
+// Fijos en código: los enlaces legales no pueden desaparecer
 // por una edición en /admin (FASE 16)
 const legalLinks = [
   { label: 'Privacidad', href: '/privacidad' },
@@ -54,6 +54,22 @@ const linkClass = 'text-sm text-ink-muted transition-colors hover:text-white'
         </p>
         {settings.tagline && <p class="mt-2 text-ink-muted">{settings.tagline}</p>}
         <ul class="mt-5 space-y-1.5 font-mono text-sm">
+          {
+            settings.address && (
+              <li>
+                <span class={linkClass}>{settings.address}</span>
+              </li>
+            )
+          }
+          {
+            (settings.hours ?? []).map((hour) => (
+              <li>
+                <span class={linkClass}>
+                  {hour.label}: {hour.value}
+                </span>
+              </li>
+            ))
+          }
           {
             settings.contactEmail && (
               <li>

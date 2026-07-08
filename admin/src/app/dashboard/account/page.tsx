@@ -192,10 +192,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             >
               <div>
                 <p className="text-sm font-semibold">
-                  {item.current ? 'Sesion actual' : 'Sesion remota'} · {item.ipAddress ?? 'IP desconocida'}
+                  {item.current ? 'Sesion actual' : 'Sesion remota'} ·{' '}
+                  {item.ipAddress ?? 'IP desconocida'}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                  Ultima actividad: {dateLabel(item.lastSeenAt)} · Expira: {dateLabel(item.expiresAt)}
+                  Ultima actividad: {dateLabel(item.lastSeenAt)} · Expira:{' '}
+                  {dateLabel(item.expiresAt)}
                 </p>
                 <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
                   {item.userAgent ?? 'User agent no registrado'}

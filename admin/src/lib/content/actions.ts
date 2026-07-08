@@ -6,8 +6,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
-import { requirePermission } from '@/lib/rbac/access'
-import { recordActivity } from '@/lib/rbac/access'
+import { recordAuditEvent } from '@/lib/audit/service'
+import { recordActivity, requirePermission } from '@/lib/rbac/access'
 import { verifyCsrf } from '@/lib/security/csrf'
 
 import { createPageVersion } from './snapshots'
@@ -147,6 +147,8 @@ function jsonFromTextarea(value: string): JsonRecord {
 async function snapshotAndRecord(input: {
   action: string
   actorId: string
+  after?: Record<string, unknown> | null
+  before?: Record<string, unknown> | null
   entityId: string
   metadata?: Record<string, unknown>
 }) {
@@ -158,6 +160,20 @@ async function snapshotAndRecord(input: {
     entityType: 'page',
     metadata: input.metadata,
   })
+  if (input.before !== undefined || input.after !== undefined) {
+    await recordAuditEvent({
+      action: input.action,
+      actorId: input.actorId,
+      after: input.after ?? null,
+      before: input.before ?? null,
+      entityId: input.entityId,
+      entityType: 'page',
+      metadata: input.metadata,
+      severity: 'notice',
+      source: 'content',
+      timeline: false,
+    })
+  }
 }
 
 export async function createPage(formData: FormData): Promise<void> {
@@ -207,6 +223,7 @@ export async function createPage(formData: FormData): Promise<void> {
 
   await snapshotAndRecord({
     action: 'content.page_created',
+    after: { slug, status: 'draft', title: parsed.data.title, type },
     actorId: current.user.id,
     entityId: created.id,
     metadata: { slug, type },
@@ -251,7 +268,21 @@ export async function updatePageDetails(formData: FormData): Promise<void> {
 
   await snapshotAndRecord({
     action: 'content.page_updated',
+    after: {
+      excerpt: parsed.data.excerpt ?? null,
+      routePath: routePathForPage({ slug, type }),
+      slug,
+      title: parsed.data.title,
+      type,
+    },
     actorId: current.user.id,
+    before: {
+      excerpt: existing.excerpt,
+      routePath: existing.routePath,
+      slug: existing.slug,
+      title: existing.title,
+      type: existing.type,
+    },
     entityId: parsed.data.pageId,
     metadata: { slug, type },
   })
@@ -412,6 +443,7 @@ export async function publishPage(formData: FormData): Promise<void> {
   const pageId = formString(formData, 'pageId')
   if (!uuidSchema.safeParse(pageId).success) redirect('/dashboard/pages?error=invalid')
 
+  const [existing] = await db.select().from(pages).where(eq(pages.id, pageId)).limit(1)
   const version = await createPageVersion({ actorId: current.user.id, pageId })
   await db
     .update(pages)
@@ -433,6 +465,28 @@ export async function publishPage(formData: FormData): Promise<void> {
     entityId: pageId,
     entityType: 'page',
     metadata: { version: version.version },
+  })
+  await recordAuditEvent({
+    action: 'content.page_published',
+    actorId: current.user.id,
+    after: {
+      publishedVersionId: version.id,
+      scheduledAt: null,
+      status: 'published',
+    },
+    before: existing
+      ? {
+          publishedVersionId: existing.publishedVersionId,
+          scheduledAt: existing.scheduledAt,
+          status: existing.status,
+        }
+      : null,
+    entityId: pageId,
+    entityType: 'page',
+    metadata: { version: version.version },
+    severity: 'notice',
+    source: 'content',
+    timeline: false,
   })
   revalidatePath('/dashboard/pages')
   redirect(`/dashboard/pages/${pageId}?status=published`)

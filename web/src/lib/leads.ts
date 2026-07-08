@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 /**
- * Validación client-side del formulario de leads (FASE 7) — espejo del
- * schema canónico del servidor en cms/src/leads/schema.ts. Si cambias
- * valores u opciones allí, actualiza también este archivo.
+ * Validación client-side del formulario de leads: espejo del contrato público
+ * del endpoint `/api/leads/submit`. Si cambias valores u opciones del servidor,
+ * actualiza también este archivo.
  */
 
 export type LeadFormType = 'contacto' | 'asesoria' | 'cotizacion'
